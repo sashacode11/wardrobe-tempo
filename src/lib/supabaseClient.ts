@@ -195,7 +195,6 @@ export const uploadImage = async (file: File) => {
   const fileName = `${userId}/${Date.now()}.${fileExt}`;
 
   // Step 4: Upload the file
-  console.log('Attempting to upload file...');
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('wardrobe-images')
     .upload(fileName, file);
@@ -208,10 +207,8 @@ export const uploadImage = async (file: File) => {
     );
     return { data: null, error: uploadError };
   }
-  console.log('File uploaded successfully:', uploadData);
 
   // Step 5: Generate a public URL for the uploaded file
-  console.log('Generating public URL...');
   const { data: publicUrlData, error: publicUrlError } = await supabase.storage
     .from('wardrobe-images')
     .getPublicUrl(uploadData.path);
@@ -220,10 +217,6 @@ export const uploadImage = async (file: File) => {
     console.error('Error generating public URL:', publicUrlError);
     return { data: null, error: publicUrlError };
   }
-
-  const { data: buckets, error } = await supabase.storage.listBuckets();
-  console.log('Buckets:', buckets);
-  console.error('Error listing buckets:', error);
 
   // Step 6: Return the result with the public URL
   return {

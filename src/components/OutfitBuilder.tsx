@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Plus, X, Save, Trash2 } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Plus, X, Save, Trash2 } from 'lucide-react';
 import {
   getCurrentUser,
   getClothingItems,
   createOutfit,
-} from "../lib/supabaseClient";
-import { Database } from "../types/supabase";
+} from '../lib/supabaseClient';
+import { Database } from '../types/supabase';
 
-type ClothingItemType = Database["public"]["Tables"]["wardrobe_items"]["Row"];
+type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
 
 interface OutfitItem {
   category: string;
@@ -56,30 +56,30 @@ const OutfitBuilder = ({
 }: OutfitBuilderProps) => {
   // Categories that match your wardrobe
   const categories = [
-    "tops",
-    "bottoms",
-    "shoes",
-    "accessories",
-    "outerwear",
-    "dresses",
-    "formal",
+    'tops',
+    'bottoms',
+    'shoes',
+    'accessories',
+    'outerwear',
+    'dresses',
+    'formal',
   ];
 
   const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [currentOutfit, setCurrentOutfit] = useState<OutfitItem[]>([
-    { category: "tops", item: null },
-    { category: "bottoms", item: null },
-    { category: "shoes", item: null },
-    { category: "accessories", item: null },
-    { category: "outerwear", item: null },
+    { category: 'tops', item: null },
+    { category: 'bottoms', item: null },
+    { category: 'shoes', item: null },
+    { category: 'accessories', item: null },
+    { category: 'outerwear', item: null },
   ]);
 
-  const [activeCategory, setActiveCategory] = useState("tops");
-  const [outfitName, setOutfitName] = useState("");
+  const [activeCategory, setActiveCategory] = useState('tops');
+  const [outfitName, setOutfitName] = useState('');
   const [occasions, setOccasions] = useState<string[]>([]);
-  const [occasionInput, setOccasionInput] = useState("");
+  const [occasionInput, setOccasionInput] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   // Load wardrobe items from Supabase
@@ -107,85 +107,85 @@ const OutfitBuilder = ({
 
       const { data, error } = await getClothingItems(user.id);
       if (error) {
-        console.error("Error loading wardrobe items:", error);
+        console.error('Error loading wardrobe items:', error);
       } else {
         setWardrobeItems(data || []);
       }
     } catch (error) {
-      console.error("Error loading wardrobe items:", error);
+      console.error('Error loading wardrobe items:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddItem = (item: ClothingItemType) => {
-    setCurrentOutfit((prev) =>
-      prev.map((outfitItem) =>
+    setCurrentOutfit(prev =>
+      prev.map(outfitItem =>
         outfitItem.category === item.category
           ? { ...outfitItem, item }
-          : outfitItem,
-      ),
+          : outfitItem
+      )
     );
   };
 
   const handleRemoveItem = (category: string) => {
-    setCurrentOutfit((prev) =>
-      prev.map((outfitItem) =>
+    setCurrentOutfit(prev =>
+      prev.map(outfitItem =>
         outfitItem.category === category
           ? { ...outfitItem, item: null }
-          : outfitItem,
-      ),
+          : outfitItem
+      )
     );
   };
 
   const handleAddOccasion = () => {
     if (occasionInput && !occasions.includes(occasionInput)) {
       setOccasions([...occasions, occasionInput]);
-      setOccasionInput("");
+      setOccasionInput('');
     }
   };
 
   const handleRemoveOccasion = (occasion: string) => {
-    setOccasions(occasions.filter((o) => o !== occasion));
+    setOccasions(occasions.filter(o => o !== occasion));
   };
 
   const handleSaveOutfit = async () => {
     const outfitItems = currentOutfit
-      .filter((outfitItem) => outfitItem.item !== null)
-      .map((outfitItem) => outfitItem.item as ClothingItemType);
+      .filter(outfitItem => outfitItem.item !== null)
+      .map(outfitItem => outfitItem.item as ClothingItemType);
 
     if (outfitItems.length === 0) {
-      alert("Please add at least one item to your outfit");
+      alert('Please add at least one item to your outfit');
       return;
     }
 
     try {
       const user = await getCurrentUser();
       if (!user) {
-        alert("Please log in to save outfits");
+        alert('Please log in to save outfits');
         return;
       }
 
       const outfitData = {
         user_id: user.id,
-        name: outfitName || "Unnamed Outfit",
+        name: outfitName || 'Unnamed Outfit',
         occasions: occasions,
       };
 
-      const clothingItemIds = outfitItems.map((item) => item.id);
+      const clothingItemIds = outfitItems.map(item => item.id);
       const { data, error } = await createOutfit(outfitData, clothingItemIds);
 
       if (error) {
-        console.error("Error saving outfit:", error);
-        alert("Failed to save outfit. Please try again.");
+        console.error('Error saving outfit:', error);
+        alert('Failed to save outfit. Please try again.');
         return;
       }
 
-      alert("Outfit saved successfully!");
+      alert('Outfit saved successfully!');
 
       if (onSave) {
         onSave({
-          name: outfitName || "Unnamed Outfit",
+          name: outfitName || 'Unnamed Outfit',
           items: outfitItems,
           occasions,
         });
@@ -193,13 +193,13 @@ const OutfitBuilder = ({
 
       // Reset form
       setCurrentOutfit([
-        { category: "tops", item: null },
-        { category: "bottoms", item: null },
-        { category: "shoes", item: null },
-        { category: "accessories", item: null },
-        { category: "outerwear", item: null },
+        { category: 'tops', item: null },
+        { category: 'bottoms', item: null },
+        { category: 'shoes', item: null },
+        { category: 'accessories', item: null },
+        { category: 'outerwear', item: null },
       ]);
-      setOutfitName("");
+      setOutfitName('');
       setOccasions([]);
       setSaveDialogOpen(false);
 
@@ -207,13 +207,13 @@ const OutfitBuilder = ({
         onClose();
       }
     } catch (error) {
-      console.error("Error saving outfit:", error);
-      alert("Failed to save outfit. Please try again.");
+      console.error('Error saving outfit:', error);
+      alert('Failed to save outfit. Please try again.');
     }
   };
 
   const filteredItems = wardrobeItems.filter(
-    (item) => item.category === activeCategory,
+    item => item.category === activeCategory
   );
 
   return (
@@ -227,7 +227,7 @@ const OutfitBuilder = ({
           <div className="w-full md:w-1/2 bg-muted/20 rounded-lg p-4 flex flex-col">
             <h3 className="text-lg font-medium mb-4">Current Outfit</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
-              {currentOutfit.map((outfitItem) => (
+              {currentOutfit.map(outfitItem => (
                 <div key={outfitItem.category} className="relative">
                   <Card className="h-full">
                     <CardHeader className="p-3">
@@ -280,12 +280,13 @@ const OutfitBuilder = ({
           {/* Item Selection */}
           <div className="w-full md:w-1/2 flex flex-col">
             <Tabs
+              value={activeCategory}
               defaultValue={activeCategory}
               onValueChange={setActiveCategory}
               className="w-full"
             >
               <TabsList className="w-full grid grid-cols-5">
-                {categories.slice(0, 5).map((category) => (
+                {categories.slice(0, 5).map(category => (
                   <TabsTrigger
                     key={category}
                     value={category}
@@ -296,7 +297,7 @@ const OutfitBuilder = ({
                 ))}
               </TabsList>
 
-              {categories.slice(0, 5).map((category) => (
+              {categories.slice(0, 5).map(category => (
                 <TabsContent
                   key={category}
                   value={category}
@@ -315,7 +316,7 @@ const OutfitBuilder = ({
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {filteredItems.length > 0 ? (
-                          filteredItems.map((item) => (
+                          filteredItems.map(item => (
                             <Card
                               key={item.id}
                               className="cursor-pointer hover:border-primary transition-colors"
@@ -338,7 +339,7 @@ const OutfitBuilder = ({
                                       </Badge>
                                     )}
                                     {Array.isArray(item.tags) &&
-                                      item.tags.slice(0, 2).map((tag) => (
+                                      item.tags.slice(0, 2).map(tag => (
                                         <Badge
                                           key={tag}
                                           variant="secondary"
@@ -393,7 +394,7 @@ const OutfitBuilder = ({
               <Input
                 id="outfit-name"
                 value={outfitName}
-                onChange={(e) => setOutfitName(e.target.value)}
+                onChange={e => setOutfitName(e.target.value)}
                 placeholder="My Favorite Outfit"
                 className="col-span-3"
               />
@@ -407,7 +408,7 @@ const OutfitBuilder = ({
                   <Input
                     id="occasions"
                     value={occasionInput}
-                    onChange={(e) => setOccasionInput(e.target.value)}
+                    onChange={e => setOccasionInput(e.target.value)}
                     placeholder="Add occasion (e.g., Casual, Work)"
                     className="flex-1"
                   />
@@ -416,7 +417,7 @@ const OutfitBuilder = ({
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {occasions.map((occasion) => (
+                  {occasions.map(occasion => (
                     <Badge
                       key={occasion}
                       variant="secondary"
