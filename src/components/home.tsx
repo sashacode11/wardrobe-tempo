@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Search, Plus, Filter, Grid, Menu, LogOut, User } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
-import { Dialog, DialogTrigger } from "./ui/dialog";
-import WardrobeGrid from "./WardrobeGrid";
-import ItemUploadForm from "./ItemUploadForm";
-import OutfitBuilder from "./OutfitBuilder";
-import AuthDialog from "./AuthDialog";
-import { getCurrentUser, signOut, supabase } from "../lib/supabaseClient";
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, Grid, Menu, LogOut, User } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Dialog, DialogTrigger } from './ui/dialog';
+import WardrobeGrid from './WardrobeGrid';
+import ItemUploadForm from './ItemUploadForm';
+import OutfitBuilder from './OutfitBuilder';
+import AuthDialog from './AuthDialog';
+import MyOutfits from './MyOutfits';
+import { getCurrentUser, signOut, supabase } from '../lib/supabaseClient';
 
 const Home = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("wardrobe");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('wardrobe');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [wardrobeKey, setWardrobeKey] = useState(0);
@@ -23,7 +24,7 @@ const Home = () => {
 
   const handleItemSaved = () => {
     // Refresh the wardrobe grid by changing its key
-    setWardrobeKey((prev) => prev + 1);
+    setWardrobeKey(prev => prev + 1);
   };
 
   const handleAuthSuccess = () => {
@@ -50,9 +51,9 @@ const Home = () => {
     }
   };
 
-  const handleAddToOutfit = (item) => {
+  const handleAddToOutfit = item => {
     setSelectedItemForOutfit(item);
-    setActiveTab("outfit");
+    setActiveTab('outfit');
   };
 
   useEffect(() => {
@@ -62,9 +63,9 @@ const Home = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
+      if (event === 'SIGNED_IN') {
         setUser(session?.user || null);
-      } else if (event === "SIGNED_OUT") {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
     });
@@ -74,22 +75,22 @@ const Home = () => {
       setShowAuthDialog(true);
     };
 
-    window.addEventListener("showAuth", handleShowAuth);
+    window.addEventListener('showAuth', handleShowAuth);
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener("showAuth", handleShowAuth);
+      window.removeEventListener('showAuth', handleShowAuth);
     };
   }, []);
 
   // Mock categories for demonstration
   const categories = [
-    { id: "all", name: "All Items" },
-    { id: "tops", name: "Tops" },
-    { id: "bottoms", name: "Bottoms" },
-    { id: "shoes", name: "Shoes" },
-    { id: "accessories", name: "Accessories" },
-    { id: "outerwear", name: "Outerwear" },
+    { id: 'all', name: 'All Items' },
+    { id: 'tops', name: 'Tops' },
+    { id: 'bottoms', name: 'Bottoms' },
+    { id: 'shoes', name: 'Shoes' },
+    { id: 'accessories', name: 'Accessories' },
+    { id: 'outerwear', name: 'Outerwear' },
   ];
 
   return (
@@ -106,7 +107,7 @@ const Home = () => {
                 <Input
                   placeholder="Search items..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="pl-8"
                 />
               </div>
@@ -159,7 +160,7 @@ const Home = () => {
                   <Input
                     placeholder="Search items..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="pl-8"
                   />
                 </div>
@@ -176,7 +177,7 @@ const Home = () => {
                     <Button
                       variant="outline"
                       className="flex-1"
-                      onClick={() => setActiveTab("outfit")}
+                      onClick={() => setActiveTab('outfit')}
                     >
                       Create Outfit
                     </Button>
@@ -259,6 +260,9 @@ const Home = () => {
                 <TabsTrigger value="outfit" className="px-4">
                   Create Outfit
                 </TabsTrigger>
+                <TabsTrigger value="my-outfits" className="px-4">
+                  My Outfits
+                </TabsTrigger>
               </TabsList>
 
               <Button variant="outline" size="sm" className="hidden md:flex">
@@ -270,7 +274,7 @@ const Home = () => {
             {/* Category filters */}
             <div className="mb-6 overflow-x-auto">
               <div className="flex space-x-2 pb-2">
-                {categories.map((category) => (
+                {categories.map(category => (
                   <Button
                     key={category.id}
                     variant="outline"
@@ -297,6 +301,10 @@ const Home = () => {
                 selectedItem={selectedItemForOutfit}
                 onItemAdded={() => setSelectedItemForOutfit(null)}
               />
+            </TabsContent>
+
+            <TabsContent value="my-outfits" className="mt-0">
+              <MyOutfits onCreateOutfit={() => setActiveTab('outfit')} />
             </TabsContent>
           </Tabs>
         )}
