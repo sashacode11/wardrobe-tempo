@@ -84,8 +84,6 @@ export const createClothingItem = async (
     location: item.location?.trim() || null,
   };
 
-  console.log('🔧 Final item data being inserted:', itemWithUserId);
-
   const { data, error } = await supabase
     .from('wardrobe_items')
     .insert(itemWithUserId)
@@ -204,6 +202,10 @@ export const uploadImage = async (file: File) => {
 
   if (uploadError) {
     console.error('Upload Error:', uploadError);
+    console.error(
+      'Upload Error Details:',
+      JSON.stringify(uploadError, null, 2)
+    );
     return { data: null, error: uploadError };
   }
   console.log('File uploaded successfully:', uploadData);
@@ -218,6 +220,10 @@ export const uploadImage = async (file: File) => {
     console.error('Error generating public URL:', publicUrlError);
     return { data: null, error: publicUrlError };
   }
+
+  const { data: buckets, error } = await supabase.storage.listBuckets();
+  console.log('Buckets:', buckets);
+  console.error('Error listing buckets:', error);
 
   // Step 6: Return the result with the public URL
   return {
