@@ -300,6 +300,7 @@ const Home = () => {
               <OutfitBuilder
                 selectedItem={selectedItemForOutfit}
                 onItemAdded={() => setSelectedItemForOutfit(null)}
+                onOutfitSaved={() => setActiveTab('my-outfits')}
               />
             </TabsContent>
 

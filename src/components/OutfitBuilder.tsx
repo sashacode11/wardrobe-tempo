@@ -45,6 +45,7 @@ interface OutfitBuilderProps {
   isOpen?: boolean;
   selectedItem?: ClothingItemType;
   onItemAdded?: () => void;
+  onOutfitSaved?: () => void;
 }
 
 const OutfitBuilder = ({
@@ -53,6 +54,7 @@ const OutfitBuilder = ({
   isOpen = true,
   selectedItem,
   onItemAdded,
+  onOutfitSaved,
 }: OutfitBuilderProps) => {
   // Categories that match your wardrobe
   const categories = [
@@ -182,6 +184,8 @@ const OutfitBuilder = ({
       }
 
       alert('Outfit saved successfully!');
+
+      onOutfitSaved();
 
       if (onSave) {
         onSave({
