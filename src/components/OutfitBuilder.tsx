@@ -412,8 +412,14 @@ const OutfitBuilder = ({
                     placeholder="Add occasion (e.g., Casual, Work)"
                     className="flex-1"
                   />
-                  <Button type="button" size="sm" onClick={handleAddOccasion}>
-                    <Plus className="h-4 w-4" />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleAddOccasion}
+                    title="Add this occasion to the list"
+                  >
+                    {/* <Plus className="h-4 w-4" /> */}
+                    <span className="text-xs hidden sm:inline">Add</span>
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
