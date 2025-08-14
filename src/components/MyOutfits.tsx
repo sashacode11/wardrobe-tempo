@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getCurrentUser, supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
+import { Input } from './ui/input';
+import OutfitBuilder from './OutfitBuilder';
 
 type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
 type OutfitType = Database['public']['Tables']['outfits']['Row'];
@@ -26,16 +28,41 @@ interface OutfitWithItems extends OutfitType {
 }
 
 interface MyOutfitsProps {
-  onCreateOutfit?: () => void; // Callback to switch to outfit builder tab
+  onCreateOutfit?: () => void;
+  onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
-const MyOutfits: React.FC<MyOutfitsProps> = ({ onCreateOutfit }) => {
+const MyOutfits: React.FC<MyOutfitsProps> = ({
+  onCreateOutfit,
+  onEditOutfit,
+}) => {
   const [outfits, setOutfits] = useState<OutfitWithItems[]>([]);
   const [selectedOutfit, setSelectedOutfit] = useState<OutfitWithItems | null>(
     null
   );
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
+    null
+  );
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+  console.log('showOutfitBuilder:', showOutfitBuilder);
+
+  const handleEditOutfit = (outfit: OutfitWithItems) => {
+    console.log('🔍 MyOutfits: Edit button clicked');
+    console.log('🔍 MyOutfits: Outfit to edit:', outfit);
+    console.log('🔍 MyOutfits: Outfit ID:', outfit.id);
+    console.log('🔍 MyOutfits: Outfit name:', outfit.name);
+    console.log('🔍 MyOutfits: Outfit items:', outfit.outfit_items);
+    console.log(
+      '🔍 MyOutfits: Outfit items length:',
+      outfit.outfit_items?.length
+    );
+
+    //   setEditingOutfit(outfit);
+    //   setShowOutfitBuilder(true);
+    onEditOutfit(outfit);
+  };
 
   useEffect(() => {
     fetchOutfits();
@@ -164,6 +191,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({ onCreateOutfit }) => {
               <Button
                 variant="ghost"
                 size="icon"
+                // onClick={() =>
+                //   onEditOutfit({ ...outfit, outfit_items: outfit.outfit_items })
+                // }
                 onClick={() => handleEditOutfit(outfit)}
                 className="h-8 w-8"
                 title="Edit outfit"
@@ -209,6 +239,138 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({ onCreateOutfit }) => {
           </div>
         </CardContent>
       </Card>
+    );
+  };
+
+  const OutfitEditModal: React.FC<{
+    outfit: OutfitWithItems | null;
+    onClose: () => void;
+    onSave: (updatedOutfit: OutfitWithItems) => void;
+  }> = ({ outfit, onClose, onSave }) => {
+    const [name, setName] = useState(outfit?.name || '');
+    const [occasions, setOccasions] = useState<string[]>(
+      outfit?.occasions || []
+    );
+
+    const [newOccasion, setNewOccasion] = useState('');
+
+    const handleAddOccasion = () => {
+      if (newOccasion && !occasions.includes(newOccasion)) {
+        setOccasions([...occasions, newOccasion]);
+        setNewOccasion('');
+      }
+    };
+
+    const handleRemoveOccasion = (toRemove: string) => {
+      setOccasions(occasions.filter(o => o !== toRemove));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (!outfit) return;
+
+      // Optimistically update
+      const updatedOutfit = {
+        ...outfit,
+        name,
+        occasions,
+      };
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from('outfits')
+        .update({
+          name,
+          occasions,
+        })
+        .eq('id', outfit.id);
+
+      if (error) {
+        console.error('Error updating outfit:', error);
+        alert('Failed to save changes.');
+        return;
+      }
+
+      onSave(updatedOutfit);
+    };
+
+    if (!outfit) return null;
+
+    return (
+      <Dialog open={!!outfit} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Outfit</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="text-sm font-medium">Outfit Name</label>
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Casual Summer Look"
+                required
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Occasions</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {occasions.map((occasion, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="px-2 py-1 flex items-center gap-1"
+                  >
+                    {occasion}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOccasion(occasion)}
+                      className="ml-1 hover:text-red-500"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex mt-2 gap-1">
+                <Input
+                  value={newOccasion}
+                  onChange={e => setNewOccasion(e.target.value)}
+                  placeholder="Add occasion"
+                  onKeyPress={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddOccasion();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddOccasion}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {/* You can extend this to reassign clothing items later */}
+
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     );
   };
 
@@ -324,28 +486,60 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({ onCreateOutfit }) => {
         )}
       </div>
 
-      {outfits.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="text-6xl mb-4">👔</div>
-            <h3 className="text-xl font-semibold mb-2">No outfits yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first outfit to get started
-            </p>
-            {onCreateOutfit && (
-              <Button onClick={onCreateOutfit} className="mt-4">
-                Create Your First Outfit
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {outfits.map(outfit => (
-            <OutfitCard key={outfit.id} outfit={outfit} />
-          ))}
-        </div>
+      {/* Edit Modal */}
+      {showOutfitBuilder && (
+        <>
+          <OutfitBuilder
+            isOpen={true}
+            initialOutfit={
+              editingOutfit
+                ? {
+                    id: editingOutfit.id,
+                    name: editingOutfit.name,
+                    items: editingOutfit.outfit_items.map(
+                      oi => oi.wardrobe_items
+                    ),
+                    occasions: editingOutfit.occasions || [],
+                  }
+                : undefined
+            }
+            onClose={() => {
+              setShowOutfitBuilder(false);
+              setEditingOutfit(null);
+            }}
+            onSave={savedOutfit => {
+              fetchOutfits();
+              setShowOutfitBuilder(false);
+              setEditingOutfit(null);
+            }}
+          />
+        </>
       )}
+
+      <>
+        {outfits.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="text-6xl mb-4">👔</div>
+              <h3 className="text-xl font-semibold mb-2">No outfits yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first outfit to get started
+              </p>
+              {onCreateOutfit && (
+                <Button onClick={onCreateOutfit} className="mt-4">
+                  Create Your First Outfit
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {outfits.map(outfit => (
+              <OutfitCard key={outfit.id} outfit={outfit} />
+            ))}
+          </div>
+        )}
+      </>
 
       {/* Outfit Detail Modal */}
       {selectedOutfit && (

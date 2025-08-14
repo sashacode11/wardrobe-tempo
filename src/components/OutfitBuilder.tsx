@@ -29,6 +29,8 @@ import {
 import { Database } from '../types/supabase';
 
 type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
+type OutfitWithItems =
+  Database['public']['Tables']['outfits_with_items']['Row'];
 
 interface OutfitItem {
   category: string;
@@ -46,6 +48,8 @@ interface OutfitBuilderProps {
   selectedItem?: ClothingItemType;
   onItemAdded?: () => void;
   onOutfitSaved?: () => void;
+  editingOutfit: OutfitWithItems | null;
+  onEditComplete: () => void;
 }
 
 const OutfitBuilder = ({
@@ -55,7 +59,17 @@ const OutfitBuilder = ({
   selectedItem,
   onItemAdded,
   onOutfitSaved,
+  editingOutfit,
+  onEditComplete,
 }: OutfitBuilderProps) => {
+  console.log('🏗️ OutfitBuilder: Component rendered');
+  console.log('🏗️ OutfitBuilder: editingOutfit prop:', editingOutfit);
+  console.log('🏗️ OutfitBuilder: editingOutfit ID:', editingOutfit?.id);
+  console.log('🏗️ OutfitBuilder: editingOutfit name:', editingOutfit?.name);
+  console.log(
+    '🏗️ OutfitBuilder: editingOutfit items:',
+    editingOutfit?.outfit_items
+  );
   // Categories that match your wardrobe
   const categories = [
     'tops',
@@ -98,6 +112,80 @@ const OutfitBuilder = ({
       }
     }
   }, [selectedItem]);
+
+  useEffect(() => {
+    if (!editingOutfit) {
+      // Not editing → reset form
+      setOutfitName('');
+      setOccasions([]);
+      setCurrentOutfit([
+        { category: 'tops', item: null },
+        { category: 'bottoms', item: null },
+        { category: 'shoes', item: null },
+        { category: 'accessories', item: null },
+        { category: 'outerwear', item: null },
+      ]);
+      return;
+    }
+
+    // ✅ Load basic fields safely
+    setOutfitName(editingOutfit.name || 'Unnamed Outfit');
+    setOccasions(
+      Array.isArray(editingOutfit.occasions) ? editingOutfit.occasions : []
+    );
+
+    // 🔥 Critical Fix: Handle missing or invalid `items`
+    const outfitItems = editingOutfit.outfit_items;
+
+    // ✅ Check if items is a valid array
+    if (!Array.isArray(outfitItems)) {
+      console.warn('Outfit items is not an array:', outfitItems);
+      console.log('Full outfit object:', editingOutfit); // 🧵 Debug: what are we getting?
+
+      // Reset to empty slots
+      setCurrentOutfit([
+        { category: 'tops', item: null },
+        { category: 'bottoms', item: null },
+        { category: 'shoes', item: null },
+        { category: 'accessories', item: null },
+        { category: 'outerwear', item: null },
+      ]);
+      return;
+    }
+
+    // ✅ Map valid items by category
+    const itemMap = outfitItems.reduce<Record<string, ClothingItemType>>(
+      (acc, outfitItem) => {
+        if (
+          outfitItem &&
+          typeof outfitItem === 'object' &&
+          outfitItem.wardrobe_items &&
+          outfitItem.wardrobe_items.category
+        ) {
+          const wardrobeItem = outfitItem.wardrobe_items;
+          console.log('🏗️ Found wardrobe item:', wardrobeItem);
+          console.log('🏗️ Category:', wardrobeItem.category);
+          acc[wardrobeItem.category] = wardrobeItem;
+        } else {
+          console.warn('🏗️ Invalid outfit item structure:', outfitItem);
+        }
+        return acc;
+      },
+      {}
+    );
+    console.log('🏗️ Item map created:', itemMap);
+
+    // ✅ Update outfit slots
+    const updatedOutfit = [
+      { category: 'tops', item: itemMap['tops'] || null },
+      { category: 'bottoms', item: itemMap['bottoms'] || null },
+      { category: 'shoes', item: itemMap['shoes'] || null },
+      { category: 'accessories', item: itemMap['accessories'] || null },
+      { category: 'outerwear', item: itemMap['outerwear'] || null },
+    ];
+    console.log('🏗️ Updated outfit slots:', updatedOutfit);
+    setCurrentOutfit(updatedOutfit);
+  }, [editingOutfit]);
 
   const loadWardrobeItems = async () => {
     try {
@@ -186,6 +274,7 @@ const OutfitBuilder = ({
       alert('Outfit saved successfully!');
 
       onOutfitSaved();
+      onEditComplete();
 
       if (onSave) {
         onSave({

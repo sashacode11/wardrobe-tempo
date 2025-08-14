@@ -127,6 +127,7 @@ export const getOutfits = async (userId: string) => {
       `
       *,
       outfit_items (
+        clothing_item_id,
         wardrobe_items (*)
       )
     `

@@ -21,6 +21,7 @@ const Home = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
+  const [editingOutfit, setEditingOutfit] = useState(null);
 
   const handleItemSaved = () => {
     // Refresh the wardrobe grid by changing its key
@@ -301,11 +302,43 @@ const Home = () => {
                 selectedItem={selectedItemForOutfit}
                 onItemAdded={() => setSelectedItemForOutfit(null)}
                 onOutfitSaved={() => setActiveTab('my-outfits')}
+                editingOutfit={editingOutfit}
+                onEditComplete={() => setEditingOutfit(null)}
               />
             </TabsContent>
 
             <TabsContent value="my-outfits" className="mt-0">
-              <MyOutfits onCreateOutfit={() => setActiveTab('outfit')} />
+              <MyOutfits
+                onCreateOutfit={() => setActiveTab('outfit')}
+                onEditOutfit={outfit => {
+                  console.log('🏠 Home: onEditOutfit called');
+                  console.log('🏠 Home: Received outfit:', outfit);
+                  console.log('🏠 Home: Current activeTab:', activeTab);
+                  console.log(
+                    '🏠 Home: Current editingOutfit before:',
+                    editingOutfit
+                  );
+                  // ✅ Patch missing items
+                  const outfitWithItems = {
+                    ...outfit,
+                    items: Array.isArray(outfit.items) ? outfit.items : [],
+                  };
+                  console.log('🏠 Home: Processed outfit:', outfitWithItems);
+                  setEditingOutfit(outfitWithItems);
+                  setTimeout(() => {
+                    console.log(
+                      '🏠 Home: editingOutfit after setState:',
+                      editingOutfit
+                    );
+                  }, 100);
+
+                  console.log('🏠 Home: Switching to outfit tab');
+                  setActiveTab('outfit');
+                  setTimeout(() => {
+                    console.log('🏠 Home: activeTab after switch:', activeTab);
+                  }, 100);
+                }}
+              />
             </TabsContent>
           </Tabs>
         )}
