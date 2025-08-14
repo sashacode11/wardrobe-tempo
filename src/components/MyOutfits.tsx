@@ -21,6 +21,7 @@ type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
 type OutfitType = Database['public']['Tables']['outfits']['Row'];
 
 interface OutfitWithItems extends OutfitType {
+  occasions?: string[];
   outfit_items: {
     clothing_item_id: string;
     wardrobe_items: ClothingItemType;

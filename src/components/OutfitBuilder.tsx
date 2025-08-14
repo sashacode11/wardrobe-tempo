@@ -575,6 +575,12 @@ const OutfitBuilder = ({
                     id="occasions"
                     value={occasionInput}
                     onChange={e => setOccasionInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOccasion();
+                      }
+                    }}
                     placeholder="Add occasion (e.g., Casual, Work)"
                     className="flex-1"
                   />
@@ -588,6 +594,16 @@ const OutfitBuilder = ({
                     <span className="text-xs hidden sm:inline">Add</span>
                   </Button>
                 </div>
+                {occasionInput.trim() && (
+                  <p className="text-xs text-muted-foreground">
+                    Press{' '}
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">
+                      Enter
+                    </kbd>{' '}
+                    or click <span className="font-medium">Add</span> to include
+                    this occasion.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1 mt-2">
                   {occasions.map(occasion => (
                     <Badge
