@@ -46,21 +46,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     null
   );
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
-  console.log('showOutfitBuilder:', showOutfitBuilder);
 
   const handleEditOutfit = (outfit: OutfitWithItems) => {
-    console.log('🔍 MyOutfits: Edit button clicked');
-    console.log('🔍 MyOutfits: Outfit to edit:', outfit);
-    console.log('🔍 MyOutfits: Outfit ID:', outfit.id);
-    console.log('🔍 MyOutfits: Outfit name:', outfit.name);
-    console.log('🔍 MyOutfits: Outfit items:', outfit.outfit_items);
-    console.log(
-      '🔍 MyOutfits: Outfit items length:',
-      outfit.outfit_items?.length
-    );
-
-    //   setEditingOutfit(outfit);
-    //   setShowOutfitBuilder(true);
     onEditOutfit(outfit);
   };
 

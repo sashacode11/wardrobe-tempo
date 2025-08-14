@@ -25,6 +25,7 @@ import {
   getCurrentUser,
   getClothingItems,
   createOutfit,
+  supabase,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 
@@ -62,14 +63,6 @@ const OutfitBuilder = ({
   editingOutfit,
   onEditComplete,
 }: OutfitBuilderProps) => {
-  console.log('🏗️ OutfitBuilder: Component rendered');
-  console.log('🏗️ OutfitBuilder: editingOutfit prop:', editingOutfit);
-  console.log('🏗️ OutfitBuilder: editingOutfit ID:', editingOutfit?.id);
-  console.log('🏗️ OutfitBuilder: editingOutfit name:', editingOutfit?.name);
-  console.log(
-    '🏗️ OutfitBuilder: editingOutfit items:',
-    editingOutfit?.outfit_items
-  );
   // Categories that match your wardrobe
   const categories = [
     'tops',
@@ -97,6 +90,7 @@ const OutfitBuilder = ({
   const [occasions, setOccasions] = useState<string[]>([]);
   const [occasionInput, setOccasionInput] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Load wardrobe items from Supabase
   useEffect(() => {
@@ -139,9 +133,6 @@ const OutfitBuilder = ({
 
     // ✅ Check if items is a valid array
     if (!Array.isArray(outfitItems)) {
-      console.warn('Outfit items is not an array:', outfitItems);
-      console.log('Full outfit object:', editingOutfit); // 🧵 Debug: what are we getting?
-
       // Reset to empty slots
       setCurrentOutfit([
         { category: 'tops', item: null },
@@ -163,8 +154,6 @@ const OutfitBuilder = ({
           outfitItem.wardrobe_items.category
         ) {
           const wardrobeItem = outfitItem.wardrobe_items;
-          console.log('🏗️ Found wardrobe item:', wardrobeItem);
-          console.log('🏗️ Category:', wardrobeItem.category);
           acc[wardrobeItem.category] = wardrobeItem;
         } else {
           console.warn('🏗️ Invalid outfit item structure:', outfitItem);
@@ -173,8 +162,6 @@ const OutfitBuilder = ({
       },
       {}
     );
-    console.log('🏗️ Item map created:', itemMap);
-
     // ✅ Update outfit slots
     const updatedOutfit = [
       { category: 'tops', item: itemMap['tops'] || null },
@@ -183,7 +170,6 @@ const OutfitBuilder = ({
       { category: 'accessories', item: itemMap['accessories'] || null },
       { category: 'outerwear', item: itemMap['outerwear'] || null },
     ];
-    console.log('🏗️ Updated outfit slots:', updatedOutfit);
     setCurrentOutfit(updatedOutfit);
   }, [editingOutfit]);
 
@@ -239,71 +225,136 @@ const OutfitBuilder = ({
     setOccasions(occasions.filter(o => o !== occasion));
   };
 
-  const handleSaveOutfit = async () => {
-    const outfitItems = currentOutfit
-      .filter(outfitItem => outfitItem.item !== null)
-      .map(outfitItem => outfitItem.item as ClothingItemType);
+  // Add detailed error handling and debugging to your handleSaveOutfit function:
 
-    if (outfitItems.length === 0) {
+  const handleSaveOutfit = async () => {
+    if (!outfitName.trim()) {
+      alert('Please enter an outfit name');
+      return;
+    }
+
+    // Check if any items are selected
+    const selectedItems = currentOutfit.filter(slot => slot.item !== null);
+
+    if (selectedItems.length === 0) {
       alert('Please add at least one item to your outfit');
       return;
     }
 
     try {
+      setSaving(true); // or setIsLoading(true) if you're using that
+
       const user = await getCurrentUser();
       if (!user) {
-        alert('Please log in to save outfits');
+        console.error('💾 No user found');
         return;
       }
 
-      const outfitData = {
-        user_id: user.id,
-        name: outfitName || 'Unnamed Outfit',
-        occasions: occasions,
-      };
+      const isEditing = !!editingOutfit;
+      if (isEditing) {
+        // 1. Update the outfit basic info
+        const { error: outfitError } = await supabase
+          .from('outfits')
+          .update({
+            name: outfitName.trim(),
+            occasions: occasions,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingOutfit.id);
 
-      const clothingItemIds = outfitItems.map(item => item.id);
-      const { data, error } = await createOutfit(outfitData, clothingItemIds);
+        if (outfitError) {
+          console.error('💾 Error updating outfit:', outfitError);
+          throw outfitError;
+        }
 
-      if (error) {
-        console.error('Error saving outfit:', error);
-        alert('Failed to save outfit. Please try again.');
-        return;
-      }
+        // 2. Delete existing outfit_items
+        const { error: deleteError } = await supabase
+          .from('outfit_items')
+          .delete()
+          .eq('outfit_id', editingOutfit.id);
 
-      alert('Outfit saved successfully!');
-
-      onOutfitSaved();
-      onEditComplete();
-
-      if (onSave) {
-        onSave({
-          name: outfitName || 'Unnamed Outfit',
-          items: outfitItems,
-          occasions,
+        if (deleteError) {
+          console.error('💾 Error deleting old outfit items:', deleteError);
+          throw deleteError;
+        }
+        // 3. Insert new outfit_items
+        const outfitItemsToInsert = selectedItems.map(slot => {
+          return {
+            outfit_id: editingOutfit.id,
+            clothing_item_id: slot.item!.id,
+            created_at: new Date().toISOString(),
+          };
         });
+
+        const { error: itemsError } = await supabase
+          .from('outfit_items')
+          .insert(outfitItemsToInsert);
+
+        if (itemsError) {
+          console.error('💾 Error inserting outfit items:', itemsError);
+          throw itemsError;
+        }
+
+        alert('Outfit updated successfully!');
+      } else {
+        // 1. Create the outfit
+        const { data: newOutfit, error: outfitError } = await supabase
+          .from('outfits')
+          .insert({
+            name: outfitName.trim(),
+            occasions: occasions,
+            user_id: user.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (outfitError || !newOutfit) {
+          console.error('💾 Error creating outfit:', outfitError);
+          throw outfitError;
+        }
+
+        // 2. Create outfit items
+        const outfitItemsToInsert = selectedItems.map(slot => ({
+          outfit_id: newOutfit.id,
+          clothing_item_id: slot.item!.id,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('outfit_items')
+          .insert(outfitItemsToInsert);
+
+        if (itemsError) {
+          console.error('💾 Error creating outfit items:', itemsError);
+          throw itemsError;
+        }
+
+        alert('Outfit saved successfully!');
       }
 
-      // Reset form
-      setCurrentOutfit([
-        { category: 'tops', item: null },
-        { category: 'bottoms', item: null },
-        { category: 'shoes', item: null },
-        { category: 'accessories', item: null },
-        { category: 'outerwear', item: null },
-      ]);
-      setOutfitName('');
-      setOccasions([]);
-      setSaveDialogOpen(false);
-
-      if (onClose) {
-        onClose();
-      }
+      // Clear editing state and redirect
+      onEditComplete?.();
+      onOutfitSaved();
     } catch (error) {
-      console.error('Error saving outfit:', error);
-      alert('Failed to save outfit. Please try again.');
+      // More specific error messages
+      let errorMessage = 'Failed to save outfit. ';
+      if (error.message) {
+        errorMessage += error.message;
+      }
+      if (error.details) {
+        errorMessage += ` Details: ${error.details}`;
+      }
+
+      alert(errorMessage);
+    } finally {
+      setSaving(false); // or setIsLoading(false)
     }
   };
+
+  // Update your save button to show different text:
+  const isEditing = !!editingOutfit;
 
   const filteredItems = wardrobeItems.filter(
     item => item.category === activeCategory
@@ -477,7 +528,29 @@ const OutfitBuilder = ({
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Save Outfit</DialogTitle>
+            {/* <DialogTitle>Save Outfit</DialogTitle> */}
+            <DialogTitle>
+              {isEditing ? 'Edit Outfit' : 'Save Outfit'}
+            </DialogTitle>
+
+            <div className="mb-4">
+              {/* <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold">
+                  {isEditing ? 'Edit Outfit' : 'Create New Outfit'}
+                </h2> */}
+              {isEditing && (
+                <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                  Editing: {editingOutfit.name}
+                </div>
+              )}
+              {/* </div> */}
+
+              {/* {isEditing && ( */}
+              {/* <div className="text-sm text-gray-600 mb-4">
+                Make your changes and click "Update Outfit" to save them.
+              </div> */}
+              {/* )} */}
+            </div>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -537,7 +610,20 @@ const OutfitBuilder = ({
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveOutfit}>Save</Button>
+            {/* <Button onClick={handleSaveOutfit}>Save</Button> */}
+            <Button
+              onClick={handleSaveOutfit}
+              disabled={saving || !outfitName.trim()}
+              className="w-full"
+            >
+              {saving
+                ? isEditing
+                  ? 'Updating...'
+                  : 'Saving...'
+                : isEditing
+                ? 'Update Outfit'
+                : 'Save Outfit'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
