@@ -240,9 +240,13 @@ const OutfitBuilder = ({
       alert('Please add at least one item to your outfit');
       return;
     }
+    if (occasionInput.trim()) {
+      alert('Please press Enter or click Add to include the occasion.');
+      return;
+    }
 
     try {
-      setSaving(true); // or setIsLoading(true) if you're using that
+      setSaving(true);
 
       const user = await getCurrentUser();
       if (!user) {
