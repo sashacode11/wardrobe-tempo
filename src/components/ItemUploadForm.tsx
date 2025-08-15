@@ -94,8 +94,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         notes: editingItem.notes || '',
       };
 
-      console.log('Setting itemData to:', newItemData);
-      console.log('newItemData.tags:', newItemData.tags);
+      console.log('Parsed seasons:', newItemData.seasons);
 
       setItemData(newItemData);
       setActiveTab('details');
@@ -691,6 +690,23 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
               <div className="md:col-span-2">
                 <Label>Tags</Label>
 
+                {/* Add new tags */}
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={currentTag}
+                    onChange={e => setCurrentTag(e.target.value)}
+                    placeholder="Add a tag (e.g., favorite, new)"
+                    onKeyDown={e => e.key === 'Enter' && handleAddTag()}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddTag}
+                    variant="outline"
+                  >
+                    Add
+                  </Button>
+                </div>
+
                 {/* Display existing tags */}
                 {itemData.tags && itemData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2 mb-2">
@@ -711,34 +727,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     ))}
                   </div>
                 )}
-
-                {/* Add new tags */}
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={currentTag}
-                    onChange={e => setCurrentTag(e.target.value)}
-                    placeholder="Add a tag (e.g., favorite, new)"
-                    onKeyDown={e => e.key === 'Enter' && handleAddTag()}
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddTag}
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                {/* <div className="flex flex-wrap gap-2 mt-2">
-                  {itemData.tags.map(tag => (
-                    <Badge key={tag} className="flex items-center gap-1">
-                      {tag}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => handleRemoveTag(tag)}
-                      />
-                    </Badge>
-                  ))}
-                </div> */}
               </div>
 
               <div className="md:col-span-2">
@@ -828,15 +816,21 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+
+                <div className="flex flex-wrap gap-2 mt-2 mb-2">
                   {itemData.occasions.map(occasion => (
-                    <Badge key={occasion} className="flex items-center gap-1">
+                    <span
+                      key={occasion}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                    >
                       {occasion}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
+                      <button
+                        className="text-blue-600 hover:text-blue-800 ml-1"
                         onClick={() => handleRemoveOccasion(occasion)}
-                      />
-                    </Badge>
+                      >
+                        x
+                      </button>
+                    </span>
                   ))}
                 </div>
               </div>
