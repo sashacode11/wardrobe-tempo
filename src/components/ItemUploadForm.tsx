@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -77,6 +77,40 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   const [customOccasion, setCustomOccasion] = useState('');
   const [showAddOccasion, setShowAddOccasion] = useState(false);
 
+  useEffect(() => {
+    if (editingItem) {
+      setItemData({
+        image: null,
+        imagePreview: editingItem.image_url || null,
+        name: editingItem.name || '',
+        category: editingItem.category || '',
+        color: editingItem.color || '',
+        location: editingItem.location || '',
+        tags: Array.isArray(editingItem.tags) ? editingItem.tags : [],
+        seasons: Array.isArray(editingItem.seasons) ? editingItem.seasons : [],
+        occasions: Array.isArray(editingItem.occasions)
+          ? editingItem.occasions
+          : [],
+        notes: editingItem.notes || '',
+      });
+      setActiveTab('details');
+    } else {
+      setItemData({
+        image: null,
+        imagePreview: null,
+        name: '',
+        category: '',
+        color: '',
+        location: '',
+        tags: [],
+        seasons: [],
+        occasions: [],
+        notes: '',
+      });
+      setActiveTab('upload');
+    }
+  }, [editingItem]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -148,7 +182,11 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   };
 
   const handleSave = async () => {
-    if (!itemData.image || !itemData.name || !itemData.category) {
+    if (
+      (!itemData.image && !itemData.imagePreview) ||
+      !itemData.name ||
+      !itemData.category
+    ) {
       alert('Please fill in all required fields: image, name, and category');
       return;
     }
@@ -158,36 +196,39 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       const user = await getCurrentUser();
       if (!user) {
         console.error('No user found');
-        // Create a custom dialog-like alert with buttons
         const shouldLogin = window.confirm(
           'You need to be logged in to save items. Would you like to log in now?'
         );
         if (shouldLogin) {
-          // Close the upload form and let the parent handle showing auth
           onOpenChange(false);
-          // You could emit an event or use a callback to show auth dialog
           window.dispatchEvent(new CustomEvent('showAuth'));
         }
         setSaving(false);
         return;
       }
 
-      // Upload image to Supabase Storage
-      const { data: imageData, error: imageError } = await uploadImage(
-        itemData.image,
-        user.id
-      );
-      if (imageError || !imageData) {
-        console.error('Error uploading image:', imageError);
-        let errorMessage = 'Failed to upload image. Please try again.';
+      let imageUrl = itemData.imagePreview;
 
-        if (imageError?.message) {
-          errorMessage = imageError.message;
+      // Only upload new image if one was selected
+      if (itemData.image) {
+        const { data: imageData, error: imageError } = await uploadImage(
+          itemData.image,
+          user.id
+        );
+
+        if (imageError || !imageData) {
+          console.error('Error uploading image:', imageError);
+          let errorMessage = 'Failed to upload image. Please try again.';
+
+          if (imageError?.message) {
+            errorMessage = imageError.message;
+          }
+
+          alert(errorMessage);
+          setSaving(false);
+          return;
         }
-
-        alert(errorMessage);
-        setSaving(false);
-        return;
+        imageUrl = imageData.publicUrl;
       }
 
       // Create clothing item in database
@@ -196,7 +237,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         name: itemData.name.trim(),
         category: itemData.category.toLowerCase().trim(),
         color: itemData.color ? itemData.color.toLowerCase().trim() : null,
-        image_url: imageData.publicUrl,
+        image_url: imageUrl,
         location: itemData.location ? itemData.location.trim() : null,
         seasons:
           itemData.seasons.length > 0
@@ -213,12 +254,16 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         notes: itemData.notes ? itemData.notes.trim() : null,
       };
 
-      const { data, error } = await createClothingItem(clothingItem);
-      if (error) {
-        console.error('Error creating clothing item:', error);
-        alert('Failed to save item. Please try again.');
-        setSaving(false);
-        return;
+      if (editingItem) {
+        console.log('Item updated successfully:', editingItem.id, clothingItem);
+      } else {
+        const { data, error } = await createClothingItem(clothingItem);
+        if (error) {
+          console.error('Error creating clothing item:', error);
+          alert('Failed to save item. Please try again.');
+          setSaving(false);
+          return;
+        }
       }
 
       // Reset form
