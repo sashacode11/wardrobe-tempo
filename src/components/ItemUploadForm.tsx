@@ -23,10 +23,12 @@ import { X, Upload, Camera, Crop, Plus } from 'lucide-react';
 import {
   getCurrentUser,
   createClothingItem,
+  updateClothingItem,
   uploadImage,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
+import { parseArrayField } from '../lib/utils';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -79,22 +81,26 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   useEffect(() => {
     if (editingItem) {
-      setItemData({
+      const newItemData = {
         image: null,
         imagePreview: editingItem.image_url || null,
         name: editingItem.name || '',
         category: editingItem.category || '',
         color: editingItem.color || '',
         location: editingItem.location || '',
-        tags: Array.isArray(editingItem.tags) ? editingItem.tags : [],
-        seasons: Array.isArray(editingItem.seasons) ? editingItem.seasons : [],
-        occasions: Array.isArray(editingItem.occasions)
-          ? editingItem.occasions
-          : [],
+        tags: parseArrayField(editingItem.tags),
+        seasons: parseArrayField(editingItem.seasons),
+        occasions: parseArrayField(editingItem.occasions),
         notes: editingItem.notes || '',
-      });
+      };
+
+      console.log('Setting itemData to:', newItemData);
+      console.log('newItemData.tags:', newItemData.tags);
+
+      setItemData(newItemData);
       setActiveTab('details');
     } else {
+      console.log('🔍 setItemData called from: useEffect (new item)');
       setItemData({
         image: null,
         imagePreview: null,
@@ -110,6 +116,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       setActiveTab('upload');
     }
   }, [editingItem]);
+
+  useEffect(() => {
+    console.log('=== ITEMDATA CHANGED ===');
+    console.log('itemData:', itemData);
+    console.log('itemData.tags:', itemData.tags);
+    console.log('itemData.tags.length:', itemData.tags?.length);
+  }, [itemData]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -131,13 +144,21 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   const handleAddTag = () => {
     if (currentTag && !itemData.tags.includes(currentTag)) {
-      setItemData({ ...itemData, tags: [...itemData.tags, currentTag] });
+      // setItemData({ ...itemData, tags: [...itemData.tags, currentTag] });
+      setItemData(prev => ({
+        ...prev,
+        tags: [...prev.tags, currentTag.trim()],
+      }));
       setCurrentTag('');
     }
   };
 
   const handleRemoveTag = (tag: string) => {
-    setItemData({ ...itemData, tags: itemData.tags.filter(t => t !== tag) });
+    // setItemData({ ...itemData, tags: itemData.tags.filter(t => t !== tag) });
+    setItemData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tag),
+    }));
   };
 
   const handleSeasonToggle = (season: string) => {
@@ -182,6 +203,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   };
 
   const handleSave = async () => {
+    console.log('Saving seasons:', itemData.seasons);
+    console.log('Saving tags:', itemData.tags);
+    console.log('Saving occasions:', itemData.occasions);
     if (
       (!itemData.image && !itemData.imagePreview) ||
       !itemData.name ||
@@ -255,7 +279,17 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       };
 
       if (editingItem) {
-        console.log('Item updated successfully:', editingItem.id, clothingItem);
+        const { data, error } = await updateClothingItem(
+          editingItem.id,
+          clothingItem
+        );
+        if (error) {
+          console.error('Error updating clothing item:', error);
+          alert('Failed to update item. Please try again.');
+          setSaving(false);
+          return;
+        }
+        alert('Item updated successfully!');
       } else {
         const { data, error } = await createClothingItem(clothingItem);
         if (error) {
@@ -264,24 +298,24 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
           setSaving(false);
           return;
         }
+        // Reset form
+        setItemData({
+          image: null,
+          imagePreview: null,
+          name: '',
+          category: '',
+          color: '',
+          location: '',
+          tags: [],
+          seasons: [],
+          occasions: [],
+          notes: '',
+        });
+        setActiveTab('upload');
+
+        alert('Item created successfully!');
       }
 
-      // Reset form
-      setItemData({
-        image: null,
-        imagePreview: null,
-        name: '',
-        category: '',
-        color: '',
-        location: '',
-        tags: [],
-        seasons: [],
-        occasions: [],
-        notes: '',
-      });
-      setActiveTab('upload');
-
-      alert('Item saved successfully!');
       onSave?.();
       onOpenChange(false);
     } catch (error) {
@@ -480,6 +514,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                           {category}
                         </SelectItem>
                       ))}
+                      {/* Add the existing categroy */}
+                      {itemData.category &&
+                        !categories.includes(itemData.category) && (
+                          <SelectItem value={itemData.category}>
+                            {itemData.category}
+                          </SelectItem>
+                        )}
                     </SelectContent>
                   </Select>
 
@@ -553,6 +594,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                           {color}
                         </SelectItem>
                       ))}
+                      {/* Add the existing color */}
+                      {itemData.color &&
+                        !categories.includes(itemData.color) && (
+                          <SelectItem value={itemData.color}>
+                            {itemData.color}
+                          </SelectItem>
+                        )}
                     </SelectContent>
                   </Select>
 
@@ -642,6 +690,29 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
               <div className="md:col-span-2">
                 <Label>Tags</Label>
+
+                {/* Display existing tags */}
+                {itemData.tags && itemData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                    {itemData.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="text-blue-600 hover:text-blue-800 ml-1"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new tags */}
                 <div className="flex gap-2 mt-2">
                   <Input
                     value={currentTag}
@@ -657,7 +728,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     Add
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                {/* <div className="flex flex-wrap gap-2 mt-2">
                   {itemData.tags.map(tag => (
                     <Badge key={tag} className="flex items-center gap-1">
                       {tag}
@@ -667,7 +738,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       />
                     </Badge>
                   ))}
-                </div>
+                </div> */}
               </div>
 
               <div className="md:col-span-2">

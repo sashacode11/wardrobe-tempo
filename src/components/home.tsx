@@ -339,9 +339,9 @@ const Home = () => {
         // onOpenChange={setShowUploadForm}
         onOpenChange={open => {
           setShowUploadForm(open);
-          if (!open) {
-            setEditingItem(null);
-          }
+          // if (!open) {
+          //   setEditingItem(null);
+          // }
         }}
         onSave={handleItemSaved}
         editingItem={editingItem}

@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { parseArrayField } from '@/lib/utils';
 
 interface ClothingItemProps {
   id?: string;
@@ -60,17 +61,17 @@ const ClothingItem = ({
     setShowDetails(false);
   };
 
-  const parseArrayField = (field: any) => {
-    if (Array.isArray(field)) return field;
-    if (typeof field === 'string') {
-      try {
-        return JSON.parse(field);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  };
+  // const parseArrayField = (field: any) => {
+  //   if (Array.isArray(field)) return field;
+  //   if (typeof field === 'string') {
+  //     try {
+  //       return JSON.parse(field);
+  //     } catch {
+  //       return [];
+  //     }
+  //   }
+  //   return [];
+  // };
 
   return (
     <>
@@ -128,7 +129,7 @@ const ClothingItem = ({
                   : 'Not specified'}
               </div>
               <div className="flex flex-wrap gap-1 mt-1">
-                {Array.isArray(tags) && tags.length > 0 ? (
+                {/* {Array.isArray(tags) && tags.length > 0 ? (
                   tags.map((tag, index) => (
                     <Badge key={index} variant="outline">
                       {tag}
@@ -136,7 +137,11 @@ const ClothingItem = ({
                   ))
                 ) : (
                   <span className="text-muted-foreground text-sm">No tags</span>
-                )}
+                )} */}
+                <span className="font-medium">Tags:</span>{' '}
+                {parseArrayField(tags).length > 0
+                  ? parseArrayField(tags).join(', ')
+                  : 'No tags'}
               </div>
             </div>
           </div>
