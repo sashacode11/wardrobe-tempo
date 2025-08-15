@@ -1,7 +1,7 @@
-import React from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Pencil, Trash2, Plus } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 
 interface ClothingItemProps {
   id?: string;
@@ -28,15 +28,15 @@ interface ClothingItemProps {
 }
 
 const ClothingItem = ({
-  id = "default-id",
-  image = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&q=80",
-  name = "Sample Item",
-  category = "tops",
-  color = "blue",
-  location = "closet",
-  seasons = ["spring", "summer"],
-  occasions = ["casual", "work"],
-  tags = ["favorite"],
+  id = 'unknown',
+  image = '/placeholder.jpg',
+  name = 'Unnamed Item',
+  category = 'uncategorized',
+  color = 'unknown',
+  location = 'unknown',
+  seasons = [],
+  occasions = [],
+  tags = [],
   onEdit = () => {},
   onDelete = () => {},
   onAddToOutfit = () => {},
@@ -62,7 +62,7 @@ const ClothingItem = ({
 
   const parseArrayField = (field: any) => {
     if (Array.isArray(field)) return field;
-    if (typeof field === "string") {
+    if (typeof field === 'string') {
       try {
         return JSON.parse(field);
       } catch {
@@ -116,16 +116,16 @@ const ClothingItem = ({
                 <span className="font-medium">Location:</span> {location}
               </div>
               <div>
-                <span className="font-medium">Seasons:</span>{" "}
+                <span className="font-medium">Seasons:</span>{' '}
                 {parseArrayField(seasons).length > 0
-                  ? parseArrayField(seasons).join(", ")
-                  : "Not specified"}
+                  ? parseArrayField(seasons).join(', ')
+                  : 'Not specified'}
               </div>
               <div>
-                <span className="font-medium">Occasions:</span>{" "}
+                <span className="font-medium">Occasions:</span>{' '}
                 {parseArrayField(occasions).length > 0
-                  ? parseArrayField(occasions).join(", ")
-                  : "Not specified"}
+                  ? parseArrayField(occasions).join(', ')
+                  : 'Not specified'}
               </div>
               <div className="flex flex-wrap gap-1 mt-1">
                 {Array.isArray(tags) && tags.length > 0 ? (

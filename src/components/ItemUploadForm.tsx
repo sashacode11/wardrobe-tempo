@@ -26,11 +26,13 @@ import {
   uploadImage,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
+import { ClothingItemType } from '../types';
 
 interface ItemUploadFormProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSave?: () => void;
+  editingItem?: ClothingItemType | null;
 }
 
 interface ItemData {
@@ -50,6 +52,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   open = true,
   onOpenChange = () => {},
   onSave = () => {},
+  editingItem = null,
 }) => {
   const [activeTab, setActiveTab] = useState('upload');
   const [itemData, setItemData] = useState<ItemData>({

@@ -1,51 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { Search, Filter, Plus, X } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Plus, X } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import ClothingItem from "./ClothingItem";
+} from './ui/select';
+import ClothingItem from './ClothingItem';
 import {
   supabase,
   getCurrentUser,
   getClothingItems,
   deleteClothingItem,
-} from "../lib/supabaseClient";
-import { Database } from "../types/supabase";
-
-type ClothingItemType = Database["public"]["Tables"]["wardrobe_items"]["Row"];
+} from '../lib/supabaseClient';
+import { Database } from '../types/supabase';
+import { ClothingItemType } from '../types';
+// type ClothingItemType = Database["public"]["Tables"]["wardrobe_items"]["Row"];
 
 interface WardrobeGridProps {
   searchQuery?: string;
   onAddItem?: () => void;
   onSelectItem?: (item: ClothingItemType) => void;
   onAddToOutfit?: (item: ClothingItemType) => void;
+  onEditItem?: (item: ClothingItemType) => void;
 }
 
 const WardrobeGrid = ({
-  searchQuery = "",
+  searchQuery = '',
   onAddItem = () => {},
   onSelectItem = () => {},
   onAddToOutfit = () => {},
+  onEditItem = () => {},
 }: WardrobeGridProps) => {
   const [items, setItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState('all');
   const [activeFilters, setActiveFilters] = useState<{
     color: string;
     season: string;
     occasion: string;
   }>({
-    color: "",
-    season: "",
-    occasion: "",
+    color: '',
+    season: '',
+    occasion: '',
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -58,19 +60,19 @@ const WardrobeGrid = ({
     try {
       const user = await getCurrentUser();
       if (!user) {
-        console.log("No user found");
+        console.log('No user found');
         setLoading(false);
         return;
       }
 
       const { data, error } = await getClothingItems(user.id);
       if (error) {
-        console.error("Error loading clothing items:", error);
+        console.error('Error loading clothing items:', error);
       } else {
         setItems(data || []);
       }
     } catch (error) {
-      console.error("Error loading clothing items:", error);
+      console.error('Error loading clothing items:', error);
     } finally {
       setLoading(false);
     }
@@ -80,30 +82,34 @@ const WardrobeGrid = ({
     try {
       const { error } = await deleteClothingItem(id);
       if (error) {
-        console.error("Error deleting item:", error);
+        console.error('Error deleting item:', error);
       } else {
         // Remove item from local state
-        setItems(items.filter((item) => item.id !== id));
+        setItems(items.filter(item => item.id !== id));
       }
     } catch (error) {
-      console.error("Error deleting item:", error);
+      console.error('Error deleting item:', error);
     }
   };
 
   const handleEditItem = (id: string) => {
     // TODO: Implement edit functionality
-    console.log("Edit item:", id);
+    console.log('Edit item:', id);
+    const itemToEdit = items.find(item => item.id === id);
+    if (itemToEdit) {
+      onEditItem(itemToEdit);
+    }
   };
 
   const handleAddToOutfit = (id: string) => {
-    const item = items.find((item) => item.id === id);
+    const item = items.find(item => item.id === id);
     if (item && onAddToOutfit) {
       onAddToOutfit(item);
     }
   };
 
   // Filter items based on search query and active filters
-  const filteredItems = items.filter((item) => {
+  const filteredItems = items.filter(item => {
     // Search filter
     if (
       searchQuery &&
@@ -113,7 +119,7 @@ const WardrobeGrid = ({
     }
 
     // Category filter
-    if (activeCategory !== "all" && item.category !== activeCategory) {
+    if (activeCategory !== 'all' && item.category !== activeCategory) {
       return false;
     }
 
@@ -140,45 +146,45 @@ const WardrobeGrid = ({
 
   const clearFilters = () => {
     setActiveFilters({
-      color: "",
-      season: "",
-      occasion: "",
+      color: '',
+      season: '',
+      occasion: '',
     });
-    setActiveCategory("all");
+    setActiveCategory('all');
   };
 
   const categories = [
-    "all",
-    "tops",
-    "bottoms",
-    "dresses",
-    "outerwear",
-    "shoes",
-    "accessories",
-    "formal",
+    'all',
+    'tops',
+    'bottoms',
+    'dresses',
+    'outerwear',
+    'shoes',
+    'accessories',
+    'formal',
   ];
   const colors = [
-    "",
-    "black",
-    "white",
-    "blue",
-    "red",
-    "green",
-    "yellow",
-    "purple",
-    "pink",
-    "brown",
-    "gray",
+    '',
+    'black',
+    'white',
+    'blue',
+    'red',
+    'green',
+    'yellow',
+    'purple',
+    'pink',
+    'brown',
+    'gray',
   ];
-  const seasons = ["", "spring", "summer", "fall", "winter", "all"];
+  const seasons = ['', 'spring', 'summer', 'fall', 'winter', 'all'];
   const occasions = [
-    "",
-    "casual",
-    "formal",
-    "business",
-    "party",
-    "sporty",
-    "semi-formal",
+    '',
+    'casual',
+    'formal',
+    'business',
+    'party',
+    'sporty',
+    'semi-formal',
   ];
 
   return (
@@ -217,16 +223,16 @@ const WardrobeGrid = ({
       {(activeFilters.color ||
         activeFilters.season ||
         activeFilters.occasion ||
-        activeCategory !== "all") && (
+        activeCategory !== 'all') && (
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-sm text-muted-foreground">Active filters:</span>
 
-          {activeCategory !== "all" && (
+          {activeCategory !== 'all' && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Category: {activeCategory}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => setActiveCategory("all")}
+                onClick={() => setActiveCategory('all')}
               />
             </Badge>
           )}
@@ -237,7 +243,7 @@ const WardrobeGrid = ({
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() =>
-                  setActiveFilters({ ...activeFilters, color: "" })
+                  setActiveFilters({ ...activeFilters, color: '' })
                 }
               />
             </Badge>
@@ -249,7 +255,7 @@ const WardrobeGrid = ({
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() =>
-                  setActiveFilters({ ...activeFilters, season: "" })
+                  setActiveFilters({ ...activeFilters, season: '' })
                 }
               />
             </Badge>
@@ -261,7 +267,7 @@ const WardrobeGrid = ({
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() =>
-                  setActiveFilters({ ...activeFilters, occasion: "" })
+                  setActiveFilters({ ...activeFilters, occasion: '' })
                 }
               />
             </Badge>
@@ -285,7 +291,7 @@ const WardrobeGrid = ({
             <label className="text-sm font-medium mb-1 block">Color</label>
             <Select
               value={activeFilters.color}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setActiveFilters({ ...activeFilters, color: value })
               }
             >
@@ -293,11 +299,11 @@ const WardrobeGrid = ({
                 <SelectValue placeholder="Select color" />
               </SelectTrigger>
               <SelectContent>
-                {colors.map((color) => (
+                {colors.map(color => (
                   <SelectItem key={color} value={color}>
                     {color
                       ? color.charAt(0).toUpperCase() + color.slice(1)
-                      : "All colors"}
+                      : 'All colors'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -308,7 +314,7 @@ const WardrobeGrid = ({
             <label className="text-sm font-medium mb-1 block">Season</label>
             <Select
               value={activeFilters.season}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setActiveFilters({ ...activeFilters, season: value })
               }
             >
@@ -316,11 +322,11 @@ const WardrobeGrid = ({
                 <SelectValue placeholder="Select season" />
               </SelectTrigger>
               <SelectContent>
-                {seasons.map((season) => (
+                {seasons.map(season => (
                   <SelectItem key={season} value={season}>
                     {season
                       ? season.charAt(0).toUpperCase() + season.slice(1)
-                      : "All seasons"}
+                      : 'All seasons'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -331,7 +337,7 @@ const WardrobeGrid = ({
             <label className="text-sm font-medium mb-1 block">Occasion</label>
             <Select
               value={activeFilters.occasion}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setActiveFilters({ ...activeFilters, occasion: value })
               }
             >
@@ -339,11 +345,11 @@ const WardrobeGrid = ({
                 <SelectValue placeholder="Select occasion" />
               </SelectTrigger>
               <SelectContent>
-                {occasions.map((occasion) => (
+                {occasions.map(occasion => (
                   <SelectItem key={occasion} value={occasion}>
                     {occasion
                       ? occasion.charAt(0).toUpperCase() + occasion.slice(1)
-                      : "All occasions"}
+                      : 'All occasions'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -359,7 +365,7 @@ const WardrobeGrid = ({
         onValueChange={setActiveCategory}
       >
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2">
-          {categories.map((category) => (
+          {categories.map(category => (
             <TabsTrigger key={category} value={category} className="capitalize">
               {category}
             </TabsTrigger>
@@ -374,7 +380,7 @@ const WardrobeGrid = ({
             <p className="text-muted-foreground">Loading your wardrobe...</p>
           </div>
         ) : filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
+          filteredItems.map(item => (
             <ClothingItem
               key={item.id}
               id={item.id}
@@ -395,8 +401,8 @@ const WardrobeGrid = ({
           <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
             <p className="text-muted-foreground mb-4">
               {items.length === 0
-                ? "No items in your wardrobe yet"
-                : "No items found matching your filters"}
+                ? 'No items in your wardrobe yet'
+                : 'No items found matching your filters'}
             </p>
             {items.length === 0 ? (
               <Button onClick={onAddItem}>

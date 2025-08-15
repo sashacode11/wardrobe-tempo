@@ -10,6 +10,7 @@ import OutfitBuilder from './OutfitBuilder';
 import AuthDialog from './AuthDialog';
 import MyOutfits from './MyOutfits';
 import { getCurrentUser, signOut, supabase } from '../lib/supabaseClient';
+import { ClothingItemType } from '../types';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +23,7 @@ const Home = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
   const [editingOutfit, setEditingOutfit] = useState(null);
+  const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
 
   const handleItemSaved = () => {
     // Refresh the wardrobe grid by changing its key
@@ -294,6 +296,10 @@ const Home = () => {
                 searchQuery={searchQuery}
                 onAddItem={handleAddItemClick}
                 onAddToOutfit={handleAddToOutfit}
+                onEditItem={item => {
+                  setEditingItem(item);
+                  setShowUploadForm(true);
+                }}
               />
             </TabsContent>
 
@@ -330,8 +336,15 @@ const Home = () => {
       {/* Upload Form Dialog */}
       <ItemUploadForm
         open={showUploadForm}
-        onOpenChange={setShowUploadForm}
+        // onOpenChange={setShowUploadForm}
+        onOpenChange={open => {
+          setShowUploadForm(open);
+          if (!open) {
+            setEditingItem(null);
+          }
+        }}
         onSave={handleItemSaved}
+        editingItem={editingItem}
       />
 
       {/* Auth Dialog */}
