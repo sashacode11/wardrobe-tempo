@@ -51,6 +51,7 @@ const Home = () => {
       setShowAuthDialog(true);
     } else {
       setShowUploadForm(true);
+      setEditingItem(null); // Reset editing item when opening form
     }
   };
 

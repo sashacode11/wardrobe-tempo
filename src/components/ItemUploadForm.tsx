@@ -116,13 +116,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   }, [editingItem]);
 
-  useEffect(() => {
-    console.log('=== ITEMDATA CHANGED ===');
-    console.log('itemData:', itemData);
-    console.log('itemData.tags:', itemData.tags);
-    console.log('itemData.tags.length:', itemData.tags?.length);
-  }, [itemData]);
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
