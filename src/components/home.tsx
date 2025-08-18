@@ -117,7 +117,7 @@ const Home = () => {
               </div>
             )} */}
 
-            {user && activeTab === 'wardrobe' && (
+            {user && (
               <div className="relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -129,7 +129,6 @@ const Home = () => {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    // className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
                   >
                     ×
@@ -297,20 +296,21 @@ const Home = () => {
             </div>
 
             {/* Category filters */}
-            <div className="mb-6 overflow-x-auto">
+            {/* <div className="mb-6 overflow-x-auto">
               <div className="flex space-x-2 pb-2">
-                {categories.map(category => (
-                  <Button
-                    key={category.id}
-                    variant="outline"
-                    size="sm"
-                    className="whitespace-nowrap"
-                  >
-                    {category.name}
-                  </Button>
-                ))}
+                {activeTab === 'wardrobe' &&
+                  categories.map(category => (
+                    <Button
+                      key={category.id}
+                      variant="outline"
+                      size="sm"
+                      className="whitespace-nowrap"
+                    >
+                      {category.name}
+                    </Button>
+                  ))}
               </div>
-            </div>
+            </div> */}
 
             <TabsContent value="wardrobe" className="mt-0">
               <WardrobeGrid
