@@ -269,10 +269,10 @@ const Home = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <Button variant="outline" size="sm" className="hidden md:flex">
+              {/* <Button variant="outline" size="sm" className="hidden md:flex">
                 <Filter className="mr-2 h-4 w-4" />
                 Filter
-              </Button>
+              </Button> */}
             </div>
 
             {/* Category filters */}
