@@ -189,7 +189,7 @@ const WardrobeGrid = ({
     <div className="w-full h-full bg-background p-4 flex flex-col gap-4">
       {/* Search and Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-1/3">
+        {/* <div className="relative w-full md:w-1/3">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search your wardrobe..."
@@ -197,7 +197,7 @@ const WardrobeGrid = ({
             className="pl-8"
             readOnly
           />
-        </div>
+        </div> */}
 
         <div className="flex gap-2 items-center">
           <Button

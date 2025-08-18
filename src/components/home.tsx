@@ -105,7 +105,7 @@ const Home = () => {
           <h1 className="text-2xl font-bold">My Wardrobe</h1>
 
           <div className="hidden md:flex items-center space-x-4">
-            {user && (
+            {/* {user && (
               <div className="relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -115,14 +115,35 @@ const Home = () => {
                   className="pl-8"
                 />
               </div>
+            )} */}
+
+            {user && activeTab === 'wardrobe' && (
+              <div className="relative w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search items..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    // className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             )}
 
             {user ? (
               <div className="flex items-center space-x-2">
-                <Button onClick={handleAddItemClick}>
+                {/* <Button onClick={handleAddItemClick}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Item
-                </Button>
+                </Button> */}
                 <Button variant="outline" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
