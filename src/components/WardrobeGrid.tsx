@@ -164,7 +164,6 @@ const WardrobeGrid = ({
     'formal',
   ];
   const colors = [
-    '',
     'black',
     'white',
     'blue',
@@ -176,9 +175,8 @@ const WardrobeGrid = ({
     'brown',
     'gray',
   ];
-  const seasons = ['', 'spring', 'summer', 'fall', 'winter', 'all'];
+  const seasons = ['spring', 'summer', 'fall', 'winter', 'all'];
   const occasions = [
-    '',
     'casual',
     'formal',
     'business',
@@ -289,6 +287,16 @@ const WardrobeGrid = ({
         <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
+            {activeFilters.color && (
+              <button
+                onClick={() =>
+                  setActiveFilters({ ...activeFilters, color: '' })
+                }
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
             <Select
               value={activeFilters.color}
               onValueChange={value =>
@@ -300,10 +308,13 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {colors.map(color => (
+                  // <SelectItem key={color} value={color}>
+                  //   {color
+                  //     ? color.charAt(0).toUpperCase() + color.slice(1)
+                  //     : 'All colors'}
+                  // </SelectItem>
                   <SelectItem key={color} value={color}>
-                    {color
-                      ? color.charAt(0).toUpperCase() + color.slice(1)
-                      : 'All colors'}
+                    {color.charAt(0).toUpperCase() + color.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -323,10 +334,13 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {seasons.map(season => (
+                  // <SelectItem key={season} value={season}>
+                  //   {season
+                  //     ? season.charAt(0).toUpperCase() + season.slice(1)
+                  //     : 'All seasons'}
+                  // </SelectItem>
                   <SelectItem key={season} value={season}>
-                    {season
-                      ? season.charAt(0).toUpperCase() + season.slice(1)
-                      : 'All seasons'}
+                    {season.charAt(0).toUpperCase() + season.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -346,10 +360,13 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {occasions.map(occasion => (
+                  // <SelectItem key={occasion} value={occasion}>
+                  //   {occasion
+                  //     ? occasion.charAt(0).toUpperCase() + occasion.slice(1)
+                  //     : 'All occasions'}
+                  // </SelectItem>
                   <SelectItem key={occasion} value={occasion}>
-                    {occasion
-                      ? occasion.charAt(0).toUpperCase() + occasion.slice(1)
-                      : 'All occasions'}
+                    {occasion.charAt(0).toUpperCase() + occasion.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>
