@@ -109,6 +109,8 @@ const Home = () => {
     { id: 'outerwear', name: 'Outerwear' },
   ];
 
+  console.log(user);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -219,7 +221,7 @@ const Home = () => {
               {/* Menu content container */}
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="p-4 border-b">
+                <div className="py-4 px-2">
                   <div className="flex items-center justify-between">
                     {/* <h2 className="text-lg font-semibold">Menu</h2> */}
                     <Button
@@ -233,16 +235,14 @@ const Home = () => {
 
                     {/* User Account Section */}
                     {user && (
-                      <div className="p-4 border-b bg-muted/30">
+                      <div className="p-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                             <User className="h-5 w-5 text-primary-foreground" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                              {user.displayName ||
-                                user.email?.split('@')[0] ||
-                                'User'}
+                              {user.user_metadata.full_name}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
                               {user.email}
