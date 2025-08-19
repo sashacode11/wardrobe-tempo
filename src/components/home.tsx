@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Grid, Menu, LogOut, User } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Filter,
+  Grid,
+  Menu,
+  LogOut,
+  User,
+  ArrowLeft,
+  Shirt,
+  Grid3x3,
+  Headphones,
+} from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
@@ -102,7 +114,7 @@ const Home = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b bg-background p-4">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Wardrobe</h1>
+          <h1 className="md:text-2xl font-bold">My Wardrobe</h1>
 
           <div className="hidden md:flex items-center space-x-4">
             {/* {user && (
@@ -174,67 +186,194 @@ const Home = () => {
           </Button>
         </div>
 
+        {/* show search outside of hamburger menu in mobile */}
+        {user && (
+          <div className="md:hidden relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        )}
+
         {/* Mobile menu */}
         {showMobileMenu && (
-          <div className="md:hidden p-4 border-t">
-            <div className="flex flex-col space-y-4">
-              {user && (
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search items..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              )}
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setShowMobileMenu(false)}
+            />
 
-              {user ? (
-                <div className="flex flex-col space-y-2">
-                  <div className="flex space-x-2">
-                    <Button className="flex-1" onClick={handleAddItemClick}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Item
+            {/* Sliding menu */}
+            <div
+              className={`
+      fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
+      transform transition-transform duration-300 ease-in-out
+      ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
+    `}
+            >
+              {/* Menu content container */}
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between">
+                    {/* <h2 className="text-lg font-semibold">Menu</h2> */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="p-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
                     </Button>
 
+                    {/* User Account Section */}
+                    {user && (
+                      <div className="p-4 border-b bg-muted/30">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {user.displayName ||
+                                user.email?.split('@')[0] ||
+                                'User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contact Button */}
                     <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setActiveTab('outfit')}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        // Add your contact functionality here
+                        console.log('Contact clicked');
+                        setShowMobileMenu(false);
+                      }}
+                      className="p-2 ml-2"
                     >
-                      Create Outfit
+                      <Headphones className="h-5 w-5" />
                     </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleSignOut}
-                    className="w-full"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </Button>
                 </div>
-              ) : (
-                <div className="flex space-x-2">
-                  <Button
-                    className="flex-1"
-                    onClick={() => setShowAuthDialog(true)}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Login
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setShowAuthDialog(true)}
-                  >
-                    Sign Up
-                  </Button>
+
+                {/* Main menu items */}
+                <div className="flex-1 p-4">
+                  {user ? (
+                    <div className="space-y-6">
+                      {/* First row - Shortcuts */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">
+                          Shortcut
+                        </h3>
+                        <div className="grid grid-cols-4 gap-4">
+                          <button
+                            onClick={handleAddItemClick}
+                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                              <Plus className="h-6 w-6 text-foreground" />
+                            </div>
+                            <span className="text-sm text-foreground font-medium">
+                              Add Item
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('outfit');
+                              setShowMobileMenu(false);
+                            }}
+                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                              <Shirt className="h-6 w-6 text-foreground" />
+                            </div>
+                            <span className="text-sm text-foreground font-medium">
+                              Create Outfit
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('myoutfits');
+                              setShowMobileMenu(false);
+                            }}
+                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                              <Grid3x3 className="h-6 w-6 text-foreground" />
+                            </div>
+                            <span className="text-sm text-foreground font-medium">
+                              My Outfits
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Second row - Recommendations */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">
+                          Recommend
+                        </h3>
+                        <div className="text-sm text-muted-foreground italic text-center py-8">
+                          Coming soon...
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          setShowAuthDialog(true);
+                          setShowMobileMenu(false);
+                        }}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Login
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setShowAuthDialog(true);
+                          setShowMobileMenu(false);
+                        }}
+                      >
+                        Sign Up
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Bottom section - Sign Out */}
+                {user && (
+                  <div className="p-4 border-t mt-auto">
+                    <Button
+                      variant="outline"
+                      onClick={handleSignOut}
+                      className="w-full"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </header>
 
@@ -275,7 +414,7 @@ const Home = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between lg:mb-6">
               <TabsList>
                 <TabsTrigger value="wardrobe" className="px-4">
                   <Grid className="mr-2 h-4 w-4" />
