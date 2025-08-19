@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, X } from 'lucide-react';
+import { Search, Filter, Plus, X, Trash2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Checkbox } from './ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -11,7 +12,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import ClothingItem from './ClothingItem';
+import SelectionControls from './multiselect/SelectionControls';
+import SelectionCheckbox from './multiselect/SelectionCheckbox';
 import {
   supabase,
   getCurrentUser,
@@ -20,10 +33,11 @@ import {
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
-// type ClothingItemType = Database["public"]["Tables"]["wardrobe_items"]["Row"];
+import { useMultiselect } from '../hooks/useMultiSelect';
 
 interface WardrobeGridProps {
   searchQuery?: string;
+  selectedCategory?: string;
   onAddItem?: () => void;
   onSelectItem?: (item: ClothingItemType) => void;
   onAddToOutfit?: (item: ClothingItemType) => void;
@@ -32,6 +46,7 @@ interface WardrobeGridProps {
 
 const WardrobeGrid = ({
   searchQuery = '',
+  selectedCategory = 'all',
   onAddItem = () => {},
   onSelectItem = () => {},
   onAddToOutfit = () => {},
@@ -39,7 +54,7 @@ const WardrobeGrid = ({
 }: WardrobeGridProps) => {
   const [items, setItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState(selectedCategory);
   const [activeFilters, setActiveFilters] = useState<{
     color: string;
     season: string;
@@ -50,6 +65,29 @@ const WardrobeGrid = ({
     occasion: '',
   });
   const [showFilters, setShowFilters] = useState(false);
+
+  // Use the multiselect hook
+  const {
+    isSelectionMode,
+    selectedItems,
+    showDeleteDialog,
+    deletingItems,
+    error: multiselectError,
+    setShowDeleteDialog,
+    setError: setMultiselectError,
+    toggleItemSelection,
+    selectAllItems,
+    deselectAllItems,
+    toggleSelectionMode,
+    deleteSelectedItems,
+  } = useMultiselect();
+
+  const [error, setError] = useState<string | null>(null);
+
+  // Update activeCategory when selectedCategory prop changes
+  useEffect(() => {
+    setActiveCategory(selectedCategory);
+  }, [selectedCategory]);
 
   // Load clothing items from Supabase
   useEffect(() => {
@@ -68,11 +106,13 @@ const WardrobeGrid = ({
       const { data, error } = await getClothingItems(user.id);
       if (error) {
         console.error('Error loading clothing items:', error);
+        setError('Failed to load items');
       } else {
         setItems(data || []);
       }
     } catch (error) {
       console.error('Error loading clothing items:', error);
+      setError('Failed to load items');
     } finally {
       setLoading(false);
     }
@@ -83,18 +123,18 @@ const WardrobeGrid = ({
       const { error } = await deleteClothingItem(id);
       if (error) {
         console.error('Error deleting item:', error);
+        setError('Failed to delete item');
       } else {
         // Remove item from local state
         setItems(items.filter(item => item.id !== id));
       }
     } catch (error) {
       console.error('Error deleting item:', error);
+      setError('Failed to delete item');
     }
   };
 
   const handleEditItem = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit item:', id);
     const itemToEdit = items.find(item => item.id === id);
     if (itemToEdit) {
       onEditItem(itemToEdit);
@@ -106,6 +146,11 @@ const WardrobeGrid = ({
     if (item && onAddToOutfit) {
       onAddToOutfit(item);
     }
+  };
+
+  // Handle bulk delete success
+  const handleBulkDeleteSuccess = (deletedIds: string[]) => {
+    setItems(prev => prev.filter(item => !deletedIds.includes(item.id)));
   };
 
   // Filter items based on search query and active filters
@@ -129,13 +174,18 @@ const WardrobeGrid = ({
     }
 
     // Season filter
-    if (activeFilters.season && !item.seasons.includes(activeFilters.season)) {
+    if (
+      activeFilters.season &&
+      item.seasons &&
+      !item.seasons.includes(activeFilters.season)
+    ) {
       return false;
     }
 
     // Occasion filter
     if (
       activeFilters.occasion &&
+      item.occasions &&
       !item.occasions.includes(activeFilters.occasion)
     ) {
       return false;
@@ -185,20 +235,39 @@ const WardrobeGrid = ({
     'semi-formal',
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading wardrobe...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full bg-background p-4 flex flex-col gap-4">
+      {/* Error display */}
+      {(error || multiselectError) && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
+          <p className="text-destructive text-sm">
+            {error || multiselectError}
+          </p>
+          <button
+            onClick={() => {
+              setError(null);
+              setMultiselectError(null);
+            }}
+            className="text-destructive hover:underline text-sm mt-1"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Search and Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        {/* <div className="relative w-full md:w-1/3">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search your wardrobe..."
-            value={searchQuery}
-            className="pl-8"
-            readOnly
-          />
-        </div> */}
-
         <div className="flex gap-2 items-center">
           <Button
             variant="outline"
@@ -215,6 +284,28 @@ const WardrobeGrid = ({
             Add Item
           </Button>
         </div>
+
+        {/* Reusable Selection Controls Component */}
+        <SelectionControls
+          isSelectionMode={isSelectionMode}
+          selectedCount={selectedItems.size}
+          totalFilteredCount={filteredItems.length}
+          onToggleSelectionMode={toggleSelectionMode}
+          onSelectAll={() => selectAllItems(filteredItems)}
+          onDeselectAll={deselectAllItems}
+          onDeleteSelected={() => setShowDeleteDialog(true)}
+        />
+      </div>
+
+      {/* Results info */}
+      <div className="text-sm text-muted-foreground">
+        {searchQuery
+          ? `Found ${filteredItems.length} item${
+              filteredItems.length !== 1 ? 's' : ''
+            } matching "${searchQuery}"`
+          : `${filteredItems.length} item${
+              filteredItems.length !== 1 ? 's' : ''
+            } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
       </div>
 
       {/* Active Filters */}
@@ -284,19 +375,9 @@ const WardrobeGrid = ({
 
       {/* Filter Options */}
       {showFilters && (
-        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
-            {activeFilters.color && (
-              <button
-                onClick={() =>
-                  setActiveFilters({ ...activeFilters, color: '' })
-                }
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Clear
-              </button>
-            )}
             <Select
               value={activeFilters.color}
               onValueChange={value =>
@@ -308,11 +389,6 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {colors.map(color => (
-                  // <SelectItem key={color} value={color}>
-                  //   {color
-                  //     ? color.charAt(0).toUpperCase() + color.slice(1)
-                  //     : 'All colors'}
-                  // </SelectItem>
                   <SelectItem key={color} value={color}>
                     {color.charAt(0).toUpperCase() + color.slice(1)}
                   </SelectItem>
@@ -334,11 +410,6 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {seasons.map(season => (
-                  // <SelectItem key={season} value={season}>
-                  //   {season
-                  //     ? season.charAt(0).toUpperCase() + season.slice(1)
-                  //     : 'All seasons'}
-                  // </SelectItem>
                   <SelectItem key={season} value={season}>
                     {season.charAt(0).toUpperCase() + season.slice(1)}
                   </SelectItem>
@@ -360,11 +431,6 @@ const WardrobeGrid = ({
               </SelectTrigger>
               <SelectContent>
                 {occasions.map(occasion => (
-                  // <SelectItem key={occasion} value={occasion}>
-                  //   {occasion
-                  //     ? occasion.charAt(0).toUpperCase() + occasion.slice(1)
-                  //     : 'All occasions'}
-                  // </SelectItem>
                   <SelectItem key={occasion} value={occasion}>
                     {occasion.charAt(0).toUpperCase() + occasion.slice(1)}
                   </SelectItem>
@@ -376,49 +442,63 @@ const WardrobeGrid = ({
       )}
 
       {/* Category Tabs */}
-      <Tabs
-        defaultValue="all"
-        value={activeCategory}
-        onValueChange={setActiveCategory}
-      >
-        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2">
-          {categories.map(category => (
-            <TabsTrigger key={category} value={category} className="capitalize">
-              {category}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {!searchQuery && (
+        <Tabs
+          defaultValue="all"
+          value={activeCategory}
+          onValueChange={setActiveCategory}
+        >
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2">
+            {categories.map(category => (
+              <TabsTrigger
+                key={category}
+                value={category}
+                className="capitalize"
+              >
+                {category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
 
       {/* Clothing Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto flex-grow">
-        {loading ? (
-          <div className="col-span-full flex items-center justify-center p-8">
-            <p className="text-muted-foreground">Loading your wardrobe...</p>
-          </div>
-        ) : filteredItems.length > 0 ? (
+        {filteredItems.length > 0 ? (
           filteredItems.map(item => (
-            <ClothingItem
-              key={item.id}
-              id={item.id}
-              image={item.image_url}
-              name={item.name}
-              category={item.category}
-              color={item.color}
-              location={item.location}
-              seasons={item.seasons}
-              occasions={item.occasions}
-              tags={item.tags}
-              onEdit={handleEditItem}
-              onDelete={handleDeleteItem}
-              onAddToOutfit={handleAddToOutfit}
-            />
+            <div key={item.id} className="relative">
+              {/* Reusable Selection Checkbox Component */}
+              <SelectionCheckbox
+                isSelectionMode={isSelectionMode}
+                isSelected={selectedItems.has(item.id)}
+                onToggleSelection={() => toggleItemSelection(item.id)}
+              />
+
+              <ClothingItem
+                id={item.id}
+                image={item.image_url}
+                name={item.name}
+                category={item.category}
+                color={item.color}
+                location={item.location}
+                seasons={item.seasons}
+                occasions={item.occasions}
+                tags={item.tags}
+                onEdit={handleEditItem}
+                onDelete={handleDeleteItem}
+                onAddToOutfit={handleAddToOutfit}
+                isSelected={selectedItems.has(item.id)}
+                isSelectionMode={isSelectionMode}
+              />
+            </div>
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
             <p className="text-muted-foreground mb-4">
               {items.length === 0
                 ? 'No items in your wardrobe yet'
+                : searchQuery
+                ? `No items found matching "${searchQuery}"`
                 : 'No items found matching your filters'}
             </p>
             {items.length === 0 ? (
@@ -434,6 +514,36 @@ const WardrobeGrid = ({
           </div>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Items</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedItems.size} item
+              {selectedItems.size !== 1 ? 's' : ''}? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingItems}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteSelectedItems(handleBulkDeleteSuccess)}
+              disabled={deletingItems}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deletingItems
+                ? 'Deleting...'
+                : `Delete ${selectedItems.size} item${
+                    selectedItems.size !== 1 ? 's' : ''
+                  }`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
