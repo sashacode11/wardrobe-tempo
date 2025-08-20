@@ -247,7 +247,7 @@ const WardrobeGrid = ({
   }
 
   return (
-    <div className="w-full h-full bg-background flex flex-col gap-4">
+    <div className="w-full h-full bg-background flex flex-col gap-2 md:gap-4">
       {/* Error display */}
       {(error || multiselectError) && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
@@ -267,48 +267,37 @@ const WardrobeGrid = ({
       )}
 
       {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-2 items-center">
-          <Button
-            variant="outline"
-            size="sm"
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-1">
+        <div className="flex gap-4 items-center">
+          {/* Filter Button */}
+          <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
+            className="flex flex-col items-center group"
+            type="button"
           >
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+              <Filter className="h-5 w-5 text-blue-400" />
+              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" /> */}
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">
+              Filter
+            </span>
+          </button>
 
-          <Button onClick={onAddItem} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Item
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-2 px-4">
-        {/* Results info */}
-        <div className="text-sm text-muted-foreground">
-          {searchQuery
-            ? `Found ${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } matching "${searchQuery}"`
-            : `${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
-        </div>
-
-        {/* Multiselects */}
-        <div className="flex-shrink-0">
-          <SelectionControls
-            isSelectionMode={isSelectionMode}
-            selectedCount={selectedItems.size}
-            totalFilteredCount={filteredItems.length}
-            onToggleSelectionMode={toggleSelectionMode}
-            onSelectAll={() => selectAllItems(filteredItems)}
-            onDeselectAll={deselectAllItems}
-            onDeleteSelected={() => setShowDeleteDialog(true)}
-          />
+          {/* Add Item Button */}
+          <button
+            onClick={onAddItem}
+            className="flex flex-col items-center group"
+            type="button"
+          >
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+              <Plus className="h-5 w-5 text-blue-400" />
+              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full" /> */}
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">
+              Add Item
+            </span>
+          </button>
         </div>
       </div>
 
@@ -465,6 +454,32 @@ const WardrobeGrid = ({
           </TabsList>
         </Tabs>
       )}
+
+      <div className="flex items-center justify-between gap-2 px-4">
+        {/* Results info */}
+        <div className="text-sm text-muted-foreground">
+          {searchQuery
+            ? `Found ${filteredItems.length} item${
+                filteredItems.length !== 1 ? 's' : ''
+              } matching "${searchQuery}"`
+            : `${filteredItems.length} item${
+                filteredItems.length !== 1 ? 's' : ''
+              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
+        </div>
+
+        {/* Multiselects */}
+        <div className="flex-shrink-0">
+          <SelectionControls
+            isSelectionMode={isSelectionMode}
+            selectedCount={selectedItems.size}
+            totalFilteredCount={filteredItems.length}
+            onToggleSelectionMode={toggleSelectionMode}
+            onSelectAll={() => selectAllItems(filteredItems)}
+            onDeselectAll={deselectAllItems}
+            onDeleteSelected={() => setShowDeleteDialog(true)}
+          />
+        </div>
+      </div>
 
       {/* Clothing Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  overflow-y-auto flex-grow px-2 w-full">
