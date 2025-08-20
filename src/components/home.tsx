@@ -100,16 +100,16 @@ const Home = () => {
   }, []);
 
   // Mock categories for demonstration
-  const categories = [
-    { id: 'all', name: 'All Items' },
-    { id: 'tops', name: 'Tops' },
-    { id: 'bottoms', name: 'Bottoms' },
-    { id: 'shoes', name: 'Shoes' },
-    { id: 'accessories', name: 'Accessories' },
-    { id: 'outerwear', name: 'Outerwear' },
-  ];
+  // const categories = [
+  //   { id: 'all', name: 'All Items' },
+  //   { id: 'tops', name: 'Tops' },
+  //   { id: 'bottoms', name: 'Bottoms' },
+  //   { id: 'shoes', name: 'Shoes' },
+  //   { id: 'accessories', name: 'Accessories' },
+  //   { id: 'outerwear', name: 'Outerwear' },
+  // ];
 
-  console.log(user);
+  // console.log(user);
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,8 +221,8 @@ const Home = () => {
               {/* Menu content container */}
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="py-4 px-2">
-                  <div className="flex items-center justify-between">
+                <div className="py-4 px-2 ">
+                  <div className="flex items-center justify-between border-b">
                     {/* <h2 className="text-lg font-semibold">Menu</h2> */}
                     <Button
                       variant="ghost"
