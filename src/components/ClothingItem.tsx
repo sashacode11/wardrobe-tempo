@@ -64,7 +64,7 @@ const ClothingItem = ({
   return (
     <>
       <Card
-        className="w-[250px] h-[300px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-white"
+        className="md:w-[250px] md:h-[300px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-white"
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
