@@ -11,6 +11,7 @@ import {
   Shirt,
   Grid3x3,
   Headphones,
+  Heart,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -378,7 +379,7 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto md:p-4">
         {authLoading ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -414,7 +415,8 @@ const Home = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="flex items-center justify-between lg:mb-6">
+            {/* Desktop Tabs - Hidden on mobile */}
+            <div className="hidden md:flex items-center justify-between lg:mb-6">
               <TabsList>
                 <TabsTrigger value="wardrobe" className="px-4">
                   <Grid className="mr-2 h-4 w-4" />
@@ -427,11 +429,58 @@ const Home = () => {
                   My Outfits
                 </TabsTrigger>
               </TabsList>
+            </div>
 
-              {/* <Button variant="outline" size="sm" className="hidden md:flex">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button> */}
+            {/* Tab Content */}
+            <TabsContent value="wardrobe">
+              {/* Your wardrobe content */}
+            </TabsContent>
+            <TabsContent value="outfit">
+              {/* Your create outfit content */}
+            </TabsContent>
+            <TabsContent value="my-outfits">
+              {/* Your my outfits content */}
+            </TabsContent>
+
+            {/* Mobile Bottom Navigation - Fixed at bottom */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
+              <div className="flex items-center justify-around py-2 px-4">
+                <button
+                  onClick={() => setActiveTab('wardrobe')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                    activeTab === 'wardrobe'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Grid className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">Wardrobe</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('outfit')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                    activeTab === 'outfit'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Shirt className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">Create</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('my-outfits')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                    activeTab === 'my-outfits'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Heart className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">My Outfits</span>
+                </button>
+              </div>
             </div>
 
             {/* Category filters */}
