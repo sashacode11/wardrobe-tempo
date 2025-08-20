@@ -447,17 +447,6 @@ const Home = () => {
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
               <div className="flex items-center justify-around py-2 px-4">
                 <button
-                  onClick={() => setActiveTab('home')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                    activeTab === 'home'
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <HomeIcon className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">Home</span>
-                </button>
-                <button
                   onClick={() => setActiveTab('wardrobe')}
                   className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
                     activeTab === 'wardrobe'
@@ -465,8 +454,8 @@ const Home = () => {
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <Grid className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">Wardrobe</span>
+                  <HomeIcon className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">Home</span>
                 </button>
 
                 <button
