@@ -284,10 +284,10 @@ const Home = () => {
                             onClick={handleAddItemClick}
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                              <Plus className="h-6 w-6 text-foreground" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                              <Plus className="h-5 w-5 text-blue-400" />
                             </div>
-                            <span className="text-sm text-foreground font-medium">
+                            <span className="text-xs sm:text-sm font-medium text-gray-700">
                               Add Item
                             </span>
                           </button>
@@ -299,10 +299,10 @@ const Home = () => {
                             }}
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                              <Shirt className="h-6 w-6 text-foreground" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                              <Shirt className="h-5 w-5 text-blue-400" />
                             </div>
-                            <span className="text-sm text-foreground font-medium">
+                            <span className="text-xs sm:text-sm font-medium text-gray-700">
                               Create Outfit
                             </span>
                           </button>
@@ -314,10 +314,10 @@ const Home = () => {
                             }}
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                              <Grid3x3 className="h-6 w-6 text-foreground" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                              <Grid3x3 className="h-5 w-5 text-blue-400" />
                             </div>
-                            <span className="text-sm text-foreground font-medium">
+                            <span className="text-xs sm:text-sm font-medium text-gray-700">
                               My Outfits
                             </span>
                           </button>
