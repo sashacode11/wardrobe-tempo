@@ -12,6 +12,7 @@ import {
   Grid3x3,
   Headphones,
   Heart,
+  HomeIcon,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -442,9 +443,20 @@ const Home = () => {
               {/* Your my outfits content */}
             </TabsContent>
 
-            {/* Mobile Bottom Navigation - Fixed at bottom */}
+            {/* Mobile Bottom Ho - Fixed at bottom */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
               <div className="flex items-center justify-around py-2 px-4">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                    activeTab === 'home'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <HomeIcon className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">Home</span>
+                </button>
                 <button
                   onClick={() => setActiveTab('wardrobe')}
                   className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
