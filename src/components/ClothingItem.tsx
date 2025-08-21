@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Eye } from 'lucide-react';
 import { parseArrayField } from '@/lib/utils';
 
 interface ClothingItemProps {
@@ -64,15 +64,26 @@ const ClothingItem = ({
   return (
     <>
       <Card
-        className="md:w-[250px] md:h-[300px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-white"
+        className="md:w-[250px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-white"
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
           <img src={image} alt={name} className="w-full h-full object-cover" />
-          <Badge className="absolute top-2 right-2">{category}</Badge>
+          <Badge className="absolute top-2 right-2 bg-white text-black">
+            {category}
+          </Badge>
+          <button
+            className="absolute bottom-2 left-2 bg-gray-700  text-white text-xs p-2 rounded-md shadow-lg"
+            onClick={e => {
+              e.stopPropagation();
+              viewOutfit();
+            }}
+          >
+            View Outfit
+          </button>
         </div>
-        <CardContent className="p-3">
-          <h3 className="font-medium text-sm truncate">{name}</h3>
+        <CardContent className="py-1 px-2 sm:p-3">
+          <h3 className="font-medium text-sm truncate text-blue-400">{name}</h3>
           <p className="text-xs text-muted-foreground">{color}</p>
         </CardContent>
       </Card>

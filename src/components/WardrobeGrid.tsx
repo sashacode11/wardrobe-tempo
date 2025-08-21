@@ -482,7 +482,7 @@ const WardrobeGrid = ({
       </div>
 
       {/* Clothing Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  overflow-y-auto flex-grow px-2 w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  overflow-y-auto flex-grow px-2 w-full">
         {filteredItems.length > 0 ? (
           filteredItems.map(item => (
             <div key={item.id} className="relative">
