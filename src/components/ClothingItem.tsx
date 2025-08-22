@@ -12,6 +12,16 @@ import {
 } from '@/components/ui/dialog';
 import { Pencil, Trash2, Plus, Eye } from 'lucide-react';
 import { parseArrayField } from '@/lib/utils';
+import { ClothingItemType, OutfitType } from '@/types';
+import ItemOutfitsModal from './ItemOutfitsModal';
+
+interface OutfitWithItems extends OutfitType {
+  occasions?: string[];
+  outfit_items: {
+    clothing_item_id: string;
+    wardrobe_items: ClothingItemType;
+  }[];
+}
 
 interface ClothingItemProps {
   id?: string;
@@ -26,6 +36,8 @@ interface ClothingItemProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onAddToOutfit?: (id: string) => void;
+  onViewDetails?: () => void;
+  onViewOutfit?: (outfit: OutfitWithItems) => void;
 }
 
 const ClothingItem = ({
@@ -41,9 +53,28 @@ const ClothingItem = ({
   onEdit = () => {},
   onDelete = () => {},
   onAddToOutfit = () => {},
+  onViewDetails,
+  onViewOutfit,
 }: ClothingItemProps) => {
   const [showDetails, setShowDetails] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const [showOutfitsModal, setShowOutfitsModal] = React.useState(false);
+
+  // const { name, category, image_url: image } = item;
+
+  const handleViewOutfit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowOutfitsModal(true);
+  };
+
+  const handleOutfitView = (outfit: OutfitWithItems) => {
+    setShowOutfitsModal(false);
+
+    if (onViewOutfit) {
+      onViewOutfit(outfit);
+    }
+  };
 
   const handleEdit = () => {
     onEdit(id);
@@ -74,12 +105,10 @@ const ClothingItem = ({
           </Badge>
           <button
             className="absolute bottom-2 left-2 bg-gray-700  text-white text-xs p-2 rounded-md shadow-lg"
-            onClick={e => {
-              e.stopPropagation();
-              viewOutfit();
-            }}
+            onClick={handleViewOutfit}
+            type="button"
           >
-            View Outfit
+            View Outfits
           </button>
         </div>
         <CardContent className="py-1 px-2 sm:p-3">
@@ -87,6 +116,22 @@ const ClothingItem = ({
           <p className="text-xs text-muted-foreground">{color}</p>
         </CardContent>
       </Card>
+
+      {/* Item Outfits Modal */}
+      <ItemOutfitsModal
+        isOpen={showOutfitsModal}
+        onClose={() => setShowOutfitsModal(false)}
+        // clothingItem={}
+        clothingItem={{
+          id,
+          name,
+          category,
+          color,
+          image_url: image,
+          // ... other fields
+        }}
+        onViewOutfit={handleOutfitView}
+      />
 
       {/* Item Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
