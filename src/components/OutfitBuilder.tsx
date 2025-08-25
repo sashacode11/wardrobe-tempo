@@ -92,6 +92,15 @@ const OutfitBuilder = ({
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    console.log(
+      '🔧 OutfitBuilder: isOpen=',
+      isOpen,
+      'onClose=',
+      typeof onClose
+    );
+  }, [isOpen, onClose]);
+
   // Load wardrobe items from Supabase
   useEffect(() => {
     loadWardrobeItems();
@@ -109,6 +118,14 @@ const OutfitBuilder = ({
 
   useEffect(() => {
     if (!editingOutfit) {
+      console.log('🔍 [useEffect] editingOutfit changed:', editingOutfit);
+      console.log('🔍 [useEffect] isOpen:', isOpen);
+
+      if (!isOpen) {
+        console.log('⏸ Dialog is closed → skipping reset logic');
+        return;
+      }
+
       // Not editing → reset form
       setOutfitName('');
       setOccasions([]);
@@ -121,6 +138,8 @@ const OutfitBuilder = ({
       ]);
       return;
     }
+
+    console.log('✏️ Switch to EDIT mode → populate fields');
 
     // ✅ Load basic fields safely
     setOutfitName(editingOutfit.name || 'Unnamed Outfit');
@@ -365,289 +384,193 @@ const OutfitBuilder = ({
   );
 
   return (
-    <div className="bg-background w-full h-full p-4">
-      <Card className="w-full h-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Outfit Builder</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col md:flex-row gap-6 h-[calc(100%-160px)]">
-          {/* Current Outfit Preview */}
-          <div className="w-full md:w-1/2 bg-muted/20 rounded-lg p-4 flex flex-col">
-            <h3 className="text-lg font-medium mb-4">Current Outfit</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
-              {currentOutfit.map(outfitItem => (
-                <div key={outfitItem.category} className="relative">
-                  <Card className="h-full">
-                    <CardHeader className="p-3">
-                      <CardTitle className="text-sm">
-                        {outfitItem.category}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 flex items-center justify-center">
-                      {outfitItem.item ? (
-                        <div className="relative w-full h-40">
-                          <img
-                            src={outfitItem.item.image_url}
-                            alt={outfitItem.item.name}
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-1 right-1 h-6 w-6"
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className="max-w-6xl max-h-screen overflow-hidden p-0 flex flex-col"
+        style={{ maxHeight: 'calc(100vh - 80px)' }}
+      >
+        {/* Header */}
+        <DialogHeader className="p-6 pb-4 border-b">
+          <DialogTitle className="text-xl font-semibold">
+            {isEditing ? 'Edit Outfit' : 'Create Outfit'}
+          </DialogTitle>
+          {isEditing && editingOutfit && (
+            <p className="text-sm text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full mt-1">
+              Editing: {editingOutfit.name}
+            </p>
+          )}
+        </DialogHeader>
+
+        {/* Scrollable Body */}
+        <div
+          className="flex-1 overflow-y-auto p-6"
+          style={{ maxHeight: 'calc(100vh - 200px)' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+            {/* Current Outfit Preview */}
+            <div className="bg-muted/20 rounded-lg p-4 flex flex-col">
+              <h3 className="text-lg font-medium mb-4">Current Outfit</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {currentOutfit.map(outfitItem => (
+                  <div key={outfitItem.category} className="relative">
+                    <Card className="h-full">
+                      <CardHeader className="p-3">
+                        <CardTitle className="text-sm capitalize">
+                          {outfitItem.category}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3 flex items-center justify-center">
+                        {outfitItem.item ? (
+                          <div className="relative w-full h-40">
+                            <img
+                              src={outfitItem.item.image_url}
+                              alt={outfitItem.item.name}
+                              className="w-full h-full object-cover rounded-md"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6"
+                              onClick={() =>
+                                handleRemoveItem(outfitItem.category)
+                              }
+                              aria-label={`Remove ${outfitItem.category}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-1 text-xs truncate">
+                              {outfitItem.item.name}
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="w-full h-40 border-2 border-dashed border-muted-foreground/30 rounded-md flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
                             onClick={() =>
-                              handleRemoveItem(outfitItem.category)
+                              setActiveCategory(outfitItem.category)
                             }
                           >
-                            <X className="h-3 w-3" />
-                          </Button>
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-1 text-xs truncate">
-                            {outfitItem.item.name}
+                            <div className="text-center">
+                              <Plus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                              <span className="text-muted-foreground text-xs">
+                                Add {outfitItem.category}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Item Selection */}
+            <div className="flex flex-col">
+              <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+                <TabsList className="grid grid-cols-5 mb-2">
+                  {categories.slice(0, 5).map(category => (
+                    <TabsTrigger
+                      key={category}
+                      value={category}
+                      className="capitalize"
+                    >
+                      {category}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {categories.slice(0, 5).map(category => (
+                  <TabsContent key={category} value={category}>
+                    <ScrollArea className="h-[500px] p-4 border rounded-md">
+                      {loading ? (
+                        <div className="flex items-center justify-center h-40">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                            <p className="text-muted-foreground">
+                              Loading clothes...
+                            </p>
                           </div>
                         </div>
                       ) : (
-                        <div
-                          className="w-full h-40 border-2 border-dashed border-muted-foreground/30 rounded-md flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                          onClick={() => setActiveCategory(outfitItem.category)}
-                        >
-                          <div className="text-center">
-                            <Plus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                            <span className="text-muted-foreground text-xs">
-                              Click to add {outfitItem.category}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Item Selection */}
-          <div className="w-full md:w-1/2 flex flex-col">
-            <Tabs
-              value={activeCategory}
-              defaultValue={activeCategory}
-              onValueChange={setActiveCategory}
-              className="w-full"
-            >
-              <TabsList className="w-full grid grid-cols-5">
-                {categories.slice(0, 5).map(category => (
-                  <TabsTrigger
-                    key={category}
-                    value={category}
-                    className="capitalize"
-                  >
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {categories.slice(0, 5).map(category => (
-                <TabsContent
-                  key={category}
-                  value={category}
-                  className="border rounded-md mt-2"
-                >
-                  <ScrollArea className="h-[500px] p-4">
-                    {loading ? (
-                      <div className="flex items-center justify-center h-40">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-muted-foreground">
-                            Loading your clothes...
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {filteredItems.length > 0 ? (
-                          filteredItems.map(item => (
-                            <Card
-                              key={item.id}
-                              className="cursor-pointer hover:border-primary transition-colors"
-                              onClick={() => handleAddItem(item)}
-                            >
-                              <CardContent className="p-3">
-                                <div className="relative w-full h-40 mb-2">
-                                  <img
-                                    src={item.image_url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover rounded-md"
-                                  />
-                                </div>
-                                <div>
-                                  <h4 className="font-medium">{item.name}</h4>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {item.color && (
-                                      <Badge variant="outline">
-                                        {item.color}
-                                      </Badge>
-                                    )}
-                                    {Array.isArray(item.tags) &&
-                                      item.tags.slice(0, 2).map(tag => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {filteredItems.length > 0 ? (
+                            filteredItems.map(item => (
+                              <Card
+                                key={item.id}
+                                className="cursor-pointer hover:border-primary transition-colors"
+                                onClick={() => handleAddItem(item)}
+                              >
+                                <CardContent className="p-3">
+                                  <div className="relative w-full h-40 mb-2">
+                                    <img
+                                      src={item.image_url}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover rounded-md"
+                                    />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium truncate">
+                                      {item.name}
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {item.color && (
                                         <Badge
-                                          key={tag}
-                                          variant="secondary"
+                                          variant="outline"
                                           className="text-xs"
                                         >
-                                          {tag}
+                                          {item.color}
                                         </Badge>
-                                      ))}
+                                      )}
+                                      {Array.isArray(item.tags) &&
+                                        item.tags.slice(0, 2).map(tag => (
+                                          <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="text-xs"
+                                          >
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                    </div>
                                   </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))
-                        ) : (
-                          <div className="col-span-2 flex flex-col items-center justify-center h-40 text-center">
-                            <p className="text-muted-foreground mb-2">
-                              No {category} in your wardrobe yet
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Add some {category} to your wardrobe to use them
-                              in outfits
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </TabsContent>
-              ))}
-            </Tabs>
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <div className="col-span-2 text-center text-muted-foreground text-sm">
+                              No {category} in your wardrobe yet.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 p-6 pt-0 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => setSaveDialogOpen(true)}>Save Outfit</Button>
-        </CardFooter>
-      </Card>
-
-      {/* Save Outfit Dialog */}
-      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            {/* <DialogTitle>Save Outfit</DialogTitle> */}
-            <DialogTitle>
-              {isEditing ? 'Edit Outfit' : 'Save Outfit'}
-            </DialogTitle>
-
-            <div className="mb-4">
-              {/* <div className="flex items-center justify-between mb-2">
-                <h2 className="text-2xl font-bold">
-                  {isEditing ? 'Edit Outfit' : 'Create New Outfit'}
-                </h2> */}
-              {isEditing && (
-                <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  Editing: {editingOutfit.name}
-                </div>
-              )}
-              {/* </div> */}
-
-              {/* {isEditing && ( */}
-              {/* <div className="text-sm text-gray-600 mb-4">
-                Make your changes and click "Update Outfit" to save them.
-              </div> */}
-              {/* )} */}
-            </div>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="outfit-name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="outfit-name"
-                value={outfitName}
-                onChange={e => setOutfitName(e.target.value)}
-                placeholder="My Favorite Outfit"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="occasions" className="text-right">
-                Occasions
-              </Label>
-              <div className="col-span-3 space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="occasions"
-                    value={occasionInput}
-                    onChange={e => setOccasionInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddOccasion();
-                      }
-                    }}
-                    placeholder="Add occasion (e.g., Casual, Work)"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddOccasion}
-                    title="Add this occasion to the list"
-                  >
-                    {/* <Plus className="h-4 w-4" /> */}
-                    <span className="text-xs hidden sm:inline">Add</span>
-                  </Button>
-                </div>
-                {occasionInput.trim() && (
-                  <p className="text-xs text-muted-foreground">
-                    Press{' '}
-                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">
-                      Enter
-                    </kbd>{' '}
-                    or click <span className="font-medium">Add</span> to include
-                    this occasion.
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {occasions.map(occasion => (
-                    <Badge
-                      key={occasion}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {occasion}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => handleRemoveOccasion(occasion)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
-              Cancel
-            </Button>
-            {/* <Button onClick={handleSaveOutfit}>Save</Button> */}
-            <Button
-              onClick={handleSaveOutfit}
-              disabled={saving || !outfitName.trim()}
-              className="w-full"
-            >
-              {saving
-                ? isEditing
-                  ? 'Updating...'
-                  : 'Saving...'
-                : isEditing
-                ? 'Update Outfit'
-                : 'Save Outfit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          <Button
+            onClick={handleSaveOutfit}
+            disabled={saving || !outfitName.trim()}
+          >
+            {saving
+              ? isEditing
+                ? 'Updating...'
+                : 'Saving...'
+              : isEditing
+              ? 'Update Outfit'
+              : 'Save Outfit'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

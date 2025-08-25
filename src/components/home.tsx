@@ -101,6 +101,8 @@ const Home = () => {
     };
   }, []);
 
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+
   // Mock categories for demonstration
   // const categories = [
   //   { id: 'all', name: 'All Items' },
@@ -521,6 +523,10 @@ const Home = () => {
                 onOutfitSaved={() => setActiveTab('my-outfits')}
                 editingOutfit={editingOutfit}
                 onEditComplete={() => setEditingOutfit(null)}
+                onClose={() => {
+                  setShowOutfitBuilder(false);
+                  setEditingOutfit(null);
+                }}
               />
             </TabsContent>
 

@@ -1,6 +1,6 @@
-// components/ItemOutfitsModal.tsx - Modal to display outfits containing a specific item
+// components/ItemOutfitsModal.tsx - Updated with reusable components
 import React, { useEffect } from 'react';
-import { Eye, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +13,19 @@ import {
 } from '@/components/ui/dialog';
 import { useItemOutfits } from '../hooks/useItemOutfits';
 import { Database } from '../types/supabase';
+import { useState } from 'react';
+
+// Import reusable components
+import OutfitActions from './common/OutfitActions';
+import ViewModal from './common/ViewModal';
+import { useOutfitActions } from '../hooks/useOutfitActions';
+import OutfitBuilder from './OutfitBuilder';
 
 type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
 type OutfitType = Database['public']['Tables']['outfits']['Row'];
 
 interface OutfitWithItems extends OutfitType {
+  name(arg0: string, name: any): unknown;
   occasions?: string[];
   outfit_items: {
     clothing_item_id: string;
@@ -30,6 +38,7 @@ interface ItemOutfitsModalProps {
   onClose: () => void;
   clothingItem: ClothingItemType | null;
   onViewOutfit?: (outfit: OutfitWithItems) => void;
+  onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
 
 const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
@@ -37,6 +46,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
   onClose,
   clothingItem,
   onViewOutfit,
+  onEditOutfit,
 }) => {
   // Debug: Log component render
   console.log('🔍 ItemOutfitsModal: Component render', {
@@ -44,8 +54,25 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
     clothingItemId: clothingItem?.id,
     clothingItemName: clothingItem?.name,
   });
+
+  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
+    null
+  );
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+
   const { outfits, isLoading, error, fetchItemOutfits, clearOutfits } =
     useItemOutfits();
+
+  // Use reusable entity actions hook for view functionality
+  const { selectedItem, showViewModal, handleView, closeModals } =
+    useOutfitActions<OutfitWithItems>({
+      onView: outfit => {
+        // Call the parent's onViewOutfit if provided
+        if (onViewOutfit) {
+          onViewOutfit(outfit);
+        }
+      },
+    });
 
   // Debug: Log hook state changes
   console.log('🔍 ItemOutfitsModal: Hook state:', {
@@ -189,6 +216,30 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
       })),
     });
 
+    const handleEditOutfit = (outfit: OutfitWithItems) => {
+      console.log('✏️ ItemOutfitsModal: Edit button clicked', {
+        outfitId: outfit.id,
+        outfitName: outfit.name,
+        onEditOutfitType: typeof onEditOutfit,
+        onEditOutfitExists: !!onEditOutfit,
+      });
+
+      if (onEditOutfit && typeof onEditOutfit === 'function') {
+        console.log(
+          '✅ ItemOutfitsModal: Calling parent onEditOutfit handler...'
+        );
+        onEditOutfit(outfit);
+      } else {
+        console.warn('❌ ItemOutfitsModal: onEditOutfit is not a function!', {
+          onEditOutfit,
+        });
+      }
+    };
+
+    function handleDelete(outfit: OutfitWithItems): void {
+      throw new Error('Function not implemented.');
+    }
+
     return (
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
@@ -214,18 +265,22 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
               )}
             </div>
 
+            {/* Use reusable OutfitActions - only show view button */}
             <div className="flex gap-1 ml-2">
-              {onViewOutfit && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewOutfit(outfit)}
-                  className="h-8 w-8"
-                  title="View outfit details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
+              <OutfitActions
+                // onView={() => handleView(outfit)}
+                // showEdit={false}
+                // showDelete={false}
+                // size="sm"
+                // viewTitle="View outfit details"
+
+                onView={() => handleView(outfit)}
+                onEdit={() => handleEditOutfit(outfit)}
+                onDelete={() => handleDelete(outfit)}
+                viewTitle="View outfit details"
+                editTitle="Edit outfit"
+                deleteTitle="Delete outfit"
+              />
             </div>
           </div>
         </CardHeader>
@@ -354,40 +409,144 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Outfits with "{clothingItem?.name}"
-          </DialogTitle>
-          {clothingItem && (
-            <div className="flex items-center gap-3 pt-2">
-              <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                <img
-                  src={clothingItem.image_url || ''}
-                  alt={clothingItem.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <p className="font-medium">{clothingItem.name}</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Badge variant="outline" className="text-xs">
-                    {clothingItem.category}
-                  </Badge>
-                  {clothingItem.color && (
-                    <span className="capitalize">{clothingItem.color}</span>
-                  )}
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Outfits with "{clothingItem?.name}"
+            </DialogTitle>
+            {clothingItem && (
+              <div className="flex items-center gap-3 pt-2">
+                <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden">
+                  <img
+                    src={clothingItem.image_url || ''}
+                    alt={clothingItem.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="font-medium">{clothingItem.name}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Badge variant="outline" className="text-xs">
+                      {clothingItem.category}
+                    </Badge>
+                    {clothingItem.color && (
+                      <span className="capitalize">{clothingItem.color}</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </DialogHeader>
+            )}
+          </DialogHeader>
 
-        {renderContent()}
-      </DialogContent>
-    </Dialog>
+          {renderContent()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reusable ViewModal for outfit details */}
+      <ViewModal
+        isOpen={!!showViewModal}
+        onClose={closeModals}
+        title={selectedItem?.name || 'Outfit Details'}
+        subtitle={
+          selectedItem
+            ? `Created on ${new Date(
+                selectedItem.created_at
+              ).toLocaleDateString()}`
+            : ''
+        }
+        maxWidth="2xl"
+      >
+        {selectedItem && (
+          <div>
+            {/* Occasions */}
+            {selectedItem.occasions && selectedItem.occasions.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-4">
+                {selectedItem.occasions.map((occasion, index) => (
+                  <Badge key={index} variant="secondary">
+                    {occasion}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Outfit Items */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(organizeOutfitItems(selectedItem)).map(
+                ([category, item]) => (
+                  <Card key={category}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm capitalize">
+                        {category}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
+                          <img
+                            src={item.image_url || ''}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.name}</p>
+                          {item.color && (
+                            <p className="text-sm text-muted-foreground capitalize">
+                              Color: {item.color}
+                            </p>
+                          )}
+                          {Array.isArray(item.tags) && item.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {item.tags.slice(0, 2).map((tag, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              )}
+            </div>
+          </div>
+        )}
+      </ViewModal>
+
+      {/* Outfit Builder Modal */}
+      {showOutfitBuilder && editingOutfit && (
+        <OutfitBuilder
+          isOpen={true}
+          initialOutfit={{
+            id: editingOutfit.id,
+            name: editingOutfit.name,
+            items: editingOutfit.outfit_items.map(oi => oi.wardrobe_items),
+            occasions: editingOutfit.occasions || [],
+          }}
+          onClose={() => {
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+          onSave={() => {
+            // Optionally refresh outfits list
+            if (clothingItem) {
+              fetchItemOutfits(clothingItem.id);
+            }
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+        />
+      )}
+    </>
   );
 };
 

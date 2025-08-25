@@ -23,8 +23,8 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import ClothingItem from './ClothingItem';
-import SelectionControls from './multiselect/SelectionControls';
-import SelectionCheckbox from './multiselect/SelectionCheckbox';
+import SelectionControls from './common/SelectionControls';
+import SelectionCheckbox from './common/SelectionCheckbox';
 import {
   supabase,
   getCurrentUser,

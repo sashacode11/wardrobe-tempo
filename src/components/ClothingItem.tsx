@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Pencil, Trash2, Plus, Eye } from 'lucide-react';
 import { parseArrayField } from '@/lib/utils';
 import { ClothingItemType, OutfitType } from '@/types';
 import ItemOutfitsModal from './ItemOutfitsModal';
+import OutfitBuilder from './OutfitBuilder';
 
 interface OutfitWithItems extends OutfitType {
   occasions?: string[];
@@ -92,6 +93,26 @@ const ClothingItem = ({
     setShowDetails(false);
   };
 
+  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
+    null
+  );
+
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+
+  function fetchOutfits() {
+    throw new Error('Function not implemented.');
+  }
+
+  const handleClose = () => {
+    console.log('❌ Closing dialog');
+    setShowOutfitBuilder(false);
+
+    // Delay clearing editingOutfit so title doesn't flash
+    setTimeout(() => {
+      setEditingOutfit(null);
+    }, 300); // match Dialog close animation duration
+  };
+
   return (
     <>
       <Card
@@ -131,6 +152,14 @@ const ClothingItem = ({
           // ... other fields
         }}
         onViewOutfit={handleOutfitView}
+        onEditOutfit={outfit => {
+          console.log(
+            '🎯 ItemOutfitsModal: Edit requested for outfit:',
+            outfit.name
+          );
+          setEditingOutfit(outfit); // Set the outfit to edit
+          setShowOutfitBuilder(true); // Open the builder
+        }}
       />
 
       {/* Item Details Dialog */}
@@ -221,6 +250,24 @@ const ClothingItem = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit outfit builder */}
+      {showOutfitBuilder && (
+        <OutfitBuilder
+          isOpen={showOutfitBuilder}
+          editingOutfit={editingOutfit}
+          onClose={handleClose}
+          onEditComplete={() => {
+            // Optionally refresh outfits
+            fetchOutfits(); // or whatever refresh function you have
+          }}
+          onOutfitSaved={() => {
+            fetchOutfits();
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+        />
+      )}
     </>
   );
 };
