@@ -370,13 +370,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col mx-0">
+        {' '}
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             Add New Clothing Item
           </DialogTitle>
         </DialogHeader>
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="upload">Upload Image</TabsTrigger>
@@ -837,7 +837,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             </div>
           </TabsContent>
         </Tabs>
-
         <DialogFooter className="flex justify-between mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
