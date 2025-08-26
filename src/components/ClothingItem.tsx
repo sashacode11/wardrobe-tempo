@@ -104,7 +104,6 @@ const ClothingItem = ({
   }
 
   const handleClose = () => {
-    console.log('❌ Closing dialog');
     setShowOutfitBuilder(false);
 
     // Delay clearing editingOutfit so title doesn't flash
@@ -153,10 +152,6 @@ const ClothingItem = ({
         }}
         onViewOutfit={handleOutfitView}
         onEditOutfit={outfit => {
-          console.log(
-            '🎯 ItemOutfitsModal: Edit requested for outfit:',
-            outfit.name
-          );
           setEditingOutfit(outfit); // Set the outfit to edit
           setShowOutfitBuilder(true); // Open the builder
         }}

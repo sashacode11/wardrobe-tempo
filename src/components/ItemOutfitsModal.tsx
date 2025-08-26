@@ -48,13 +48,6 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
   onViewOutfit,
   onEditOutfit,
 }) => {
-  // Debug: Log component render
-  console.log('🔍 ItemOutfitsModal: Component render', {
-    isOpen,
-    clothingItemId: clothingItem?.id,
-    clothingItemName: clothingItem?.name,
-  });
-
   const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
     null
   );
@@ -74,26 +67,10 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
       },
     });
 
-  // Debug: Log hook state changes
-  console.log('🔍 ItemOutfitsModal: Hook state:', {
-    outfitsCount: outfits?.length || 0,
-    isLoading,
-    error,
-    clothingItemId: clothingItem?.id,
-    isOpen,
-  });
-
   useEffect(() => {
     if (isOpen && clothingItem) {
-      console.log('🔍 ItemOutfitsModal: Fetching outfits for item:', {
-        itemId: clothingItem.id,
-        itemName: clothingItem.name,
-        itemCategory: clothingItem.category,
-      });
-
       // Check if fetchItemOutfits function exists
       if (typeof fetchItemOutfits === 'function') {
-        console.log('🔍 ItemOutfitsModal: Calling fetchItemOutfits...');
         fetchItemOutfits(clothingItem.id);
       } else {
         console.error(
@@ -102,96 +79,27 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
         );
       }
     } else if (!isOpen) {
-      console.log('🔍 ItemOutfitsModal: Clearing outfits (modal closed)');
       if (typeof clearOutfits === 'function') {
         clearOutfits();
       }
     }
   }, [isOpen, clothingItem, fetchItemOutfits, clearOutfits]);
 
-  // Debug: Log outfits data when it changes
-  useEffect(() => {
-    console.log('🔍 ItemOutfitsModal: Outfits state changed:', {
-      outfits: outfits,
-      outfitsType: typeof outfits,
-      outfitsLength: outfits?.length,
-      isArray: Array.isArray(outfits),
-      clothingItemId: clothingItem?.id,
-    });
-
-    if (outfits && outfits.length > 0) {
-      console.log('🔍 ItemOutfitsModal: Outfits received:', outfits.length);
-      outfits.forEach((outfit, index) => {
-        console.log(`🔍 Outfit ${index + 1}:`, {
-          id: outfit.id,
-          name: outfit.name,
-          itemsCount: outfit.outfit_items?.length || 0,
-          outfitItems: outfit.outfit_items?.map(item => ({
-            clothing_item_id: item.clothing_item_id,
-            wardrobe_item_id: item.wardrobe_items?.id,
-            wardrobe_item_name: item.wardrobe_items?.name,
-            wardrobe_item_category: item.wardrobe_items?.category,
-          })),
-        });
-      });
-    } else if (outfits && outfits.length === 0) {
-      console.log(
-        '🔍 ItemOutfitsModal: Empty outfits array for item:',
-        clothingItem?.id
-      );
-    } else if (outfits === null || outfits === undefined) {
-      console.log(
-        '🔍 ItemOutfitsModal: Outfits is null/undefined for item:',
-        clothingItem?.id
-      );
-    }
-  }, [outfits, clothingItem]);
-
   // Helper function to organize outfit items by category
   const organizeOutfitItems = (outfit: OutfitWithItems) => {
-    console.log('🔍 Organizing outfit items for:', outfit.name);
     const organized: { [key: string]: ClothingItemType } = {};
 
     if (!outfit.outfit_items) {
-      console.log('⚠️ No outfit_items array found for outfit:', outfit.name);
       return organized;
     }
 
     outfit.outfit_items?.forEach((item, index) => {
       const clothingItemData = item.wardrobe_items;
-      console.log(`🔍 Processing outfit item ${index + 1}:`, {
-        clothing_item_id: item.clothing_item_id,
-        wardrobe_item: clothingItemData
-          ? {
-              id: clothingItemData.id,
-              name: clothingItemData.name,
-              category: clothingItemData.category,
-              color: clothingItemData.color,
-            }
-          : null,
-      });
 
       if (clothingItemData) {
         organized[clothingItemData.category] = clothingItemData;
-        console.log(
-          `✅ Added to ${clothingItemData.category}:`,
-          clothingItemData.name
-        );
-      } else {
-        console.log(
-          '⚠️ No wardrobe_items data for clothing_item_id:',
-          item.clothing_item_id
-        );
       }
     });
-
-    console.log(
-      '🔍 Final organized items:',
-      Object.keys(organized).map(cat => ({
-        category: cat,
-        item: organized[cat].name,
-      }))
-    );
 
     return organized;
   };
@@ -207,27 +115,8 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
         item.wardrobe_items?.id === clothingItem?.id
     );
 
-    console.log(`🔍 OutfitCard for "${outfit.name}":`, {
-      currentItemId: clothingItem?.id,
-      currentItemInOutfit,
-      outfitItemIds: outfit.outfit_items?.map(item => ({
-        clothing_item_id: item.clothing_item_id,
-        wardrobe_item_id: item.wardrobe_items?.id,
-      })),
-    });
-
     const handleEditOutfit = (outfit: OutfitWithItems) => {
-      console.log('✏️ ItemOutfitsModal: Edit button clicked', {
-        outfitId: outfit.id,
-        outfitName: outfit.name,
-        onEditOutfitType: typeof onEditOutfit,
-        onEditOutfitExists: !!onEditOutfit,
-      });
-
       if (onEditOutfit && typeof onEditOutfit === 'function') {
-        console.log(
-          '✅ ItemOutfitsModal: Calling parent onEditOutfit handler...'
-        );
         onEditOutfit(outfit);
       } else {
         console.warn('❌ ItemOutfitsModal: onEditOutfit is not a function!', {
@@ -308,17 +197,6 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
                 isCurrentItemCheck2 ||
                 isCurrentItemCheck3;
 
-              if (item && clothingItem) {
-                console.log(`🔍 Category ${category} item check:`, {
-                  itemId: item.id,
-                  currentItemId: clothingItem.id,
-                  isCurrentItemCheck1,
-                  isCurrentItemCheck2,
-                  isCurrentItemCheck3,
-                  finalIsCurrentItem: isCurrentItem,
-                });
-              }
-
               return (
                 <div key={category} className="text-center">
                   <div
@@ -366,7 +244,6 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
     }
 
     if (error) {
-      console.log('🔍 ItemOutfitsModal: Error state:', error);
       return (
         <div className="text-center py-12">
           <div className="text-red-500 mb-4">⚠️</div>
@@ -383,9 +260,6 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
     }
 
     if (outfits.length === 0) {
-      console.log(
-        '🔍 ItemOutfitsModal: No outfits state - showing empty message'
-      );
       return (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">👔</div>

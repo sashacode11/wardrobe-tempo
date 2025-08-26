@@ -94,12 +94,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         notes: editingItem.notes || '',
       };
 
-      console.log('Parsed seasons:', newItemData.seasons);
-
       setItemData(newItemData);
       setActiveTab('details');
     } else {
-      console.log('🔍 setItemData called from: useEffect (new item)');
       setItemData({
         image: null,
         imagePreview: null,
@@ -195,9 +192,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   };
 
   const handleSave = async () => {
-    console.log('Saving seasons:', itemData.seasons);
-    console.log('Saving tags:', itemData.tags);
-    console.log('Saving occasions:', itemData.occasions);
     if (
       (!itemData.image && !itemData.imagePreview) ||
       !itemData.name ||

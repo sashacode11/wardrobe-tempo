@@ -108,7 +108,6 @@ const WardrobeGrid = ({
     try {
       const user = await getCurrentUser();
       if (!user) {
-        console.log('No user found');
         setLoading(false);
         return;
       }

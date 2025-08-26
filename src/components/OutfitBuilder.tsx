@@ -99,15 +99,6 @@ const OutfitBuilder = ({
     setInternalOpen(isOpen);
   }, [isOpen]);
 
-  useEffect(() => {
-    console.log(
-      '🔧 OutfitBuilder: isOpen=',
-      isOpen,
-      'onClose=',
-      typeof onClose
-    );
-  }, [isOpen, onClose]);
-
   // Load wardrobe items from Supabase
   useEffect(() => {
     loadWardrobeItems();
@@ -125,11 +116,7 @@ const OutfitBuilder = ({
 
   useEffect(() => {
     if (!editingOutfit) {
-      console.log('🔍 [useEffect] editingOutfit changed:', editingOutfit);
-      console.log('🔍 [useEffect] isOpen:', isOpen);
-
       if (!isOpen) {
-        console.log('⏸ Dialog is closed → skipping reset logic');
         return;
       }
 
@@ -145,8 +132,6 @@ const OutfitBuilder = ({
       ]);
       return;
     }
-
-    console.log('✏️ Switch to EDIT mode → populate fields');
 
     // ✅ Load basic fields safely
     setOutfitName(editingOutfit.name || 'Unnamed Outfit');
@@ -366,7 +351,6 @@ const OutfitBuilder = ({
       setSaveDialogOpen(false);
 
       if (isEditing) {
-        console.log('Edit completed - closing dialog and navigating back');
         // Close the edit dialog and navigate back
         handleClose();
         onEditComplete();
@@ -375,7 +359,6 @@ const OutfitBuilder = ({
         // Only call onOutfitSaved for new outfits, with error protection
         try {
           if (onOutfitSaved) {
-            console.log('Calling onOutfitSaved for new outfit...');
             onOutfitSaved();
           }
         } catch (error) {
@@ -404,10 +387,6 @@ const OutfitBuilder = ({
   );
 
   const handleClose = () => {
-    console.log('🚪 handleClose called');
-    console.log('🚪 onClose exists:', !!onClose);
-    console.log('🚪 isEditing:', isEditing);
-
     // First close the dialog internally
     setInternalOpen(false);
 
@@ -426,16 +405,10 @@ const OutfitBuilder = ({
 
     // Call the parent's onClose function
     if (onClose) {
-      console.log('🚪 Calling onClose...');
       onClose();
     } else {
       console.warn('🚪 No onClose function provided!');
     }
-
-    // Don't call onEditComplete here - it causes "Function not implemented" errors
-    console.log(
-      '🚪 Close completed - skipping onEditComplete to prevent errors'
-    );
   };
 
   return (
