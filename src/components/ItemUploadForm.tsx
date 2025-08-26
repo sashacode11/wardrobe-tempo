@@ -201,6 +201,11 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       return;
     }
 
+    if (currentTag.trim()) {
+      alert('Please press Enter or click Add to include the tag.');
+      return;
+    }
+
     setSaving(true);
     try {
       const user = await getCurrentUser();
