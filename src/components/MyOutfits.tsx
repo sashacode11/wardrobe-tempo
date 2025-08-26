@@ -28,9 +28,10 @@ import ViewModal from './common/ViewModal';
 // import EditModal from './common/EditModal';
 import DeleteModal from './common/DeleteModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
+import { ClothingItemType, OutfitType } from '@/types';
 
-type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
-type OutfitType = Database['public']['Tables']['outfits']['Row'];
+// type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
+// type OutfitType = Database['public']['Tables']['outfits']['Row'];
 
 interface OutfitWithItems extends OutfitType {
   occasions?: string[];

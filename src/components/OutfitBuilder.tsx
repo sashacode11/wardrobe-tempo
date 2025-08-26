@@ -28,10 +28,11 @@ import {
   supabase,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
+import { ClothingItemType, OutfitWithItems } from '@/types';
 
-type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
-type OutfitWithItems =
-  Database['public']['Tables']['outfits_with_items']['Row'];
+// type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
+// type OutfitWithItems =
+//   Database['public']['Tables']['outfits_with_items']['Row'];
 
 interface OutfitItem {
   category: string;
