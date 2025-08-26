@@ -104,6 +104,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   }, []);
 
   const fetchOutfits = async () => {
+    console.log('🔁 fetchOutfits: Starting...');
+
     try {
       setLoading(true);
 
@@ -132,6 +134,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         setError('Failed to load outfits');
         return;
       }
+      console.log('✅ fetchOutfits: Loaded data:', data?.length, 'outfits');
 
       setOutfits((data as OutfitWithItems[]) || []);
     } catch (error) {
@@ -398,7 +401,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             setMyOutfitsEditingOutfit(null);
           }}
           onOutfitSaved={() => {
-            // ← Add this for create mode
+            console.log('💾 onOutfitSaved: Calling fetchOutfits...');
+
             fetchOutfits();
             setShowOutfitBuilder(false);
             setMyOutfitsEditingOutfit(null);
