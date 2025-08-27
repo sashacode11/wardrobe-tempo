@@ -382,7 +382,8 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto md:p-4">
+      <main className="container mx-auto md:p-4 pb-20 md:pb-4">
+        {' '}
         {authLoading ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -444,47 +445,6 @@ const Home = () => {
             <TabsContent value="my-outfits">
               {/* Your my outfits content */}
             </TabsContent>
-
-            {/* Mobile Bottom Ho - Fixed at bottom */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
-              <div className="flex items-center justify-around py-2 px-4">
-                <button
-                  onClick={() => setActiveTab('wardrobe')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                    activeTab === 'wardrobe'
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <HomeIcon className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">Home</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('outfit')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                    activeTab === 'outfit'
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <Shirt className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">Create</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('my-outfits')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                    activeTab === 'my-outfits'
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <Heart className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">My Outfits</span>
-                </button>
-              </div>
-            </div>
 
             {/* Category filters */}
             {/* <div className="mb-6 overflow-x-auto">
@@ -549,6 +509,47 @@ const Home = () => {
           </Tabs>
         )}
       </main>
+
+      {/* Mobile Bottom Ho - Fixed at bottom */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
+        <div className="flex items-center justify-around py-2 px-4">
+          <button
+            onClick={() => setActiveTab('wardrobe')}
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              activeTab === 'wardrobe'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <HomeIcon className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Home</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('outfit')}
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              activeTab === 'outfit'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Shirt className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Create</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('my-outfits')}
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              activeTab === 'my-outfits'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Heart className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">My Outfits</span>
+          </button>
+        </div>
+      </div>
 
       {/* Upload Form Dialog */}
       <ItemUploadForm
