@@ -517,7 +517,7 @@ const Home = () => {
             onClick={() => setActiveTab('wardrobe')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'wardrobe'
-                ? 'text-primary bg-primary/10'
+                ? 'text-blue-600 '
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -529,11 +529,11 @@ const Home = () => {
             onClick={() => setActiveTab('outfit')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'outfit'
-                ? 'text-primary bg-primary/10'
+                ? 'text-blue-600 '
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            <Shirt className="h-5 w-5 mb-1" />
+            <Plus className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Create</span>
           </button>
 
@@ -541,11 +541,11 @@ const Home = () => {
             onClick={() => setActiveTab('my-outfits')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'my-outfits'
-                ? 'text-primary bg-primary/10'
+                ? 'text-blue-600 '
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            <Heart className="h-5 w-5 mb-1" />
+            <Shirt className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">My Outfits</span>
           </button>
         </div>
