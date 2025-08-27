@@ -10,7 +10,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Pencil, Trash2, Plus, Eye } from 'lucide-react';
+import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { capitalizeFirst, parseArrayField } from '@/lib/utils';
 import { ClothingItemType, OutfitType } from '@/types';
 import ItemOutfitsModal from './ItemOutfitsModal';
@@ -160,69 +161,152 @@ const ClothingItem = ({
 
       {/* Item Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto">
-          {' '}
-          <DialogHeader>
-            <DialogTitle>{capitalizeFirst(name)}</DialogTitle>
-            <DialogDescription>Item details</DialogDescription>
-          </DialogHeader>
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
-            {' '}
-            <div className="relative w-full h-48 sm:h-64 overflow-hidden rounded-md">
-              {' '}
+        <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto p-0 overflow-hidden [&>button]:hidden">
+          {/* Image Header with Title Overlay */}
+          <div className="relative">
+            <div className="relative w-full h-48 sm:h-64 overflow-hidden">
               <img
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"
               />
-            </div>
-            <div className="grid gap-2">
-              <div>
-                <span className="font-medium">Category:</span> {category}
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+              {/* Title overlay on image */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <h2 className="text-white text-xl font-bold drop-shadow-lg">
+                  {capitalizeFirst(name)}
+                </h2>
               </div>
-              <div>
-                <span className="font-medium">Color:</span> {color}
-              </div>
-              <div>
-                <span className="font-medium">Location:</span> {location}
-              </div>
-              <div>
-                <span className="font-medium">Seasons:</span>{' '}
-                {parseArrayField(seasons).length > 0
-                  ? parseArrayField(seasons).join(', ')
-                  : 'Not specified'}
-              </div>
-              <div>
-                <span className="font-medium">Occasions:</span>{' '}
-                {parseArrayField(occasions).length > 0
-                  ? parseArrayField(occasions).join(', ')
-                  : 'Not specified'}
-              </div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                <span className="font-medium">Tags:</span>{' '}
-                {parseArrayField(tags).length > 0
-                  ? parseArrayField(tags).join(', ')
-                  : 'No tags'}
-              </div>
+
+              {/* Close button */}
+              <DialogPrimitive.Close className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-black hover:bg-white/30 transition-colors">
+                <X className="h-4 w-4" />
+              </DialogPrimitive.Close>
             </div>
           </div>
-          <DialogFooter className="flex flex-row gap-3 justify-between sm:justify-between">
-            <div className="flex gap-2 w-fit">
-              <Button variant="outline" size="sm" onClick={handleEdit}>
-                <Pencil className="h-4 w-4 mr-1" /> Edit
+
+          <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
+            {/* Details Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Category
+                </p>
+                <p className="text-sm font-medium capitalize">{category}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Color
+                </p>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full border border-gray-300"
+                    style={{
+                      backgroundColor: color === 'white' ? '#ffffff' : color,
+                    }}
+                  ></div>
+                  <p className="text-sm font-medium capitalize">{color}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Location
+                </p>
+                <p className="text-sm font-medium">
+                  {location || 'Not specified'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Season
+                </p>
+                <p className="text-sm font-medium capitalize">
+                  {parseArrayField(seasons).length > 0
+                    ? parseArrayField(seasons).join(', ')
+                    : 'Not specified'}
+                </p>
+              </div>
+            </div>
+
+            {/* Tags and Occasions */}
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Occasions
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {parseArrayField(occasions).length > 0 ? (
+                    parseArrayField(occasions).map((occasion, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      >
+                        {occasion.trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Not specified
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Tags
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {parseArrayField(tags).length > 0 ? (
+                    parseArrayField(tags).map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                      >
+                        #{tag.trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      No tags
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEdit}
+                className="flex-1"
+              >
+                <Pencil className="h-4 w-4 mr-2" /> Edit
               </Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
                 onClick={() => setConfirmDelete(true)}
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
               >
-                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
+              </Button>
+              <Button
+                onClick={handleAddToOutfit}
+                size="sm"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add to Outfit
               </Button>
             </div>
-            <Button onClick={handleAddToOutfit} size="sm" className="w-fit">
-              <Plus className="h-4 w-4 mr-1" /> Add to Outfit
-            </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
