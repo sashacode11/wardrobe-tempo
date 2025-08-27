@@ -159,21 +159,22 @@ const ClothingItem = ({
 
       {/* Item Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto">
+          {' '}
           <DialogHeader>
             <DialogTitle>{name}</DialogTitle>
             <DialogDescription>Item details</DialogDescription>
           </DialogHeader>
-
-          <div className="grid gap-4">
-            <div className="relative w-full h-[300px] overflow-hidden rounded-md">
+          <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
+            {' '}
+            <div className="relative w-full h-48 sm:h-64 overflow-hidden rounded-md">
+              {' '}
               <img
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"
               />
             </div>
-
             <div className="grid gap-2">
               <div>
                 <span className="font-medium">Category:</span> {category}
@@ -204,9 +205,8 @@ const ClothingItem = ({
               </div>
             </div>
           </div>
-
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <div className="flex gap-2">
+          <DialogFooter className="flex flex-row gap-3 justify-between sm:justify-between">
+            <div className="flex gap-2 w-fit">
               <Button variant="outline" size="sm" onClick={handleEdit}>
                 <Pencil className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -218,7 +218,7 @@ const ClothingItem = ({
                 <Trash2 className="h-4 w-4 mr-1" /> Delete
               </Button>
             </div>
-            <Button onClick={handleAddToOutfit}>
+            <Button onClick={handleAddToOutfit} size="sm" className="w-fit">
               <Plus className="h-4 w-4 mr-1" /> Add to Outfit
             </Button>
           </DialogFooter>
