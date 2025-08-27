@@ -24,3 +24,8 @@ export const parseArrayField = field => {
   }
   return [];
 };
+
+export function capitalizeFirst(name: string | null | undefined): string {
+  if (!name || typeof name !== 'string') return '';
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}

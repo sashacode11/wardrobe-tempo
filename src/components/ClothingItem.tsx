@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Pencil, Trash2, Plus, Eye } from 'lucide-react';
-import { parseArrayField } from '@/lib/utils';
+import { capitalizeFirst, parseArrayField } from '@/lib/utils';
 import { ClothingItemType, OutfitType } from '@/types';
 import ItemOutfitsModal from './ItemOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
@@ -132,7 +132,9 @@ const ClothingItem = ({
           </button>
         </div>
         <CardContent className="py-1 px-2 sm:p-3">
-          <h3 className="font-medium text-sm truncate text-blue-400">{name}</h3>
+          <h3 className="font-medium text-sm truncate text-blue-400">
+            {capitalizeFirst(name)}
+          </h3>
           <p className="text-xs text-muted-foreground">{color}</p>
         </CardContent>
       </Card>
@@ -148,7 +150,6 @@ const ClothingItem = ({
           category,
           color,
           image_url: image,
-          // ... other fields
         }}
         onViewOutfit={handleOutfitView}
         onEditOutfit={outfit => {
@@ -162,7 +163,7 @@ const ClothingItem = ({
         <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto">
           {' '}
           <DialogHeader>
-            <DialogTitle>{name}</DialogTitle>
+            <DialogTitle>{capitalizeFirst(name)}</DialogTitle>
             <DialogDescription>Item details</DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
