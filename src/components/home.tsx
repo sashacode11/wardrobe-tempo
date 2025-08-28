@@ -104,38 +104,27 @@ const Home = () => {
 
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
 
-  // Mock categories for demonstration
-  // const categories = [
-  //   { id: 'all', name: 'All Items' },
-  //   { id: 'tops', name: 'Tops' },
-  //   { id: 'bottoms', name: 'Bottoms' },
-  //   { id: 'shoes', name: 'Shoes' },
-  //   { id: 'accessories', name: 'Accessories' },
-  //   { id: 'outerwear', name: 'Outerwear' },
-  // ];
-
-  // console.log(user);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 pl-4 pr-4 sm:pb-4 sm:pt-4">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="md:text-2xl font-bold">My Wardrobe</h1>
+          <h1 className="md:text-2xl font-bold">Nexa</h1>
+
+          {/* show search outside of hamburger menu in mobile */}
+          {user && (
+            <div className="md:hidden relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          )}
 
           <div className="hidden md:flex items-center space-x-4">
-            {/* {user && (
-              <div className="relative w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            )} */}
-
             {user && (
               <div className="relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -158,10 +147,6 @@ const Home = () => {
 
             {user ? (
               <div className="flex items-center space-x-2">
-                {/* <Button onClick={handleAddItemClick}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Item
-                </Button> */}
                 <Button variant="outline" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -192,19 +177,6 @@ const Home = () => {
             <Menu className="h-5 w-5" />
           </Button>
         </div>
-
-        {/* show search outside of hamburger menu in mobile */}
-        {user && (
-          <div className="md:hidden relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search items..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-        )}
 
         {/* Mobile menu */}
         {showMobileMenu && (
