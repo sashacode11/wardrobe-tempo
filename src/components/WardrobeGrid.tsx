@@ -32,7 +32,7 @@ import {
   deleteClothingItem,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
-import { ClothingItemType, OutfitType } from '../types';
+import { ClothingItemType, OutfitWithItems } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
 
 interface WardrobeGridProps {
@@ -42,14 +42,6 @@ interface WardrobeGridProps {
   onSelectItem?: (item: ClothingItemType) => void;
   onAddToOutfit?: (item: ClothingItemType) => void;
   onEditItem?: (item: ClothingItemType) => void;
-}
-
-interface OutfitWithItems extends OutfitType {
-  occasions?: string[];
-  outfit_items: {
-    clothing_item_id: string;
-    wardrobe_items: ClothingItemType;
-  }[];
 }
 
 const WardrobeGrid = ({

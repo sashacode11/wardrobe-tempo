@@ -1,17 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase, getCurrentUser } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
-
-type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
-type OutfitType = Database['public']['Tables']['outfits']['Row'];
-
-interface OutfitWithItems extends OutfitType {
-  occasions?: string[];
-  outfit_items: {
-    clothing_item_id: string;
-    wardrobe_items: ClothingItemType;
-  }[];
-}
+import { OutfitWithItems } from '../types';
 
 interface UseItemOutfitsReturn {
   outfits: OutfitWithItems[];

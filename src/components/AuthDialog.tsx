@@ -1,49 +1,49 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   supabase,
   signInWithGoogle,
   signInWithApple,
-} from "../lib/supabaseClient";
-import { Eye, EyeOff } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+} from '../lib/supabaseClient';
+import { Eye, EyeOff } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface AuthDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onAuthSuccess?: () => void;
-  defaultTab?: "login" | "signup";
+  defaultTab?: 'login' | 'signup';
 }
 
 const AuthDialog: React.FC<AuthDialogProps> = ({
   open = false,
   onOpenChange = () => {},
   onAuthSuccess = () => {},
-  defaultTab = "login",
+  defaultTab = 'login',
 }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -57,11 +57,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         onAuthSuccess();
         onOpenChange(false);
         // Reset form
-        setEmail("");
-        setPassword("");
+        setEmail('');
+        setPassword('');
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
   const handleGoogleSignIn = async () => {
     setOauthLoading(true);
-    setError("");
+    setError('');
 
     try {
       const { error } = await signInWithGoogle();
@@ -78,7 +78,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       }
       // Note: OAuth redirects will handle success automatically
     } catch (err) {
-      setError("An unexpected error occurred with Google sign-in");
+      setError('An unexpected error occurred with Google sign-in');
     } finally {
       setOauthLoading(false);
     }
@@ -86,7 +86,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
   const handleAppleSignIn = async () => {
     setOauthLoading(true);
-    setError("");
+    setError('');
 
     try {
       const { error } = await signInWithApple();
@@ -95,7 +95,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       }
       // Note: OAuth redirects will handle success automatically
     } catch (err) {
-      setError("An unexpected error occurred with Apple sign-in");
+      setError('An unexpected error occurred with Apple sign-in');
     } finally {
       setOauthLoading(false);
     }
@@ -104,16 +104,16 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError('Password must be at least 6 characters long');
       setLoading(false);
       return;
     }
@@ -127,15 +127,15 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       if (error) {
         setError(error.message);
       } else {
-        alert("Check your email for the confirmation link!");
+        alert('Check your email for the confirmation link!');
         onOpenChange(false);
         // Reset form
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -177,7 +177,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {oauthLoading ? "Connecting..." : "Continue with Google"}
+            {oauthLoading ? 'Connecting...' : 'Continue with Google'}
           </Button>
 
           <Button
@@ -194,7 +194,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
             >
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
-            {oauthLoading ? "Connecting..." : "Continue with Apple"}
+            {oauthLoading ? 'Connecting...' : 'Continue with Apple'}
           </Button>
         </div>
 
@@ -207,7 +207,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={value => setActiveTab(value as 'login' | 'signup')}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -221,7 +225,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                   id="login-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
                 />
@@ -232,9 +236,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 <div className="relative">
                   <Input
                     id="login-password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
                   />
@@ -265,7 +269,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 className="w-full"
                 disabled={loading || oauthLoading}
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
           </TabsContent>
@@ -278,7 +282,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                   id="signup-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
                 />
@@ -289,9 +293,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 <div className="relative">
                   <Input
                     id="signup-password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     placeholder="Create a password"
                     required
                   />
@@ -316,9 +320,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 <div className="relative">
                   <Input
                     id="confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
                     required
                   />
@@ -349,7 +353,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 className="w-full"
                 disabled={loading || oauthLoading}
               >
-                {loading ? "Creating account..." : "Sign Up"}
+                {loading ? 'Creating account...' : 'Sign Up'}
               </Button>
             </form>
           </TabsContent>

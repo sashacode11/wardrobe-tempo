@@ -14,24 +14,13 @@ import {
 import { useItemOutfits } from '../hooks/useItemOutfits';
 import { Database } from '../types/supabase';
 import { useState } from 'react';
+import { OutfitWithItems, ClothingItemType } from '@/types';
 
 // Import reusable components
 import OutfitActions from './common/OutfitActions';
 import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import OutfitBuilder from './OutfitBuilder';
-
-type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
-type OutfitType = Database['public']['Tables']['outfits']['Row'];
-
-interface OutfitWithItems extends OutfitType {
-  name(arg0: string, name: any): unknown;
-  occasions?: string[];
-  outfit_items: {
-    clothing_item_id: string;
-    wardrobe_items: ClothingItemType;
-  }[];
-}
 
 interface ItemOutfitsModalProps {
   isOpen: boolean;
@@ -400,12 +389,13 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
       {showOutfitBuilder && editingOutfit && (
         <OutfitBuilder
           isOpen={true}
-          initialOutfit={{
-            id: editingOutfit.id,
-            name: editingOutfit.name,
-            items: editingOutfit.outfit_items.map(oi => oi.wardrobe_items),
-            occasions: editingOutfit.occasions || [],
-          }}
+          // initialOutfit={{
+          //   id: editingOutfit.id,
+          //   name: editingOutfit.name,
+          //   items: editingOutfit.outfit_items.map(oi => oi.wardrobe_items),
+          //   occasions: editingOutfit.occasions || [],
+          // }}
+          initialOutfit={editingOutfit}
           onClose={() => {
             setShowOutfitBuilder(false);
             setEditingOutfit(null);
@@ -417,6 +407,10 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
             }
             setShowOutfitBuilder(false);
             setEditingOutfit(null);
+          }}
+          editingOutfit={undefined}
+          onEditComplete={function (): void {
+            throw new Error('Function not implemented.');
           }}
         />
       )}

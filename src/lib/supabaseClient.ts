@@ -211,13 +211,13 @@ export const uploadImage = async (file: File) => {
   }
 
   // Step 5: Generate a public URL for the uploaded file
-  const { data: publicUrlData, error: publicUrlError } = await supabase.storage
+  const { data: publicUrlData } = supabase.storage
     .from('wardrobe-images')
     .getPublicUrl(uploadData.path);
 
-  if (publicUrlError) {
-    console.error('Error generating public URL:', publicUrlError);
-    return { data: null, error: publicUrlError };
+  if (!publicUrlData.publicUrl) {
+    console.error('Failed to generate public URL');
+    return null;
   }
 
   // Step 6: Return the result with the public URL

@@ -19,8 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Plus, X, Save, Trash2 } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import {
   getCurrentUser,
   getClothingItems,
@@ -28,34 +27,9 @@ import {
   supabase,
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
-import { ClothingItemType, OutfitWithItems } from '@/types';
-
-// type ClothingItemType = Database['public']['Tables']['wardrobe_items']['Row'];
-// type OutfitWithItems =
-//   Database['public']['Tables']['outfits_with_items']['Row'];
-
-interface OutfitItem {
-  category: string;
-  item: ClothingItemType | null;
-}
-
-interface OutfitBuilderProps {
-  onSave?: (outfit: {
-    name: string;
-    items: ClothingItemType[];
-    occasions: string[];
-  }) => void;
-  onClose?: () => void;
-  isOpen?: boolean;
-  selectedItem?: ClothingItemType;
-  onItemAdded?: () => void;
-  onOutfitSaved?: () => void;
-  editingOutfit: OutfitWithItems | null;
-  onEditComplete: () => void;
-}
+import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
 
 const OutfitBuilder = ({
-  onSave,
   onClose,
   isOpen = true,
   selectedItem,

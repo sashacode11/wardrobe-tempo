@@ -13,34 +13,9 @@ import {
 import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { capitalizeFirst, parseArrayField } from '@/lib/utils';
-import { ClothingItemType, OutfitType } from '@/types';
+import { OutfitWithItems, ClothingItemProps } from '@/types';
 import ItemOutfitsModal from './ItemOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
-
-interface OutfitWithItems extends OutfitType {
-  occasions?: string[];
-  outfit_items: {
-    clothing_item_id: string;
-    wardrobe_items: ClothingItemType;
-  }[];
-}
-
-interface ClothingItemProps {
-  id?: string;
-  image?: string;
-  name?: string;
-  category?: string;
-  color?: string;
-  location?: string;
-  seasons?: string[];
-  occasions?: string[];
-  tags?: string[];
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onAddToOutfit?: (id: string) => void;
-  onViewDetails?: () => void;
-  onViewOutfit?: (outfit: OutfitWithItems) => void;
-}
 
 const ClothingItem = ({
   id = 'unknown',
@@ -55,7 +30,6 @@ const ClothingItem = ({
   onEdit = () => {},
   onDelete = () => {},
   onAddToOutfit = () => {},
-  onViewDetails,
   onViewOutfit,
 }: ClothingItemProps) => {
   const [showDetails, setShowDetails] = React.useState(false);

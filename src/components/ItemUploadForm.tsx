@@ -227,8 +227,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       // Only upload new image if one was selected
       if (itemData.image) {
         const { data: imageData, error: imageError } = await uploadImage(
-          itemData.image,
-          user.id
+          itemData.image
         );
 
         if (imageError || !imageData) {
