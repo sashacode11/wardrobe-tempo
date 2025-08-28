@@ -146,7 +146,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       <DialogContent className="bg-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
-            Welcome to My Wardrobe
+            Welcome to Vesti
           </DialogTitle>
         </DialogHeader>
 

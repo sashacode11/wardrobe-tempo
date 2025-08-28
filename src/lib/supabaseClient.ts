@@ -31,6 +31,12 @@ export const signInWithGoogle = async () => {
     options: {
       // redirectTo: 'http://localhost:5173/auth/callback',
       redirectTo: `${window.location.origin}/auth/callback`,
+      // Add these for mobile compatibility:
+      skipBrowserRedirect: false,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'select_account',
+      },
     },
   });
   return { data, error };
