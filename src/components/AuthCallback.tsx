@@ -2,53 +2,27 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
-export default function AuthCallback() {
+const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        // Wait for Supabase to process the auth
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    const handleOAuthCallback = async () => {
+      // This processes the access_token from the URL fragment
+      const { error } = await supabase.auth.getSession();
 
-        const { data, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('Auth error:', error);
-          navigate('/login');
-          return;
-        }
-
-        if (data.session) {
-          console.log('✅ Login successful:', data.session.user.email);
-          navigate('/dashboard'); // or your main page
-        } else {
-          console.log('❌ No session found');
-          navigate('/login');
-        }
-      } catch (err) {
-        console.error('Callback error:', err);
-        navigate('/login');
+      if (error) {
+        console.error('Error handling Supabase OAuth callback:', error.message);
+        return;
       }
+
+      // Optional: Wait a moment to allow session propagation (sometimes helps in dev)
+      setTimeout(() => navigate('/'), 100);
     };
 
-    handleAuthCallback();
+    handleOAuthCallback();
   }, [navigate]);
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        flexDirection: 'column',
-      }}
-    >
-      <div>🔄 Completing login...</div>
-      <div style={{ fontSize: '14px', marginTop: '10px', opacity: 0.7 }}>
-        Please wait a moment
-      </div>
-    </div>
-  );
-}
+  return <p>Logging in... Please wait.</p>;
+};
+
+export default AuthCallback;
