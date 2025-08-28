@@ -1,28 +1,47 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 
-const AuthCallback = () => {
+export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleOAuthCallback = async () => {
-      // This processes the access_token from the URL fragment
-      const { error } = await supabase.auth.getSession();
+    const handleAuthCallback = async () => {
+      try {
+        // This handles both hash and query parameters
+        const { data, error } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error("Error handling Supabase OAuth callback:", error.message);
-        return;
+        if (error) {
+          console.error('Auth error:', error);
+          navigate('/login');
+          return;
+        }
+
+        if (data.session) {
+          console.log('Login successful:', data.session.user);
+          navigate('/dashboard'); // or wherever you want to redirect
+        } else {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Callback error:', error);
+        navigate('/login');
       }
-
-      // Optional: Wait a moment to allow session propagation (sometimes helps in dev)
-      setTimeout(() => navigate("/"), 100);
     };
 
-    handleOAuthCallback();
+    handleAuthCallback();
   }, [navigate]);
 
-  return <p>Logging in... Please wait.</p>;
-};
-
-export default AuthCallback;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
+      <div>Completing login...</div>
+    </div>
+  );
+}
