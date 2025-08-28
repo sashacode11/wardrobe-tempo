@@ -8,7 +8,9 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // This handles both hash and query parameters
+        // Wait for Supabase to process the auth
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -18,13 +20,14 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
-          console.log('Login successful:', data.session.user);
-          navigate('/dashboard'); // or wherever you want to redirect
+          console.log('✅ Login successful:', data.session.user.email);
+          navigate('/dashboard'); // or your main page
         } else {
+          console.log('❌ No session found');
           navigate('/login');
         }
-      } catch (error) {
-        console.error('Callback error:', error);
+      } catch (err) {
+        console.error('Callback error:', err);
         navigate('/login');
       }
     };
@@ -39,9 +42,13 @@ export default function AuthCallback() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
+        flexDirection: 'column',
       }}
     >
-      <div>Completing login...</div>
+      <div>🔄 Completing login...</div>
+      <div style={{ fontSize: '14px', marginTop: '10px', opacity: 0.7 }}>
+        Please wait a moment
+      </div>
     </div>
   );
 }
