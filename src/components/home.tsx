@@ -39,6 +39,7 @@ const Home = () => {
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleItemSaved = () => {
     // Refresh the wardrobe grid by changing its key
@@ -419,23 +420,6 @@ const Home = () => {
               {/* Your my outfits content */}
             </TabsContent>
 
-            {/* Category filters */}
-            {/* <div className="mb-6 overflow-x-auto">
-              <div className="flex space-x-2 pb-2">
-                {activeTab === 'wardrobe' &&
-                  categories.map(category => (
-                    <Button
-                      key={category.id}
-                      variant="outline"
-                      size="sm"
-                      className="whitespace-nowrap"
-                    >
-                      {category.name}
-                    </Button>
-                  ))}
-              </div>
-            </div> */}
-
             <TabsContent value="wardrobe" className="mt-0">
               <WardrobeGrid
                 key={wardrobeKey}
@@ -485,7 +469,7 @@ const Home = () => {
 
       {/* Mobile Bottom Ho - Fixed at bottom */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
-        <div className="flex items-center justify-around py-2 px-4">
+        <div className="flex items-center justify-around py-2 px-2">
           <button
             onClick={() => setActiveTab('wardrobe')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
@@ -496,6 +480,28 @@ const Home = () => {
           >
             <HomeIcon className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Home</span>
+          </button>
+
+          {/* Filter Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
+            type="button"
+          >
+            <Filter className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Filter</span>
+          </button>
+
+          {/* Add Item - Center with special styling */}
+          <button
+            onClick={handleAddItemClick}
+            className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
+            type="button"
+          >
+            {/* <div className="w-12 h-12 rounded-full flex items-center justify-center hover:shadow-xl transition-all duration-200 hover:scale-105 "> */}
+            <Plus className="h-5 w-5 mb-1" />
+            {/* </div> */}
+            <span className="text-xs font-medium ">Add Item</span>
           </button>
 
           <button

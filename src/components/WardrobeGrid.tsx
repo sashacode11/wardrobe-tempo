@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Checkbox } from './ui/checkbox';
+// import { Checkbox } from './ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -26,23 +26,14 @@ import ClothingItem from './ClothingItem';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
 import {
-  supabase,
+  // supabase,
   getCurrentUser,
   getClothingItems,
   deleteClothingItem,
 } from '../lib/supabaseClient';
-import { Database } from '../types/supabase';
-import { ClothingItemType, OutfitWithItems } from '../types';
+// import { Database } from '../types/supabase';
+import { ClothingItemType, OutfitWithItems, WardrobeGridProps } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
-
-interface WardrobeGridProps {
-  searchQuery?: string;
-  selectedCategory?: string;
-  onAddItem?: () => void;
-  onSelectItem?: (item: ClothingItemType) => void;
-  onAddToOutfit?: (item: ClothingItemType) => void;
-  onEditItem?: (item: ClothingItemType) => void;
-}
 
 const WardrobeGrid = ({
   searchQuery = '',
@@ -271,10 +262,9 @@ const WardrobeGrid = ({
         </div>
       )}
 
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-1">
+      {/* Add and Filter Bar */}
+      <div className="hidden md:flex flex-col md:flex-row gap-4 items-center justify-between p-1">
         <div className="flex gap-4 items-center">
-          {/* Filter Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex flex-col items-center group"
@@ -282,14 +272,12 @@ const WardrobeGrid = ({
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
               <Filter className="h-5 w-5 text-blue-400" />
-              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" /> */}
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700">
               Filter
             </span>
           </button>
 
-          {/* Add Item Button */}
           <button
             onClick={onAddItem}
             className="flex flex-col items-center group"
@@ -297,7 +285,6 @@ const WardrobeGrid = ({
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
               <Plus className="h-5 w-5 text-blue-400" />
-              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full" /> */}
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700">
               Add Item
@@ -446,12 +433,12 @@ const WardrobeGrid = ({
           value={activeCategory}
           onValueChange={setActiveCategory}
         >
-          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2">
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2 bg-transparent">
             {categories.map(category => (
               <TabsTrigger
                 key={category}
                 value={category}
-                className="capitalize"
+                className="capitalize data-[state=active]:bg-blue-500  data-[state=active]:text-white"
               >
                 {category}
               </TabsTrigger>

@@ -60,3 +60,12 @@ export interface ClothingItemProps {
   isSelected: boolean;
   isSelectionMode: boolean;
 }
+
+export interface WardrobeGridProps {
+  searchQuery?: string;
+  selectedCategory?: string;
+  onAddItem?: () => void;
+  onSelectItem?: (item: ClothingItemType) => void;
+  onAddToOutfit?: (item: ClothingItemType) => void;
+  onEditItem?: (item: ClothingItemType) => void;
+}
