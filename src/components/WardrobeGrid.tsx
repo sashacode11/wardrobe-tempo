@@ -243,7 +243,7 @@ const WardrobeGrid = ({
   }
 
   return (
-    <div className="w-full h-full bg-background flex flex-col gap-2 md:gap-4">
+    <div className="w-full h-full bg-background flex flex-col gap-2">
       {/* Error display */}
       {(error || multiselectError) && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
@@ -261,37 +261,6 @@ const WardrobeGrid = ({
           </button>
         </div>
       )}
-
-      {/* Add and Filter Bar */}
-      <div className="hidden md:flex flex-col md:flex-row gap-4 items-center justify-between p-1">
-        <div className="flex gap-4 items-center">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex flex-col items-center group"
-            type="button"
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-              <Filter className="h-5 w-5 text-blue-400" />
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Filter
-            </span>
-          </button>
-
-          <button
-            onClick={onAddItem}
-            className="flex flex-col items-center group"
-            type="button"
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-              <Plus className="h-5 w-5 text-blue-400" />
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Add Item
-            </span>
-          </button>
-        </div>
-      </div>
 
       {/* Active Filters */}
       {(activeFilters.color ||
@@ -359,7 +328,7 @@ const WardrobeGrid = ({
       )}
 
       {/* Filter Options */}
-      {showFilters && (
+      {/* {showFilters && (
         <div className="hidden bg-muted/30 p-4 rounded-md md:grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
@@ -424,7 +393,7 @@ const WardrobeGrid = ({
             </Select>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Category Tabs */}
       {!searchQuery && (
@@ -447,49 +416,76 @@ const WardrobeGrid = ({
         </Tabs>
       )}
 
-      <div className="flex items-center justify-between gap-2 px-4">
-        {/* Results info */}
-        <div className="text-sm text-muted-foreground">
-          {searchQuery
-            ? `Found ${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } matching "${searchQuery}"`
-            : `${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
+      <div className="flex items-center justify-between px-4">
+        <div className="flex gap-2 items-center justify-between w-full md:justify-start md:w-auto">
+          {/* Results info */}
+          <div className="text-sm text-muted-foreground">
+            {searchQuery
+              ? `Found ${filteredItems.length} item${
+                  filteredItems.length !== 1 ? 's' : ''
+                } matching "${searchQuery}"`
+              : `${filteredItems.length} item${
+                  filteredItems.length !== 1 ? 's' : ''
+                } ${
+                  activeCategory !== 'all' ? `in ${activeCategory}` : 'total'
+                }`}
+          </div>
+
+          {/* filter */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex md:hidden items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group"
+            type="button"
+          >
+            <Filter className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-gray-700">Filter</span>
+            <ChevronDown
+              className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+                showFilters ? 'rotate-180' : 'rotate-0'
+              }`}
+            />
+          </button>
+
+          {/* Multiselects */}
+          <div className="flex-shrink-0">
+            <SelectionControls
+              isSelectionMode={isSelectionMode}
+              selectedCount={selectedItems.size}
+              totalFilteredCount={filteredItems.length}
+              onToggleSelectionMode={toggleSelectionMode}
+              onSelectAll={() => selectAllItems(filteredItems)}
+              onDeselectAll={deselectAllItems}
+              onDeleteSelected={() => setShowDeleteDialog(true)}
+            />
+          </div>
         </div>
 
-        {/* filter */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex md:hidden items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group"
-          type="button"
-        >
-          <Filter className="h-4 w-4 text-blue-400" />
-          <span className="text-sm font-medium text-gray-700">Filter</span>
-          <ChevronDown
-            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
-              showFilters ? 'rotate-180' : 'rotate-0'
-            }`}
-          />
-        </button>
+        {/* Add and Filter Bar */}
+        <div className="hidden md:flex flex-col md:flex-row gap-4 items-center justify-between p-1">
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
+              type="button"
+            >
+              <Filter className="h-4 w-4" />
+              Filter
+            </button>
 
-        {/* Multiselects */}
-        <div className="flex-shrink-0">
-          <SelectionControls
-            isSelectionMode={isSelectionMode}
-            selectedCount={selectedItems.size}
-            totalFilteredCount={filteredItems.length}
-            onToggleSelectionMode={toggleSelectionMode}
-            onSelectAll={() => selectAllItems(filteredItems)}
-            onDeselectAll={deselectAllItems}
-            onDeleteSelected={() => setShowDeleteDialog(true)}
-          />
+            {/* <button
+              onClick={onAddItem}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
+              type="button"
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button> */}
+          </div>
         </div>
       </div>
 
       {showFilters && (
-        <div className="md:hidden bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
             <Select

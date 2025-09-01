@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Search,
   Plus,
-  Filter,
-  Grid,
   Menu,
   LogOut,
   User,
@@ -39,7 +37,6 @@ const Home = () => {
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
   const handleItemSaved = () => {
     // Refresh the wardrobe grid by changing its key
@@ -127,6 +124,7 @@ const Home = () => {
                 >
                   Wardrobe
                 </button>
+
                 <button
                   value="outfit"
                   onClick={() => setActiveTab('outfit')}
@@ -138,6 +136,7 @@ const Home = () => {
                 >
                   Create Outfit
                 </button>
+
                 <button
                   value="my-outfits"
                   onClick={() => setActiveTab('my-outfits')}
@@ -186,6 +185,15 @@ const Home = () => {
                 )}
               </div>
             )}
+
+            <button
+              onClick={handleAddItemClick}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
+              type="button"
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
 
             {user ? (
               <div className="flex items-center space-x-2">
