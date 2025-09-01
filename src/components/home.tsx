@@ -105,8 +105,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 pl-2 pr-2 sm:pb-4 sm:pt-4">
-        <div className="container mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 px-2 md:px-20 sm:pb-4 sm:pt-4">
+        <div className=" mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
 

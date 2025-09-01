@@ -447,7 +447,7 @@ const WardrobeGrid = ({
           </button>
 
           {/* Multiselects */}
-          <div className="flex-shrink-0">
+          <div className="flex md:hidden flex-shrink-0">
             <SelectionControls
               isSelectionMode={isSelectionMode}
               selectedCount={selectedItems.size}
@@ -463,9 +463,21 @@ const WardrobeGrid = ({
         {/* Add and Filter Bar */}
         <div className="hidden md:flex flex-col md:flex-row gap-4 items-center justify-between p-1">
           <div className="flex gap-3 items-center">
+            {/* Multiselects */}
+            <div className="hidden md:flex flex-shrink-0">
+              <SelectionControls
+                isSelectionMode={isSelectionMode}
+                selectedCount={selectedItems.size}
+                totalFilteredCount={filteredItems.length}
+                onToggleSelectionMode={toggleSelectionMode}
+                onSelectAll={() => selectAllItems(filteredItems)}
+                onDeselectAll={deselectAllItems}
+                onDeleteSelected={() => setShowDeleteDialog(true)}
+              />
+            </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
               type="button"
             >
               <Filter className="h-4 w-4" />
