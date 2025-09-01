@@ -359,8 +359,8 @@ const WardrobeGrid = ({
       )}
 
       {/* Filter Options */}
-      {/* {showFilters && (
-        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
+      {showFilters && (
+        <div className="hidden bg-muted/30 p-4 rounded-md md:grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
             <Select
@@ -424,7 +424,7 @@ const WardrobeGrid = ({
             </Select>
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Category Tabs */}
       {!searchQuery && (
@@ -489,7 +489,7 @@ const WardrobeGrid = ({
       </div>
 
       {showFilters && (
-        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:hidden bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Color</label>
             <Select
