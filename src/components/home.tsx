@@ -116,7 +116,7 @@ const Home = () => {
                 <button
                   value="wardrobe"
                   onClick={() => setActiveTab('wardrobe')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                  className={`mx-4 pm-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'wardrobe'
                       ? 'border-b-2 border-blue-600 px-0'
                       : 'text-gray-800'
@@ -128,7 +128,7 @@ const Home = () => {
                 <button
                   value="outfit"
                   onClick={() => setActiveTab('outfit')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                  className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'outfit'
                       ? 'border-b-2 border-blue-600 px-0'
                       : 'text-gray-800'
@@ -140,7 +140,7 @@ const Home = () => {
                 <button
                   value="my-outfits"
                   onClick={() => setActiveTab('my-outfits')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                  className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'my-outfits'
                       ? 'border-b-2 border-blue-600 px-0'
                       : 'text-gray-800'
