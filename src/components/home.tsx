@@ -110,7 +110,48 @@ const Home = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 pl-2 pr-2 sm:pb-4 sm:pt-4">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
+          <div className="flex items-center gap-8">
+            <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
+
+            {/* desktop tabs */}
+            {user && (
+              <div className="hidden md:flex flex-row">
+                <button
+                  value="wardrobe"
+                  onClick={() => setActiveTab('wardrobe')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                    activeTab === 'wardrobe'
+                      ? 'border-b-2 border-blue-600 px-0'
+                      : 'text-gray-800'
+                  }`}
+                >
+                  Wardrobe
+                </button>
+                <button
+                  value="outfit"
+                  onClick={() => setActiveTab('outfit')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                    activeTab === 'outfit'
+                      ? 'border-b-2 border-blue-600 px-0'
+                      : 'text-gray-800'
+                  }`}
+                >
+                  Create Outfit
+                </button>
+                <button
+                  value="my-outfits"
+                  onClick={() => setActiveTab('my-outfits')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                    activeTab === 'my-outfits'
+                      ? 'border-b-2 border-blue-600 px-0'
+                      : 'text-gray-800'
+                  }`}
+                >
+                  My Outfits
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* show search outside of hamburger menu in mobile */}
           {user && (
@@ -393,33 +434,6 @@ const Home = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            {/* Desktop Tabs - Hidden on mobile */}
-            <div className="hidden md:flex items-center justify-between lg:mb-6">
-              <TabsList>
-                <TabsTrigger value="wardrobe" className="px-4">
-                  <Grid className="mr-2 h-4 w-4" />
-                  Wardrobe
-                </TabsTrigger>
-                <TabsTrigger value="outfit" className="px-4">
-                  Create Outfit
-                </TabsTrigger>
-                <TabsTrigger value="my-outfits" className="px-4">
-                  My Outfits
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            {/* Tab Content */}
-            <TabsContent value="wardrobe">
-              {/* Your wardrobe content */}
-            </TabsContent>
-            <TabsContent value="outfit">
-              {/* Your create outfit content */}
-            </TabsContent>
-            <TabsContent value="my-outfits">
-              {/* Your my outfits content */}
-            </TabsContent>
-
             <TabsContent value="wardrobe" className="mt-0">
               <WardrobeGrid
                 key={wardrobeKey}
