@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, X, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, X, Trash2, ChevronDown } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -359,6 +359,135 @@ const WardrobeGrid = ({
       )}
 
       {/* Filter Options */}
+      {/* {showFilters && (
+        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Color</label>
+            <Select
+              value={activeFilters.color}
+              onValueChange={value =>
+                setActiveFilters({ ...activeFilters, color: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select color" />
+              </SelectTrigger>
+              <SelectContent>
+                {colors.map(color => (
+                  <SelectItem key={color} value={color}>
+                    {color.charAt(0).toUpperCase() + color.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">Season</label>
+            <Select
+              value={activeFilters.season}
+              onValueChange={value =>
+                setActiveFilters({ ...activeFilters, season: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select season" />
+              </SelectTrigger>
+              <SelectContent>
+                {seasons.map(season => (
+                  <SelectItem key={season} value={season}>
+                    {season.charAt(0).toUpperCase() + season.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">Occasion</label>
+            <Select
+              value={activeFilters.occasion}
+              onValueChange={value =>
+                setActiveFilters({ ...activeFilters, occasion: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select occasion" />
+              </SelectTrigger>
+              <SelectContent>
+                {occasions.map(occasion => (
+                  <SelectItem key={occasion} value={occasion}>
+                    {occasion.charAt(0).toUpperCase() + occasion.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )} */}
+
+      {/* Category Tabs */}
+      {!searchQuery && (
+        <Tabs
+          defaultValue="all"
+          value={activeCategory}
+          onValueChange={setActiveCategory}
+        >
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2 bg-transparent">
+            {categories.map(category => (
+              <TabsTrigger
+                key={category}
+                value={category}
+                className="capitalize data-[state=active]:bg-blue-500  data-[state=active]:text-white"
+              >
+                {category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+
+      <div className="flex items-center justify-between gap-2 px-4">
+        {/* Results info */}
+        <div className="text-sm text-muted-foreground">
+          {searchQuery
+            ? `Found ${filteredItems.length} item${
+                filteredItems.length !== 1 ? 's' : ''
+              } matching "${searchQuery}"`
+            : `${filteredItems.length} item${
+                filteredItems.length !== 1 ? 's' : ''
+              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
+        </div>
+
+        {/* filter */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex md:hidden items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group"
+          type="button"
+        >
+          <Filter className="h-4 w-4 text-blue-400" />
+          <span className="text-sm font-medium text-gray-700">Filter</span>
+          <ChevronDown
+            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+              showFilters ? 'rotate-180' : 'rotate-0'
+            }`}
+          />
+        </button>
+
+        {/* Multiselects */}
+        <div className="flex-shrink-0">
+          <SelectionControls
+            isSelectionMode={isSelectionMode}
+            selectedCount={selectedItems.size}
+            totalFilteredCount={filteredItems.length}
+            onToggleSelectionMode={toggleSelectionMode}
+            onSelectAll={() => selectAllItems(filteredItems)}
+            onDeselectAll={deselectAllItems}
+            onDeleteSelected={() => setShowDeleteDialog(true)}
+          />
+        </div>
+      </div>
+
       {showFilters && (
         <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -425,53 +554,6 @@ const WardrobeGrid = ({
           </div>
         </div>
       )}
-
-      {/* Category Tabs */}
-      {!searchQuery && (
-        <Tabs
-          defaultValue="all"
-          value={activeCategory}
-          onValueChange={setActiveCategory}
-        >
-          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2 bg-transparent">
-            {categories.map(category => (
-              <TabsTrigger
-                key={category}
-                value={category}
-                className="capitalize data-[state=active]:bg-blue-500  data-[state=active]:text-white"
-              >
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      <div className="flex items-center justify-between gap-2 px-4">
-        {/* Results info */}
-        <div className="text-sm text-muted-foreground">
-          {searchQuery
-            ? `Found ${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } matching "${searchQuery}"`
-            : `${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
-        </div>
-
-        {/* Multiselects */}
-        <div className="flex-shrink-0">
-          <SelectionControls
-            isSelectionMode={isSelectionMode}
-            selectedCount={selectedItems.size}
-            totalFilteredCount={filteredItems.length}
-            onToggleSelectionMode={toggleSelectionMode}
-            onSelectAll={() => selectAllItems(filteredItems)}
-            onDeselectAll={deselectAllItems}
-            onDeleteSelected={() => setShowDeleteDialog(true)}
-          />
-        </div>
-      </div>
 
       {/* Clothing Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  overflow-y-auto flex-grow px-2 w-full">

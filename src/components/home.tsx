@@ -482,16 +482,6 @@ const Home = () => {
             <span className="text-xs font-medium">Home</span>
           </button>
 
-          {/* Filter Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
-            type="button"
-          >
-            <Filter className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Filter</span>
-          </button>
-
           {/* Add Item - Center with special styling */}
           <button
             onClick={handleAddItemClick}
