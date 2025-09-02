@@ -13,15 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, X, ArrowLeft } from 'lucide-react';
+import { Plus, X, ArrowLeft, Palette, Save, Sparkles } from 'lucide-react';
 import {
   getCurrentUser,
   getClothingItems,
   createOutfit,
   supabase,
 } from '../lib/supabaseClient';
-import { Database } from '../types/supabase';
+// import { Database } from '../types/supabase';
 import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
+import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
   onClose,
@@ -32,15 +33,15 @@ const OutfitBuilder = ({
   onEditComplete,
 }: OutfitBuilderProps) => {
   // Categories that match your wardrobe
-  const categories = [
-    'tops',
-    'bottoms',
-    'shoes',
-    'accessories',
-    'outerwear',
-    'dresses',
-    'formal',
-  ];
+  // const categories = [
+  //   'tops',
+  //   'bottoms',
+  //   'shoes',
+  //   'accessories',
+  //   'outerwear',
+  //   'dresses',
+  //   'formal',
+  // ];
 
   const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -344,6 +345,14 @@ const OutfitBuilder = ({
   const filteredItems = wardrobeItems.filter(
     item => item.category === activeCategory
   );
+  const selectedItemsCount = currentOutfit.filter(
+    slot => slot.item !== null
+  ).length;
+
+  const getCategoryIcon = categoryKey => {
+    const category = categories.find(cat => cat.key === categoryKey);
+    return category ? category.icon : Shirt;
+  };
 
   const handleClose = () => {
     // Reset form state when closing
@@ -366,207 +375,355 @@ const OutfitBuilder = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          {/* <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClose}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button> */}
-          <div>
-            <h1 className="text-2xl font-bold">
-              {isEditing ? 'Edit Outfit' : 'Create Outfit'}
-            </h1>
-            {isEditing && editingOutfit && (
-              <p className="text-sm text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full mt-1">
-                Editing: {editingOutfit.name}
-              </p>
-            )}
-          </div>
-        </div>
+    <div className="min-h-screen ">
+      {/* Animated Background Pattern */}
+      <div className="fixed inset-0 opacity-30 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Current Outfit Preview */}
-        <div className="bg-muted/20 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Outfit</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {currentOutfit.map(outfitItem => (
-              <div key={outfitItem.category} className="relative">
-                <Card className="h-full">
-                  <CardHeader className="p-3">
-                    <CardTitle className="text-sm capitalize">
-                      {outfitItem.category}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 flex items-center justify-center">
-                    {outfitItem.item ? (
-                      <div className="relative w-full h-40">
-                        <img
-                          src={outfitItem.item.image_url}
-                          alt={outfitItem.item.name}
-                          className="w-full h-full object-cover rounded-md"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6"
-                          onClick={() => handleRemoveItem(outfitItem.category)}
-                          aria-label={`Remove ${outfitItem.category}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-1 text-xs truncate">
-                          {outfitItem.item.name}
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        className="w-full h-40 border-2 border-dashed border-muted-foreground/30 rounded-md flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                        onClick={() => setActiveCategory(outfitItem.category)}
-                      >
-                        <div className="text-center">
-                          <Plus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                          <span className="text-muted-foreground text-xs">
-                            Add {outfitItem.category}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+      <div className="max-w-7xl mx-auto p-4 relative">
+        {/* Enhanced Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="flex items-center gap-2 hover:bg-white/50 backdrop-blur-sm"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </Button> */}
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {isEditing ? 'Edit Outfit' : 'Create Outfit'}
+                  </h1>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Mix and match your wardrobe items
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Item Selection */}
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold mb-4">Select Items</h2>
-          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="grid grid-cols-5 mb-4">
-              {categories.slice(0, 5).map(category => (
-                <TabsTrigger
-                  key={category}
-                  value={category}
-                  className="capitalize"
-                >
-                  {category}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {categories.slice(0, 5).map(category => (
-              <TabsContent key={category} value={category}>
-                <ScrollArea className="h-[600px] p-4 border rounded-md">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-40">
-                      <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                        <p className="text-muted-foreground">
-                          Loading clothes...
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {filteredItems.length > 0 ? (
-                        filteredItems.map(item => (
-                          <Card
-                            key={item.id}
-                            className="cursor-pointer hover:border-primary transition-colors"
-                            onClick={() => handleAddItem(item)}
-                          >
-                            <CardContent className="p-3">
-                              <div className="relative w-full h-40 mb-2">
-                                <img
-                                  src={item.image_url}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover rounded-md"
-                                />
-                              </div>
-                              <div>
-                                <h4 className="font-medium truncate">
-                                  {item.name}
-                                </h4>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {item.color && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {item.color}
-                                    </Badge>
-                                  )}
-                                  {Array.isArray(item.tags) &&
-                                    item.tags.slice(0, 2).map(tag => (
-                                      <Badge
-                                        key={tag}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="col-span-2 text-center text-muted-foreground text-sm">
-                          No {category} in your wardrobe yet.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </div>
-      </div>
-
-      {/* Save Outfit Dialog */}
-      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? 'Edit Outfit' : 'Save Outfit'}
-            </DialogTitle>
-            <div className="mb-4">
-              {isEditing && (
-                <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  Editing: {editingOutfit?.name}
+              {isEditing && editingOutfit && (
+                <div className="mt-3">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  >
+                    Editing: {editingOutfit.name}
+                  </Badge>
                 </div>
               )}
             </div>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="outfit-name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="outfit-name"
-                value={outfitName}
-                onChange={e => setOutfitName(e.target.value)}
-                placeholder="My Favorite Outfit"
-                className="col-span-3"
-              />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/20">
+              <Palette className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-slate-700">
+                {selectedItemsCount} items selected
+              </span>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="occasions" className="text-right">
-                Occasions
-              </Label>
-              <div className="col-span-3 space-y-2">
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 md:gap-8">
+          {/* Enhanced Current Outfit Preview - List View */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 order-2 xl:order-1">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Your Outfit
+                </h2>
+              </div>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                {selectedItemsCount}{' '}
+                {selectedItemsCount === 1 ? 'item' : 'items'}
+              </Badge>
+            </div>
+
+            {selectedItemsCount > 0 ? (
+              <div className="space-y-3">
+                {currentOutfit
+                  .filter(outfitItem => outfitItem.item !== null)
+                  .map(outfitItem => {
+                    const IconComponent = getCategoryIcon(outfitItem.category);
+                    return (
+                      <div
+                        key={outfitItem.category}
+                        className="flex items-center gap-4 p-3 bg-white/60 rounded-xl border border-slate-200/40 hover:bg-white/80 transition-all duration-300 group"
+                      >
+                        {/* Item Image */}
+                        <div className="relative w-16 h-16 flex-shrink-0">
+                          <img
+                            src={outfitItem.item.image_url}
+                            alt={outfitItem.item.name}
+                            className="w-full h-full object-cover rounded-lg shadow-sm"
+                          />
+                        </div>
+
+                        {/* Item Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <IconComponent className="h-4 w-4 text-slate-500" />
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                              {outfitItem.category}
+                            </span>
+                          </div>
+                          <h3 className="font-medium text-slate-800 truncate">
+                            {outfitItem.item.name}
+                          </h3>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {outfitItem.item.color && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-white/80"
+                              >
+                                {outfitItem.item.color}
+                              </Badge>
+                            )}
+                            {Array.isArray(outfitItem.item.tags) &&
+                              outfitItem.item.tags.slice(0, 2).map(tag => (
+                                <Badge
+                                  key={tag}
+                                  variant="secondary"
+                                  className="text-xs bg-blue-100 text-blue-700"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                          </div>
+                        </div>
+
+                        {/* Remove Button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                          onClick={() => handleRemoveItem(outfitItem.category)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              // Empty State
+              <div className="text-center py-12">
+                <div className="p-4 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-medium text-slate-600 mb-2">
+                  Start Building Your Outfit
+                </h3>
+                <p className="text-sm text-slate-500 mb-4">
+                  Select items from your wardrobe to create the perfect look
+                </p>
+                {/* <Button
+                  variant="outline"
+                  onClick={() => setActiveCategory('tops')}
+                  className="bg-white/80 hover:bg-white border-slate-200"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Item
+                </Button> */}
+              </div>
+            )}
+
+            {selectedItemsCount > 0 && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">
+                      Outfit Ready!
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setSaveDialogOpen(true)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs px-3 py-1 h-8"
+                  >
+                    <Save className="h-3 w-3 mr-1" />
+                    Save
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-700 mt-1">
+                  Your outfit looks great! Save it to your collection.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Enhanced Item Selection */}
+          <div className="flex flex-col order-1 xl:order-2">
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-2 md:p-6">
+              <h2 className="text-xl font-semibold mb-2 md:mb-6 text-slate-800">
+                Browse Your Wardrobe
+              </h2>
+
+              <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+                <div className="md:mb-6 -mx-6 px-6">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <TabsList className="flex w-max min-w-full bg-slate-100/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
+                      {categories.map(category => {
+                        const IconComponent = category.icon;
+                        return (
+                          <TabsTrigger
+                            key={category.key}
+                            value={category.key}
+                            className="capitalize text-sm px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-2 min-w-max"
+                          >
+                            <IconComponent className="h-4 w-4 hidden sm:inline" />
+                            <span>{category.label}</span>
+                          </TabsTrigger>
+                        );
+                      })}
+                    </TabsList>
+                  </div>
+                </div>
+
+                {categories.map(category => (
+                  <TabsContent key={category.key} value={category.key}>
+                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50">
+                      {loading ? (
+                        <div className="flex items-center justify-center h-40">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <p className="text-slate-600">
+                              Loading wardrobe...
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                          {filteredItems.length > 0 ? (
+                            filteredItems.map(item => (
+                              <Card
+                                key={item.id}
+                                className="cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden"
+                                onClick={() => handleAddItem(item)}
+                              >
+                                <CardContent className="p-0">
+                                  <div className="relative w-full h-40 overflow-hidden">
+                                    <img
+                                      src={item.image_url}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                      <div className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+                                        <Plus className="h-3 w-3 text-slate-700" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="p-3">
+                                    <h4 className="font-medium truncate text-sm text-slate-800 mb-2">
+                                      {item.name}
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1">
+                                      {item.color && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs bg-white/80"
+                                        >
+                                          {item.color}
+                                        </Badge>
+                                      )}
+                                      {Array.isArray(item.tags) &&
+                                        item.tags.slice(0, 1).map(tag => (
+                                          <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="text-xs bg-blue-100 text-blue-700"
+                                          >
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <div className="col-span-2 text-center text-slate-500 py-12">
+                              <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <category.icon className="h-8 w-8" />
+                              </div>
+                              <p className="text-sm">
+                                No {category.label.toLowerCase()} in your
+                                wardrobe yet.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Floating Save Button */}
+        {/* <div className="flex md:hidden justify-end mt-6">
+          <Button
+            onClick={() => setSaveDialogOpen(true)}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-2xl px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-3xl"
+            disabled={selectedItemsCount === 0}
+          >
+            <Save className="h-5 w-5 mr-2" />
+            Save Outfit
+          </Button>
+        </div> */}
+
+        {/* Enhanced Save Dialog */}
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+          <DialogContent className="bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {isEditing ? 'Update Outfit' : 'Save Your Outfit'}
+              </DialogTitle>
+              <p className="text-slate-600 mt-2">
+                Give your outfit a name and add occasions where you'd wear it.
+              </p>
+            </DialogHeader>
+            <div className="grid gap-6 py-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="outfit-name"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Outfit Name
+                </Label>
+                <Input
+                  id="outfit-name"
+                  value={outfitName}
+                  onChange={e => setOutfitName(e.target.value)}
+                  placeholder="My Amazing Outfit"
+                  className="border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="occasions"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Occasions
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="occasions"
@@ -578,73 +735,66 @@ const OutfitBuilder = ({
                         handleAddOccasion();
                       }
                     }}
-                    placeholder="Add occasion (e.g., Casual, Work)"
-                    className="flex-1"
+                    placeholder="Work, Casual, Date Night..."
+                    className="flex-1 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
                   />
                   <Button
                     type="button"
-                    size="sm"
+                    variant="outline"
                     onClick={handleAddOccasion}
-                    title="Add this occasion to the list"
+                    className="px-4"
                   >
-                    <span className="text-xs hidden sm:inline">Add</span>
+                    Add
                   </Button>
                 </div>
-                {occasionInput.trim() && (
-                  <p className="text-xs text-muted-foreground">
-                    Press{' '}
-                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">
-                      Enter
-                    </kbd>{' '}
-                    or click <span className="font-medium">Add</span> to include
-                    this occasion.
-                  </p>
+                {occasions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg">
+                    {occasions.map(occasion => (
+                      <Badge
+                        key={occasion}
+                        variant="secondary"
+                        className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      >
+                        {occasion}
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-blue-900"
+                          onClick={() => handleRemoveOccasion(occasion)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
                 )}
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {occasions.map(occasion => (
-                    <Badge
-                      key={occasion}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {occasion}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => handleRemoveOccasion(occasion)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveOutfit}
-              disabled={saving || !outfitName.trim()}
-              className="w-full"
-            >
-              {saving
-                ? isEditing
-                  ? 'Updating...'
-                  : 'Saving...'
-                : isEditing
-                ? 'Update Outfit'
-                : 'Save Outfit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Button
-        className="ml-auto block bg-blue-600"
-        onClick={() => setSaveDialogOpen(true)}
-      >
-        Save Outfit
-      </Button>
+            <DialogFooter className="gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setSaveDialogOpen(false)}
+                className="border-slate-200 hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveOutfit}
+                disabled={saving || !outfitName.trim()}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6"
+              >
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    {isEditing ? 'Updating...' : 'Saving...'}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    {isEditing ? 'Update Outfit' : 'Save Outfit'}
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
