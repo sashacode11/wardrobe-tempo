@@ -21,7 +21,12 @@ import {
   supabase,
 } from '../lib/supabaseClient';
 // import { Database } from '../types/supabase';
-import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
+import {
+  ClothingItemType,
+  OutfitBuilderProps,
+  OutfitItem,
+  useWardrobeItems,
+} from '@/types';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -43,20 +48,21 @@ const OutfitBuilder = ({
   //   'formal',
   // ];
 
-  const categories = () => {
-    return [...new Set(wardrobeItems.map(item => item.category))];
-  };
+  // const categories = () => {
+  //   return [...new Set(wardrobeItems.map(item => item.category))];
+  // };
 
-  const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
+  // const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
+  const { wardrobeItems, setWardrobeItems, categories } = useWardrobeItems();
+
   const [loading, setLoading] = useState(true);
 
-  const [currentOutfit, setCurrentOutfit] = useState<OutfitItem[]>([
-    { category: 'tops', item: null },
-    { category: 'bottoms', item: null },
-    { category: 'shoes', item: null },
-    { category: 'accessories', item: null },
-    { category: 'outerwear', item: null },
-  ]);
+  const [currentOutfit, setCurrentOutfit] = useState<OutfitItem[]>(() =>
+    categories.map(category => ({
+      category,
+      item: null,
+    }))
+  );
 
   const [activeCategory, setActiveCategory] = useState('tops');
   const [outfitName, setOutfitName] = useState('');
@@ -81,17 +87,30 @@ const OutfitBuilder = ({
   }, [selectedItem]);
 
   useEffect(() => {
+    // Only run if categories exist and currentOutfit is still empty
+    if (categories.length > 0 && currentOutfit.length === 0) {
+      console.log('🔧 Initializing currentOutfit with categories:', categories);
+
+      const initialOutfit = categories.map(category => ({
+        category,
+        item: null,
+      }));
+
+      setCurrentOutfit(initialOutfit);
+    }
+  }, [categories, currentOutfit]);
+
+  useEffect(() => {
     if (!editingOutfit) {
       // Not editing → reset form
       setOutfitName('');
       setOccasions([]);
-      setCurrentOutfit([
-        { category: 'tops', item: null },
-        { category: 'bottoms', item: null },
-        { category: 'shoes', item: null },
-        { category: 'accessories', item: null },
-        { category: 'outerwear', item: null },
-      ]);
+      setCurrentOutfit(
+        categories.map(category => ({
+          category,
+          item: null,
+        }))
+      );
       return;
     }
 
@@ -107,13 +126,12 @@ const OutfitBuilder = ({
     // Check if items is a valid array
     if (!Array.isArray(outfitItems)) {
       // Reset to empty slots
-      setCurrentOutfit([
-        { category: 'tops', item: null },
-        { category: 'bottoms', item: null },
-        { category: 'shoes', item: null },
-        { category: 'accessories', item: null },
-        { category: 'outerwear', item: null },
-      ]);
+      setCurrentOutfit(
+        categories.map(category => ({
+          category,
+          item: null,
+        }))
+      );
       return;
     }
 
@@ -137,13 +155,18 @@ const OutfitBuilder = ({
     );
 
     // Update outfit slots
-    const updatedOutfit = [
-      { category: 'tops', item: itemMap['tops'] || null },
-      { category: 'bottoms', item: itemMap['bottoms'] || null },
-      { category: 'shoes', item: itemMap['shoes'] || null },
-      { category: 'accessories', item: itemMap['accessories'] || null },
-      { category: 'outerwear', item: itemMap['outerwear'] || null },
-    ];
+    const updatedOutfit = categories.map(category => {
+      // Find any item in this category from outfit_items
+      const outfitItemData = outfitItems.find(oi => oi.category === category);
+      const item = outfitItemData
+        ? itemMap.get(outfitItemData.item_id) || null
+        : null;
+
+      return {
+        category,
+        item,
+      };
+    });
     setCurrentOutfit(updatedOutfit);
   }, [editingOutfit]);
 
@@ -169,13 +192,41 @@ const OutfitBuilder = ({
   };
 
   const handleAddItem = (item: ClothingItemType) => {
-    setCurrentOutfit(prev =>
-      prev.map(outfitItem =>
-        outfitItem.category === item.category
-          ? { ...outfitItem, item }
-          : outfitItem
-      )
-    );
+    console.log('🔍 [handleAddItem] START — Attempting to add item:', {
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      imageUrl: item.image_url,
+    });
+
+    // Log previous state
+    console.log('💾 [handleAddItem] Previous currentOutfit:', currentOutfit);
+
+    // Update state
+    setCurrentOutfit(prev => {
+      console.log('🔄 [handleAddItem] Inside setCurrentOutfit - prev:', prev);
+
+      const updated = prev.map(outfitItem => {
+        console.log('🧩 [Mapping] Checking slot:', {
+          slotCategory: outfitItem.category,
+          hasItem: !!outfitItem.item,
+          matches: outfitItem.category === item.category,
+        });
+
+        if (outfitItem.category === item.category) {
+          console.log(
+            '✅ [Update] Match found! Replacing item in category:',
+            item.category
+          );
+          return { ...outfitItem, item };
+        }
+
+        return outfitItem;
+      });
+
+      console.log('✅ [Success] Updated currentOutfit:', updated);
+      return updated;
+    });
   };
 
   const handleRemoveItem = (category: string) => {
@@ -364,13 +415,12 @@ const OutfitBuilder = ({
     setOccasions([]);
     setOccasionInput('');
     setSaveDialogOpen(false);
-    setCurrentOutfit([
-      { category: 'tops', item: null },
-      { category: 'bottoms', item: null },
-      { category: 'shoes', item: null },
-      { category: 'accessories', item: null },
-      { category: 'outerwear', item: null },
-    ]);
+    setCurrentOutfit(
+      categories.map(category => ({
+        category,
+        item: null,
+      }))
+    );
 
     // Call the parent's onClose function
     if (onClose) {
@@ -581,7 +631,7 @@ const OutfitBuilder = ({
                 <div className="md:mb-6 -mx-6 px-6">
                   <div className="overflow-x-auto scrollbar-hide">
                     <TabsList className="flex w-max min-w-full bg-slate-100/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
-                      {categories().map(category => {
+                      {categories.map(category => {
                         // const IconComponent = category.icon;
                         return (
                           <TabsTrigger
@@ -602,7 +652,7 @@ const OutfitBuilder = ({
                   </div>
                 </div>
 
-                {categories().map(category => (
+                {categories.map(category => (
                   <TabsContent key={category} value={category}>
                     <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50">
                       {loading ? (
@@ -667,9 +717,6 @@ const OutfitBuilder = ({
                             ))
                           ) : (
                             <div className="col-span-2 text-center text-slate-500 py-12">
-                              <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                                <category.icon className="h-8 w-8" />
-                              </div>
                               <p className="text-sm">
                                 No {category.toLowerCase()} in your wardrobe
                                 yet.
