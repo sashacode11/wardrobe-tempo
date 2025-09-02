@@ -22,7 +22,7 @@ import {
 } from '../lib/supabaseClient';
 // import { Database } from '../types/supabase';
 import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
-import { categories } from '@/lib/data';
+// import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
   onClose,
@@ -42,6 +42,10 @@ const OutfitBuilder = ({
   //   'dresses',
   //   'formal',
   // ];
+
+  const categories = () => {
+    return [...new Set(wardrobeItems.map(item => item.category))];
+  };
 
   const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -349,10 +353,10 @@ const OutfitBuilder = ({
     slot => slot.item !== null
   ).length;
 
-  const getCategoryIcon = categoryKey => {
-    const category = categories.find(cat => cat.key === categoryKey);
-    return category ? category.icon : Shirt;
-  };
+  // const getCategoryIcon = categoryKey => {
+  //   const category = categories.find(cat => cat.key === categoryKey);
+  //   return category ? category.icon : Shirt;
+  // };
 
   const handleClose = () => {
     // Reset form state when closing
@@ -457,7 +461,7 @@ const OutfitBuilder = ({
                 {currentOutfit
                   .filter(outfitItem => outfitItem.item !== null)
                   .map(outfitItem => {
-                    const IconComponent = getCategoryIcon(outfitItem.category);
+                    // const IconComponent = getCategoryIcon(outfitItem.category);
                     return (
                       <div
                         key={outfitItem.category}
@@ -475,7 +479,7 @@ const OutfitBuilder = ({
                         {/* Item Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <IconComponent className="h-4 w-4 text-slate-500" />
+                            {/* <IconComponent className="h-4 w-4 text-slate-500" /> */}
                             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                               {outfitItem.category}
                             </span>
@@ -577,16 +581,20 @@ const OutfitBuilder = ({
                 <div className="md:mb-6 -mx-6 px-6">
                   <div className="overflow-x-auto scrollbar-hide">
                     <TabsList className="flex w-max min-w-full bg-slate-100/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
-                      {categories.map(category => {
-                        const IconComponent = category.icon;
+                      {categories().map(category => {
+                        // const IconComponent = category.icon;
                         return (
                           <TabsTrigger
-                            key={category.key}
-                            value={category.key}
+                            key={category}
+                            value={category}
                             className="capitalize text-sm px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-2 min-w-max"
                           >
-                            <IconComponent className="h-4 w-4 hidden sm:inline" />
-                            <span>{category.label}</span>
+                            {/* <IconComponent className="h-4 w-4 hidden sm:inline" /> */}
+                            {/* <span>{category.label}</span> */}
+                            <span>
+                              {category.charAt(0).toUpperCase() +
+                                category.slice(1)}
+                            </span>
                           </TabsTrigger>
                         );
                       })}
@@ -594,8 +602,8 @@ const OutfitBuilder = ({
                   </div>
                 </div>
 
-                {categories.map(category => (
-                  <TabsContent key={category.key} value={category.key}>
+                {categories().map(category => (
+                  <TabsContent key={category} value={category}>
                     <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50">
                       {loading ? (
                         <div className="flex items-center justify-center h-40">
@@ -612,7 +620,7 @@ const OutfitBuilder = ({
                             filteredItems.map(item => (
                               <Card
                                 key={item.id}
-                                className="cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden"
+                                className="cursor-pointer  hover:-translate-y-2 transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden"
                                 onClick={() => handleAddItem(item)}
                               >
                                 <CardContent className="p-0">
@@ -663,8 +671,8 @@ const OutfitBuilder = ({
                                 <category.icon className="h-8 w-8" />
                               </div>
                               <p className="text-sm">
-                                No {category.label.toLowerCase()} in your
-                                wardrobe yet.
+                                No {category.toLowerCase()} in your wardrobe
+                                yet.
                               </p>
                             </div>
                           )}
