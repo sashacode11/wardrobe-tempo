@@ -1,4 +1,4 @@
-// components/ItemOutfitsModal.tsx - Updated with reusable components
+// components/ViewOutfitsModal.tsx - Updated with reusable components
 import React, { useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,9 @@ import OutfitActions from './common/OutfitActions';
 import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import OutfitBuilder from './OutfitBuilder';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 
-interface ItemOutfitsModalProps {
+interface ViewOutfitsModalProps {
   isOpen: boolean;
   onClose: () => void;
   clothingItem: ClothingItemType | null;
@@ -30,7 +31,7 @@ interface ItemOutfitsModalProps {
   onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
 
-const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
+const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   isOpen,
   onClose,
   clothingItem,
@@ -63,7 +64,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
         fetchItemOutfits(clothingItem.id);
       } else {
         console.error(
-          '❌ ItemOutfitsModal: fetchItemOutfits is not a function:',
+          '❌ ViewOutfitsModal: fetchItemOutfits is not a function:',
           typeof fetchItemOutfits
         );
       }
@@ -95,7 +96,8 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
 
   const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
     const items = organizeOutfitItems(outfit);
-    const categories = ['tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
+    // const categories = ['tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
+    const { categories } = useWardrobeItems();
 
     // Debug: Check if current item is in this outfit
     const currentItemInOutfit = outfit.outfit_items?.some(
@@ -108,7 +110,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
       if (onEditOutfit && typeof onEditOutfit === 'function') {
         onEditOutfit(outfit);
       } else {
-        console.warn('❌ ItemOutfitsModal: onEditOutfit is not a function!', {
+        console.warn('❌ ViewOutfitsModal: onEditOutfit is not a function!', {
           onEditOutfit,
         });
       }
@@ -418,4 +420,4 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
   );
 };
 
-export default ItemOutfitsModal;
+export default ViewOutfitsModal;

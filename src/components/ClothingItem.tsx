@@ -14,7 +14,7 @@ import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { capitalizeFirst, parseArrayField } from '@/lib/utils';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
-import ItemOutfitsModal from './ItemOutfitsModal';
+import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
 
 const ClothingItem = ({
@@ -115,7 +115,7 @@ const ClothingItem = ({
       </Card>
 
       {/* Item Outfits Modal */}
-      <ItemOutfitsModal
+      <ViewOutfitsModal
         isOpen={showOutfitsModal}
         onClose={() => setShowOutfitsModal(false)}
         // clothingItem={}

@@ -34,6 +34,7 @@ import {
 // import { Database } from '../types/supabase';
 import { ClothingItemType, OutfitWithItems, WardrobeGridProps } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 
 const WardrobeGrid = ({
   searchQuery = '',
@@ -199,16 +200,18 @@ const WardrobeGrid = ({
     setActiveCategory('all');
   };
 
-  const categories = [
-    'all',
-    'tops',
-    'bottoms',
-    'dresses',
-    'outerwear',
-    'shoes',
-    'accessories',
-    'formal',
-  ];
+  // const categories = [
+  //   'all',
+  //   'tops',
+  //   'bottoms',
+  //   'dresses',
+  //   'outerwear',
+  //   'shoes',
+  //   'accessories',
+  //   'formal',
+  // ];
+  const { categories } = useWardrobeItems();
+
   const colors = [
     'black',
     'white',
