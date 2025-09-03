@@ -21,12 +21,8 @@ import {
   supabase,
 } from '../lib/supabaseClient';
 // import { Database } from '../types/supabase';
-import {
-  ClothingItemType,
-  OutfitBuilderProps,
-  OutfitItem,
-  useWardrobeItems,
-} from '@/types';
+import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({

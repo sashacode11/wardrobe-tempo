@@ -1,5 +1,4 @@
 import { Database } from './supabase';
-import { useState, useMemo } from 'react';
 
 export type ClothingItemType =
   Database['public']['Tables']['wardrobe_items']['Row'];
@@ -69,27 +68,4 @@ export interface WardrobeGridProps {
   onSelectItem?: (item: ClothingItemType) => void;
   onAddToOutfit?: (item: ClothingItemType) => void;
   onEditItem?: (item: ClothingItemType) => void;
-}
-
-export function getUniqueCategories(items: ClothingItemType[]): string[] {
-  if (!items || !Array.isArray(items)) return [];
-  return [...new Set(items.map(item => item.category))].filter(Boolean);
-}
-
-// 🔹 Custom Hook: Use Wardrobe Items + Categories
-export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
-  const [wardrobeItems, setWardrobeItems] =
-    useState<ClothingItemType[]>(initialItems);
-
-  // Automatically compute categories when items change
-  const categories = useMemo(
-    () => getUniqueCategories(wardrobeItems),
-    [wardrobeItems]
-  );
-
-  return {
-    wardrobeItems,
-    setWardrobeItems,
-    categories,
-  };
 }
