@@ -28,7 +28,8 @@ import {
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
-import { parseArrayField } from '../lib/utils';
+import { capitalizeFirst, parseArrayField } from '../lib/utils';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -158,29 +159,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       });
     } else {
       setItemData({ ...itemData, seasons: [...itemData.seasons, season] });
-    }
-  };
-
-  const handleAddOccasion = () => {
-    if (currentOccasion && !itemData.occasions.includes(currentOccasion)) {
-      setItemData({
-        ...itemData,
-        occasions: [...itemData.occasions, currentOccasion],
-      });
-      setCurrentOccasion('');
-    }
-  };
-
-  const handleAddCustomOccasion = () => {
-    if (customOccasion && !occasionSuggestions.includes(customOccasion)) {
-      const newOccasions = [...occasionSuggestions, customOccasion];
-      setOccasionSuggestions(newOccasions);
-      setItemData({
-        ...itemData,
-        occasions: [...itemData.occasions, customOccasion],
-      });
-      setCustomOccasion('');
-      setShowAddOccasion(false);
     }
   };
 
@@ -316,6 +294,12 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   };
 
+  const {
+    categories: existingCategories,
+    colors: existingColors,
+    occasions: existingOccasions,
+  } = useWardrobeItems();
+
   const [categories, setCategories] = useState([
     'Tops',
     'Bottoms',
@@ -340,6 +324,35 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     'Multicolor',
   ]);
 
+  const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+
+  const [occasions, setOccasions] = useState([
+    'Casual',
+    'Work',
+    'Formal',
+    'Party',
+    'Workout',
+    'Beach',
+    'Travel',
+  ]);
+
+  useEffect(() => {
+    const mergedCategories = [
+      ...new Set([...categories, ...existingCategories]),
+    ];
+    setCategories(mergedCategories);
+  }, [existingCategories]);
+
+  useEffect(() => {
+    const mergedColors = [...new Set([...colors, ...existingColors])];
+    setColors(mergedColors);
+  }, [existingColors]);
+
+  useEffect(() => {
+    const mergedOccasions = [...new Set([...occasions, ...existingOccasions])];
+    setOccasions(mergedOccasions);
+  }, [existingOccasions]);
+
   const handleAddCustomCategory = () => {
     if (customCategory && !categories.includes(customCategory)) {
       const newCategories = [...categories, customCategory];
@@ -360,17 +373,28 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   };
 
-  const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+  const handleAddOccasion = () => {
+    if (currentOccasion && !itemData.occasions.includes(currentOccasion)) {
+      setItemData({
+        ...itemData,
+        occasions: [...itemData.occasions, currentOccasion],
+      });
+      setCurrentOccasion('');
+    }
+  };
 
-  const [occasionSuggestions, setOccasionSuggestions] = useState([
-    'Casual',
-    'Work',
-    'Formal',
-    'Party',
-    'Workout',
-    'Beach',
-    'Travel',
-  ]);
+  const handleAddCustomOccasion = () => {
+    if (customOccasion && !occasions.includes(customOccasion)) {
+      const newOccasions = [...occasions, customOccasion];
+      setOccasions(newOccasions);
+      setItemData({
+        ...itemData,
+        occasions: [...itemData.occasions, customOccasion],
+      });
+      setCustomOccasion('');
+      setShowAddOccasion(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -501,7 +525,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     <SelectContent>
                       {categories.map(category => (
                         <SelectItem key={category} value={category}>
-                          {category}
+                          {capitalizeFirst(category)}
                         </SelectItem>
                       ))}
                       {/* Add the existing categroy */}
@@ -581,7 +605,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     <SelectContent>
                       {colors.map(color => (
                         <SelectItem key={color} value={color}>
-                          {color}
+                          {capitalizeFirst(color)}
                         </SelectItem>
                       ))}
                       {/* Add the existing color */}
@@ -741,9 +765,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                         <SelectValue placeholder="Select or type occasion" />
                       </SelectTrigger>
                       <SelectContent>
-                        {occasionSuggestions.map(occasion => (
+                        {occasions.map(occasion => (
                           <SelectItem key={occasion} value={occasion}>
-                            {occasion}
+                            {capitalizeFirst(occasion)}
                           </SelectItem>
                         ))}
                       </SelectContent>
