@@ -1,6 +1,6 @@
 // MyOutfits.tsx - Complete improved version with better styling
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Shirt, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -276,19 +276,20 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm shadow-sm ${
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 ${
             isSelectionMode && isSelected
               ? 'ring-2 ring-blue-500 ring-offset-2'
               : ''
           }`}
         >
-          <CardHeader className="pb-4">
+          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4">
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-xl font-semibold text-gray-900 mb-1 truncate">
+                <CardTitle className="text-l font-semibold text-gray-900 mb-1 truncate">
                   {outfit.name}
                 </CardTitle>
-                <p className="text-sm text-gray-500 mb-3">
+                <p className="text-sm text-gray-500">
+                  Created:{' '}
                   {new Date(outfit.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -297,7 +298,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 </p>
 
                 {/* Occasions with improved styling */}
-                {outfit.occasions && outfit.occasions.length > 0 && (
+                {/* {outfit.occasions && outfit.occasions.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {outfit.occasions.slice(0, 3).map((occasion, index) => (
                       <Badge
@@ -317,12 +318,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       </Badge>
                     )}
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Action buttons with improved positioning */}
               {!isSelectionMode && (
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-3">
+                <div className="group-hover:opacity-100 transition-opacity duration-200 ml-3">
                   <OutfitActions
                     onView={() => handleView(outfit)}
                     onEdit={() => handleEditOutfit(outfit)}
@@ -336,10 +337,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             </div>
           </CardHeader>
 
-          <CardContent className="pt-0 pb-6">
+          <CardContent className="pt-0 pb-6 py-2">
             {/* Items display with improved layout */}
             {itemsWithContent.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-0">
                 {/* Item count indicator */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">
@@ -404,8 +405,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Error display */}
         {(error || multiselectError || entityError) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
@@ -426,15 +427,35 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         )}
 
         {/* Header Section */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              My Outfits
-            </h2>
-            <p className="text-gray-600">
-              You have {outfits.length} saved outfit
-              {outfits.length !== 1 ? 's' : ''}
-            </p>
+            <div className="flex items-center gap-4 mb-2">
+              {/* Icon with gradient background */}
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <Shirt className="h-8 w-8 text-white" />
+              </div>
+
+              <div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  My Outfits
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    {/* <TrendingUp className="h-4 w-4" /> */}
+                    <p className="text-sm font-medium">
+                      You have {outfits.length} saved outfit
+                      {outfits.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  {outfits.length > 0 && (
+                    <div className="flex items-center gap-1 text-amber-600">
+                      <Sparkles className="h-4 w-4" />
+                      {/* <span className="text-sm font-medium">Collection</span> */}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -507,7 +528,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
             {outfits.map(outfit => (
               <OutfitCard key={outfit.id} outfit={outfit} />
             ))}
@@ -526,7 +547,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 ).toLocaleDateString()}`
               : ''
           }
-          maxWidth="4xl"
+          maxWidth="xl"
         >
           {selectedItem && (
             <div className="space-y-6">
