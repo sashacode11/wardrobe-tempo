@@ -7,6 +7,31 @@ export function getUniqueCategories(items: ClothingItemType[]): string[] {
   return [...new Set(items.map(item => item.category))].filter(Boolean);
 }
 
+export function getUniqueColors(items: ClothingItemType[]): string[] {
+  if (!items || !Array.isArray(items)) return [];
+  return [...new Set(items.map(item => item.color))].filter(Boolean);
+}
+
+export function getUniqueSeasons(items: ClothingItemType[]): string[] {
+  if (!items || !Array.isArray(items)) return [];
+  // Handle both single and multiple seasons
+  const allSeasons = items.flatMap(item => {
+    if (Array.isArray(item.season)) return item.season;
+    return item.season ? [item.season] : [];
+  });
+  return [...new Set(allSeasons)].filter(Boolean);
+}
+
+export function getUniqueOccasions(items: ClothingItemType[]): string[] {
+  if (!items || !Array.isArray(items)) return [];
+  // Handle both single and multiple seasons
+  const allOccasions = items.flatMap(item => {
+    if (Array.isArray(item.occasion)) return item.occasion;
+    return item.occasion ? [item.occasion] : [];
+  });
+  return [...new Set(allOccasions)].filter(Boolean);
+}
+
 // Global cache to share data across all hook instances
 let globalWardrobeCache: {
   data: ClothingItemType[] | null;
@@ -130,6 +155,21 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     [localData.items]
   );
 
+  const colors = useMemo(
+    () => getUniqueColors(localData.items),
+    [localData.items]
+  );
+
+  const seasons = useMemo(
+    () => getUniqueSeasons(localData.items),
+    [localData.items]
+  );
+
+  const occasions = useMemo(
+    () => getUniqueOccasions(localData.items),
+    [localData.items]
+  );
+
   const refetch = useCallback(async () => {
     // Clear cache and fetch fresh data
     globalWardrobeCache.data = null;
@@ -159,6 +199,9 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     wardrobeItems: localData.items,
     setWardrobeItems,
     categories,
+    colors,
+    seasons,
+    occasions,
     loading: localData.loading,
     error: localData.error,
     refetch,

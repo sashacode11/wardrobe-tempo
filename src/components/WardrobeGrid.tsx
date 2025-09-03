@@ -210,29 +210,29 @@ const WardrobeGrid = ({
   //   'accessories',
   //   'formal',
   // ];
-  const { categories } = useWardrobeItems();
+  const { categories, colors, seasons, occasions } = useWardrobeItems();
 
-  const colors = [
-    'black',
-    'white',
-    'blue',
-    'red',
-    'green',
-    'yellow',
-    'purple',
-    'pink',
-    'brown',
-    'gray',
-  ];
-  const seasons = ['spring', 'summer', 'fall', 'winter', 'all'];
-  const occasions = [
-    'casual',
-    'formal',
-    'business',
-    'party',
-    'sporty',
-    'semi-formal',
-  ];
+  // const colors = [
+  //   'black',
+  //   'white',
+  //   'blue',
+  //   'red',
+  //   'green',
+  //   'yellow',
+  //   'purple',
+  //   'pink',
+  //   'brown',
+  //   'gray',
+  // ];
+  // const seasons = ['spring', 'summer', 'fall', 'winter', 'all'];
+  // const occasions = [
+  //   'casual',
+  //   'formal',
+  //   'business',
+  //   'party',
+  //   'sporty',
+  //   'semi-formal',
+  // ];
 
   if (loading) {
     return (
