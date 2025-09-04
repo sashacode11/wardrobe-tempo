@@ -1,22 +1,20 @@
+// home.tsx - Updated to use SearchBar component
 import React, { useState, useEffect } from 'react';
 import {
-  Search,
   Plus,
   Menu,
   LogOut,
   User,
   ArrowLeft,
   Shirt,
-  Grid3x3,
   Headphones,
-  Heart,
   HomeIcon,
   Package,
+  Filter,
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Dialog, DialogTrigger } from './ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import SearchBar from './common/SearchBar';
 import WardrobeGrid from './WardrobeGrid';
 import ItemUploadForm from './ItemUploadForm';
 import OutfitBuilder from './OutfitBuilder';
@@ -24,9 +22,13 @@ import AuthDialog from './AuthDialog';
 import MyOutfits from './MyOutfits';
 import { getCurrentUser, signOut, supabase } from '../lib/supabaseClient';
 import { ClothingItemType } from '../types';
+import { useSearch } from '../hooks/useSearch';
+import { FilterConfig, useFilters } from '@/hooks/useFilters';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import FilterPanel from './common/FilterPanel';
+import ResultsInfo from './common/ResultsInfo';
 
 const Home = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('wardrobe');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -38,8 +40,57 @@ const Home = () => {
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
 
+  // Initialize empty search - actual items will be handled by individual components
+  const { searchQuery, setSearchQuery, clearSearch } = useSearch([]);
+
+  // 🔹 Filter & Search States (elevated to Home)
+  // const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Get wardrobe metadata (categories, colors, etc.)
+  const {
+    categories,
+    colors,
+    seasons,
+    occasions,
+    loading: metadataLoading,
+  } = useWardrobeItems();
+
+  // Define filter configurations
+  const filterConfigs: FilterConfig[] = [
+    {
+      key: 'color',
+      label: 'Color',
+      options: colors,
+      placeholder: 'Select color',
+    },
+    {
+      key: 'seasons',
+      label: 'Season',
+      options: seasons,
+      placeholder: 'Select season',
+    },
+    {
+      key: 'occasions',
+      label: 'Occasion',
+      options: occasions,
+      placeholder: 'Select occasion',
+    },
+  ];
+
+  // We'll apply filters later after fetching items
+  const {
+    activeFilters,
+    updateFilter,
+    clearFilter,
+    clearAllFilters,
+    hasActiveFilters,
+    activeFilterEntries,
+  } = useFilters([], { filterConfigs }); // We'll use this after items are loaded
+
   const handleItemSaved = () => {
-    // Refresh the wardrobe grid by changing its key
     setWardrobeKey(prev => prev + 1);
   };
 
@@ -64,7 +115,7 @@ const Home = () => {
       setShowAuthDialog(true);
     } else {
       setShowUploadForm(true);
-      setEditingItem(null); // Reset editing item when opening form
+      setEditingItem(null);
     }
   };
 
@@ -76,7 +127,6 @@ const Home = () => {
   useEffect(() => {
     checkUser();
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -87,7 +137,6 @@ const Home = () => {
       }
     });
 
-    // Listen for custom auth events from ItemUploadForm
     const handleShowAuth = () => {
       setShowAuthDialog(true);
     };
@@ -100,21 +149,27 @@ const Home = () => {
     };
   }, []);
 
-  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+  // Reset category when switching to wardrobe tab
+  useEffect(() => {
+    if (activeTab === 'wardrobe') {
+      setActiveCategory('all');
+      setSearchQuery('');
+      clearAllFilters();
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 px-2 md:px-20 sm:pb-4 sm:pt-4">
-        <div className=" mx-auto flex items-center justify-between">
+        <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
 
-            {/* desktop tabs */}
+            {/* Desktop tabs */}
             {user && (
               <div className="hidden md:flex flex-row">
                 <button
-                  value="wardrobe"
                   onClick={() => setActiveTab('wardrobe')}
                   className={`mx-4 pm-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'wardrobe'
@@ -126,7 +181,6 @@ const Home = () => {
                 </button>
 
                 <button
-                  value="outfit"
                   onClick={() => setActiveTab('outfit')}
                   className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'outfit'
@@ -138,7 +192,6 @@ const Home = () => {
                 </button>
 
                 <button
-                  value="my-outfits"
                   onClick={() => setActiveTab('my-outfits')}
                   className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     activeTab === 'my-outfits'
@@ -152,38 +205,28 @@ const Home = () => {
             )}
           </div>
 
-          {/* show search outside of hamburger menu in mobile */}
+          {/* Mobile search */}
           {user && (
-            <div className="md:hidden relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
+            <div className="md:hidden">
+              <SearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onClear={clearSearch}
                 placeholder="Search items..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-8"
+                size="sm"
               />
             </div>
           )}
 
           <div className="hidden md:flex items-center space-x-4">
             {user && (
-              <div className="relative w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+              <SearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onClear={clearSearch}
+                placeholder="Search items..."
+                className="w-64"
+              />
             )}
 
             <button
@@ -228,29 +271,23 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu - keeping the existing mobile menu code */}
         {showMobileMenu && (
           <>
-            {/* Backdrop */}
             <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
               onClick={() => setShowMobileMenu(false)}
             />
-
-            {/* Sliding menu */}
             <div
               className={`
-      fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
-      transform transition-transform duration-300 ease-in-out
-      ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
-    `}
+                fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
+                transform transition-transform duration-300 ease-in-out
+                ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
+              `}
             >
-              {/* Menu content container */}
               <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="py-4 px-2 ">
+                <div className="py-4 px-2">
                   <div className="flex items-center justify-between border-b">
-                    {/* <h2 className="text-lg font-semibold">Menu</h2> */}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -260,7 +297,6 @@ const Home = () => {
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
 
-                    {/* User Account Section */}
                     {user && (
                       <div className="p-4">
                         <div className="flex items-center space-x-3">
@@ -279,12 +315,10 @@ const Home = () => {
                       </div>
                     )}
 
-                    {/* Contact Button */}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        // Add your contact functionality here
                         console.log('Contact clicked');
                         setShowMobileMenu(false);
                       }}
@@ -295,11 +329,9 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Main menu items */}
                 <div className="flex-1 p-4">
                   {user ? (
                     <div className="space-y-6">
-                      {/* First row - Shortcuts */}
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-4">
                           Shortcut
@@ -334,7 +366,7 @@ const Home = () => {
 
                           <button
                             onClick={() => {
-                              setActiveTab('myoutfits');
+                              setActiveTab('my-outfits');
                               setShowMobileMenu(false);
                             }}
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -349,7 +381,6 @@ const Home = () => {
                         </div>
                       </div>
 
-                      {/* Second row - Recommendations */}
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-4">
                           Recommend
@@ -385,7 +416,6 @@ const Home = () => {
                   )}
                 </div>
 
-                {/* Bottom section - Sign Out */}
                 {user && (
                   <div className="p-4 border-t mt-auto">
                     <Button
@@ -406,7 +436,6 @@ const Home = () => {
 
       {/* Main content */}
       <main className="container mx-auto md:p-4 pb-20 md:pb-4">
-        {' '}
         {authLoading ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -443,6 +472,87 @@ const Home = () => {
             className="w-full"
           >
             <TabsContent value="wardrobe" className="mt-0">
+              <div className="space-y-4">
+                {/* 🔹 Filter Panel */}
+                <FilterPanel
+                  filters={filterConfigs}
+                  activeFilters={activeFilters}
+                  onUpdateFilter={updateFilter}
+                  onClearFilter={clearFilter}
+                  className="hidden md:block"
+                  onClearAllFilters={() => {
+                    clearAllFilters();
+                    setActiveCategory('all');
+                    setSearchQuery('');
+                  }}
+                  activeFilterEntries={[
+                    ...(activeCategory !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: 'Category',
+                            value: activeCategory,
+                          },
+                        ]
+                      : []),
+                    ...activeFilterEntries,
+                  ]}
+                  hasActiveFilters={
+                    hasActiveFilters ||
+                    activeCategory !== 'all' ||
+                    !!searchQuery
+                  }
+                  showFilters={showFilters}
+                  onToggleFilters={() => setShowFilters(!showFilters)}
+                />
+
+                {/* 🔹 Category Tabs */}
+                {/* <div className="px-4">
+                  <div className="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
+                    {categories.map(category => (
+                      <button
+                        key={category}
+                        onClick={() => setActiveCategory(category)}
+                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors
+                          ${
+                            activeCategory === category
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                      >
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div> */}
+                <Tabs
+                  defaultValue="all"
+                  value={activeCategory}
+                  onValueChange={setActiveCategory}
+                >
+                  <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto">
+                    {categories.map(category => (
+                      <TabsTrigger
+                        key={category}
+                        value={category}
+                        className="capitalize"
+                      >
+                        {category}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+
+                {/* 🔹 Results Info */}
+                <ResultsInfo
+                  totalCount={0} // Will be filled by WardrobeGrid
+                  filteredCount={0}
+                  itemType="item"
+                  searchQuery={searchQuery}
+                  activeCategory={activeCategory}
+                />
+              </div>
+
               <WardrobeGrid
                 key={wardrobeKey}
                 searchQuery={searchQuery}
@@ -463,7 +573,6 @@ const Home = () => {
                 editingOutfit={editingOutfit}
                 onEditComplete={() => setEditingOutfit(null)}
                 onClose={() => {
-                  setShowOutfitBuilder(false);
                   setEditingOutfit(null);
                 }}
               />
@@ -471,9 +580,9 @@ const Home = () => {
 
             <TabsContent value="my-outfits" className="mt-0">
               <MyOutfits
+                searchQuery={searchQuery}
                 onCreateOutfit={() => setActiveTab('outfit')}
                 onEditOutfit={outfit => {
-                  // ✅ Patch missing items
                   const outfitWithItems = {
                     ...outfit,
                     items: Array.isArray(outfit.outfit_items)
@@ -487,16 +596,124 @@ const Home = () => {
             </TabsContent>
           </Tabs>
         )}
+
+        {/* 🔹 Filter Modal - Slide in from right */}
+        {showFilterModal && (
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setShowFilterModal(false)}
+            />
+            <div
+              className={`
+        fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
+        transform transition-transform duration-300 ease-in-out
+        ${showFilterModal ? 'translate-x-0' : 'translate-x-full'}
+      `}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="p-4 border-b flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Filters</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilterModal(false)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  {/* Category Filter */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium mb-3">Category</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map(category => (
+                        <button
+                          key={category}
+                          onClick={() => setActiveCategory(category)}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors
+                    ${
+                      activeCategory === category
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
+                    }
+                  `}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dynamic Filters */}
+                  <FilterPanel
+                    filters={filterConfigs}
+                    activeFilters={activeFilters}
+                    onUpdateFilter={updateFilter}
+                    onClearFilter={clearFilter}
+                    onClearAllFilters={() => {
+                      clearAllFilters();
+                      setActiveCategory('all');
+                    }}
+                    activeFilterEntries={[
+                      ...(activeCategory !== 'all'
+                        ? [
+                            {
+                              key: 'category',
+                              label: 'Category',
+                              value: activeCategory,
+                            },
+                          ]
+                        : []),
+                      ...activeFilterEntries,
+                    ]}
+                    hasActiveFilters={
+                      hasActiveFilters || activeCategory !== 'all'
+                    }
+                    showFilters={true}
+                    onToggleFilters={() => {}} // no-op since always open
+                    inline={true} // optional: style without toggle
+                  />
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t">
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowFilterModal(false)}
+                  >
+                    Apply Filters
+                  </Button>
+                  {hasActiveFilters || activeCategory !== 'all' ? (
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        clearAllFilters();
+                        setActiveCategory('all');
+                      }}
+                    >
+                      Clear All
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
-      {/* Mobile Bottom Ho - Fixed at bottom */}
+      {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
         <div className="flex items-center justify-around py-2 px-2">
           <button
             onClick={() => setActiveTab('wardrobe')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'wardrobe'
-                ? 'text-blue-600 '
+                ? 'text-blue-600'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -504,23 +721,41 @@ const Home = () => {
             <span className="text-xs font-medium">Home</span>
           </button>
 
-          {/* Add Item - Center with special styling */}
+          {/* 🔹 Filter Button */}
+          <button
+            onClick={() => {
+              if (activeTab === 'wardrobe') {
+                setShowFilterModal(true);
+              } else {
+                setActiveTab('wardrobe');
+                // Optional: auto-open filter after switch
+                setTimeout(() => setShowFilterModal(true), 300);
+              }
+            }}
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              activeTab === 'wardrobe' && hasActiveFilters
+                ? 'text-blue-600'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Filter className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Filter</span>
+          </button>
+
           <button
             onClick={handleAddItemClick}
             className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
             type="button"
           >
-            {/* <div className="w-12 h-12 rounded-full flex items-center justify-center hover:shadow-xl transition-all duration-200 hover:scale-105 "> */}
             <Plus className="h-5 w-5 mb-1" />
-            {/* </div> */}
-            <span className="text-xs font-medium ">Add Item</span>
+            <span className="text-xs font-medium">Add Item</span>
           </button>
 
           <button
             onClick={() => setActiveTab('outfit')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'outfit'
-                ? 'text-blue-600 '
+                ? 'text-blue-600'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -532,7 +767,7 @@ const Home = () => {
             onClick={() => setActiveTab('my-outfits')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
               activeTab === 'my-outfits'
-                ? 'text-blue-600 '
+                ? 'text-blue-600'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -545,12 +780,8 @@ const Home = () => {
       {/* Upload Form Dialog */}
       <ItemUploadForm
         open={showUploadForm}
-        // onOpenChange={setShowUploadForm}
         onOpenChange={open => {
           setShowUploadForm(open);
-          // if (!open) {
-          //   setEditingItem(null);
-          // }
         }}
         onSave={handleItemSaved}
         editingItem={editingItem}

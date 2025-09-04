@@ -398,7 +398,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col mx-0">
+      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col mx-0 ">
         {' '}
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
