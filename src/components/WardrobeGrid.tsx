@@ -282,15 +282,15 @@ const WardrobeGrid = ({
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-row gap-3 justify-center">
                 {searchQuery ||
                 activeCategory !== 'all' ||
                 Object.keys(activeFilters).length ? (
                   <>
                     <Button
                       variant="outline"
-                      onClick={onClearFilters} // ✅ Properly calls parent handler
-                      className="rounded-full border-white/20 bg-white/60 backdrop-blur-sm hover:bg-white/80 px-6 py-2.5"
+                      onClick={onClearFilters}
+                      className="rounded-full border-2 backdrop-blur-sm hover:bg-white/80 px-6 py-2.5"
                     >
                       Clear Filters
                     </Button>

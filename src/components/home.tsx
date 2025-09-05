@@ -632,7 +632,7 @@ const Home = () => {
             />
             <div
               className={`
-    fixed top-0 left-0 h-[85vh] md:h-full w-80 max-w-[85vw] bg-background border-r z-50
+    fixed top-0 left-0 h-[85vh] md:max-h-[65vh] md:h-full w-80 max-w-[85vw] bg-background border-r z-50
     transform transition-transform duration-300 ease-in-out
     ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
   `}
