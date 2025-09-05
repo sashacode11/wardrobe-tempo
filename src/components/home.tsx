@@ -586,6 +586,7 @@ const Home = () => {
                 }}
                 activeFilters={activeFilters}
                 activeCategory={activeCategory}
+                onClearFilters={clearAllFilters}
               />
             </TabsContent>
 
@@ -632,7 +633,7 @@ const Home = () => {
             />
             <div
               className={`
-    fixed top-0 left-0 h-[85vh] md:max-h-[65vh] md:h-full w-80 max-w-[85vw] bg-background border-r z-50
+    fixed top-0 left-0 h-[85vh]  md:h-full w-80 max-w-[85vw] bg-background border-r z-50
     transform transition-transform duration-300 ease-in-out
     ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
   `}
@@ -641,13 +642,29 @@ const Home = () => {
                 {/* Header */}
                 <div className="p-2 pt-4 border-b flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Filters</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFilterModal(false)}
-                  >
-                    <X className="h-6 w-6" />
-                  </Button>
+                  <div className="flex items-center gap-5">
+                    {hasActiveFilters ||
+                      (activeCategory !== 'all' && (
+                        <div
+                          // variant="outline"
+                          className="hidden text-sm md:inline text-blue-600"
+                          onClick={() => {
+                            clearAllFilters();
+                            setActiveCategory('all');
+                          }}
+                        >
+                          Clear All
+                        </div>
+                      ))}
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFilterModal(false)}
+                    >
+                      <X className="h-6 w-6" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Scrollable Content */}
@@ -706,7 +723,7 @@ const Home = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-2 border-t flex flex-row justify-end gap-3">
+                <div className="p-2 border-t flex md:hidden flex-row justify-end gap-3">
                   {hasActiveFilters || activeCategory !== 'all' ? (
                     <Button
                       variant="outline"
