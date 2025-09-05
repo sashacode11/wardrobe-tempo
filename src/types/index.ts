@@ -1,3 +1,4 @@
+import { FilterOptions } from '@/hooks/useFilters';
 import { Database } from './supabase';
 
 export type ClothingItemType =
@@ -68,4 +69,7 @@ export interface WardrobeGridProps {
   onSelectItem?: (item: ClothingItemType) => void;
   onAddToOutfit?: (item: ClothingItemType) => void;
   onEditItem?: (item: ClothingItemType) => void;
+  onClearFilters?: () => void;
+  activeFilters?: FilterOptions;
+  activeCategory?: string;
 }

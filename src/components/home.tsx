@@ -11,6 +11,7 @@ import {
   HomeIcon,
   Package,
   Filter,
+  X,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -20,13 +21,19 @@ import ItemUploadForm from './ItemUploadForm';
 import OutfitBuilder from './OutfitBuilder';
 import AuthDialog from './AuthDialog';
 import MyOutfits from './MyOutfits';
-import { getCurrentUser, signOut, supabase } from '../lib/supabaseClient';
+import {
+  getClothingItems,
+  getCurrentUser,
+  signOut,
+  supabase,
+} from '../lib/supabaseClient';
 import { ClothingItemType } from '../types';
 import { useSearch } from '../hooks/useSearch';
 import { FilterConfig, useFilters } from '@/hooks/useFilters';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import FilterPanel from './common/FilterPanel';
 import ResultsInfo from './common/ResultsInfo';
+import { Close } from '@radix-ui/react-dialog';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -40,14 +47,9 @@ const Home = () => {
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
 
-  // Initialize empty search - actual items will be handled by individual components
-  const { searchQuery, setSearchQuery, clearSearch } = useSearch([]);
-
-  // 🔹 Filter & Search States (elevated to Home)
-  // const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  // Load wardrobe items
+  const [items, setItems] = useState<ClothingItemType[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
 
   // Get wardrobe metadata (categories, colors, etc.)
   const {
@@ -80,7 +82,7 @@ const Home = () => {
     },
   ];
 
-  // We'll apply filters later after fetching items
+  // Handle Filters
   const {
     activeFilters,
     updateFilter,
@@ -88,7 +90,18 @@ const Home = () => {
     clearAllFilters,
     hasActiveFilters,
     activeFilterEntries,
-  } = useFilters([], { filterConfigs }); // We'll use this after items are loaded
+  } = useFilters([], { filterConfigs });
+
+  // 🔹 Filter & Search States (elevated to Home)
+  const { searchQuery, setSearchQuery, clearSearch } = useSearch([]);
+  // const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const activeFilterCount =
+    (activeCategory !== 'all' ? 1 : 0) +
+    Object.values(activeFilters).filter(Boolean).length +
+    (searchQuery ? 1 : 0);
 
   const handleItemSaved = () => {
     setWardrobeKey(prev => prev + 1);
@@ -124,6 +137,7 @@ const Home = () => {
     setActiveTab('outfit');
   };
 
+  // Listen to auth changes
   useEffect(() => {
     checkUser();
 
@@ -149,6 +163,25 @@ const Home = () => {
     };
   }, []);
 
+  // Load clothing items on mount & when user changes
+  useEffect(() => {
+    const loadItems = async () => {
+      if (!user) return;
+      setLoadingItems(true);
+      try {
+        const { data, error } = await getClothingItems(user.id);
+        if (error) throw error;
+        setItems(data || []);
+      } catch (err) {
+        console.error('Failed to load items:', err);
+      } finally {
+        setLoadingItems(false);
+      }
+    };
+
+    loadItems();
+  }, [user]);
+
   // Reset category when switching to wardrobe tab
   useEffect(() => {
     if (activeTab === 'wardrobe') {
@@ -157,6 +190,33 @@ const Home = () => {
       clearAllFilters();
     }
   }, [activeTab]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-center space-y-6 max-w-md">
+          <h2 className="text-2xl font-bold">Welcome to Vesti</h2>
+          <p className="text-gray-600">
+            Organize your wardrobe, plan outfits, and style your life.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => setShowAuthDialog(true)}>Login</Button>
+            <Button variant="outline" onClick={() => setShowAuthDialog(true)}>
+              Sign Up
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,40 +228,26 @@ const Home = () => {
 
             {/* Desktop tabs */}
             {user && (
-              <div className="hidden md:flex flex-row">
-                <button
-                  onClick={() => setActiveTab('wardrobe')}
-                  className={`mx-4 pm-2 text-sm font-medium transition-colors hover:text-blue-600 ${
-                    activeTab === 'wardrobe'
-                      ? 'border-b-2 border-blue-600 px-0'
-                      : 'text-gray-800'
-                  }`}
-                >
-                  Wardrobe
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('outfit')}
-                  className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
-                    activeTab === 'outfit'
-                      ? 'border-b-2 border-blue-600 px-0'
-                      : 'text-gray-800'
-                  }`}
-                >
-                  Create Outfit
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('my-outfits')}
-                  className={`mx-4 my-2 text-sm font-medium transition-colors hover:text-blue-600 ${
-                    activeTab === 'my-outfits'
-                      ? 'border-b-2 border-blue-600 px-0'
-                      : 'text-gray-800'
-                  }`}
-                >
-                  My Outfits
-                </button>
-              </div>
+              <nav className="hidden md:flex bg-white/60 backdrop-blur-sm rounded-full p-1 border border-white/20">
+                {[
+                  { key: 'wardrobe', label: 'Wardrobe', icon: HomeIcon },
+                  { key: 'outfit', label: 'Create Outfit', icon: Package },
+                  { key: 'my-outfits', label: 'My Outfits', icon: Shirt },
+                ].map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    className={`relative mx-6 py-2.5  text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                      activeTab === key
+                        ? 'border-b-2 border-blue-600 px-0'
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </nav>
             )}
           </div>
 
@@ -218,6 +264,7 @@ const Home = () => {
             </div>
           )}
 
+          {/* Desktop right side bar */}
           <div className="hidden md:flex items-center space-x-4">
             {user && (
               <SearchBar
@@ -261,6 +308,7 @@ const Home = () => {
             )}
           </div>
 
+          {/* Hamburger menu in mobile */}
           <Button
             variant="ghost"
             size="icon"
@@ -271,7 +319,7 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Mobile menu - keeping the existing mobile menu code */}
+        {/* Mobile menu modal*/}
         {showMobileMenu && (
           <>
             <div
@@ -444,6 +492,7 @@ const Home = () => {
             </div>
           </div>
         ) : !user ? (
+          // Not logged in
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold">Welcome to My Wardrobe</h2>
@@ -473,58 +522,39 @@ const Home = () => {
           >
             <TabsContent value="wardrobe" className="mt-0">
               <div className="space-y-4">
-                {/* 🔹 Filter Panel */}
-                <FilterPanel
-                  filters={filterConfigs}
-                  activeFilters={activeFilters}
-                  onUpdateFilter={updateFilter}
-                  onClearFilter={clearFilter}
-                  className="hidden md:block"
-                  onClearAllFilters={() => {
-                    clearAllFilters();
-                    setActiveCategory('all');
-                    setSearchQuery('');
+                {/* Filter Button */}
+                <button
+                  onClick={() => {
+                    if (activeTab === 'wardrobe') {
+                      setShowFilterModal(true);
+                    } else {
+                      setActiveTab('wardrobe');
+
+                      setTimeout(() => setShowFilterModal(true), 300);
+                    }
                   }}
-                  activeFilterEntries={[
-                    ...(activeCategory !== 'all'
-                      ? [
-                          {
-                            key: 'category',
-                            label: 'Category',
-                            value: activeCategory,
-                          },
-                        ]
-                      : []),
-                    ...activeFilterEntries,
-                  ]}
-                  hasActiveFilters={
-                    hasActiveFilters ||
-                    activeCategory !== 'all' ||
-                    !!searchQuery
-                  }
-                  showFilters={showFilters}
-                  onToggleFilters={() => setShowFilters(!showFilters)}
-                />
+                  className={`hidden md:flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                    activeTab === 'wardrobe' && hasActiveFilters
+                      ? 'text-blue-600'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="relative">
+                    <Filter className="h-5 w-5 mb-1" />
+                    {activeFilterCount > 0 && (
+                      <span
+                        className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium 
+                  w-4 h-4 rounded-full flex items-center justify-center 
+                  ring-2 ring-background z-10"
+                      >
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs font-medium">Filter</span>
+                </button>
 
                 {/* 🔹 Category Tabs */}
-                {/* <div className="px-4">
-                  <div className="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
-                    {categories.map(category => (
-                      <button
-                        key={category}
-                        onClick={() => setActiveCategory(category)}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors
-                          ${
-                            activeCategory === category
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                      >
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div> */}
                 <Tabs
                   defaultValue="all"
                   value={activeCategory}
@@ -542,17 +572,9 @@ const Home = () => {
                     ))}
                   </TabsList>
                 </Tabs>
-
-                {/* 🔹 Results Info */}
-                <ResultsInfo
-                  totalCount={0} // Will be filled by WardrobeGrid
-                  filteredCount={0}
-                  itemType="item"
-                  searchQuery={searchQuery}
-                  activeCategory={activeCategory}
-                />
               </div>
 
+              {/* grid items */}
               <WardrobeGrid
                 key={wardrobeKey}
                 searchQuery={searchQuery}
@@ -562,9 +584,12 @@ const Home = () => {
                   setEditingItem(item);
                   setShowUploadForm(true);
                 }}
+                activeFilters={activeFilters}
+                activeCategory={activeCategory}
               />
             </TabsContent>
 
+            {/* Edit item */}
             <TabsContent value="outfit" className="mt-0">
               <OutfitBuilder
                 selectedItem={selectedItemForOutfit}
@@ -578,6 +603,7 @@ const Home = () => {
               />
             </TabsContent>
 
+            {/* My Outfits */}
             <TabsContent value="my-outfits" className="mt-0">
               <MyOutfits
                 searchQuery={searchQuery}
@@ -597,30 +623,30 @@ const Home = () => {
           </Tabs>
         )}
 
-        {/* 🔹 Filter Modal - Slide in from right */}
+        {/* 🔹 Filter Modal - Slide in from left */}
         {showFilterModal && (
           <>
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => setShowFilterModal(false)}
             />
             <div
               className={`
-        fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
-        transform transition-transform duration-300 ease-in-out
-        ${showFilterModal ? 'translate-x-0' : 'translate-x-full'}
-      `}
+    fixed top-0 left-0 h-[85vh] md:h-full w-80 max-w-[85vw] bg-background border-r z-50
+    transform transition-transform duration-300 ease-in-out
+    ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
+  `}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="p-4 border-b flex items-center justify-between">
+                <div className="p-2 pt-4 border-b flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Filters</h3>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowFilterModal(false)}
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <X className="h-6 w-6" />
                   </Button>
                 </div>
 
@@ -680,25 +706,25 @@ const Home = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t">
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowFilterModal(false)}
-                  >
-                    Apply Filters
-                  </Button>
+                <div className="p-2 border-t flex flex-row justify-end gap-3">
                   {hasActiveFilters || activeCategory !== 'all' ? (
                     <Button
                       variant="outline"
-                      className="w-full mt-2"
+                      className="w-auto"
                       onClick={() => {
                         clearAllFilters();
                         setActiveCategory('all');
                       }}
                     >
-                      Clear All
+                      Clear
                     </Button>
                   ) : null}
+                  <Button
+                    className="w-auto"
+                    onClick={() => setShowFilterModal(false)}
+                  >
+                    Done
+                  </Button>
                 </div>
               </div>
             </div>
@@ -709,6 +735,7 @@ const Home = () => {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
         <div className="flex items-center justify-around py-2 px-2">
+          {/* Home button */}
           <button
             onClick={() => setActiveTab('wardrobe')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
@@ -728,20 +755,30 @@ const Home = () => {
                 setShowFilterModal(true);
               } else {
                 setActiveTab('wardrobe');
-                // Optional: auto-open filter after switch
+
                 setTimeout(() => setShowFilterModal(true), 300);
               }
             }}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-              activeTab === 'wardrobe' && hasActiveFilters
+            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors relative ${
+              activeFilterCount > 0
                 ? 'text-blue-600'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
             <Filter className="h-5 w-5 mb-1" />
+            {activeFilterCount > 0 && (
+              <span
+                className="absolute -top-0 -right-0 bg-blue-600 text-white text-xs font-medium 
+                  w-4 h-4 rounded-full flex items-center justify-center 
+                  ring-2 ring-background z-10"
+              >
+                {activeFilterCount}
+              </span>
+            )}
             <span className="text-xs font-medium">Filter</span>
           </button>
 
+          {/* Add item button */}
           <button
             onClick={handleAddItemClick}
             className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
@@ -751,6 +788,7 @@ const Home = () => {
             <span className="text-xs font-medium">Add Item</span>
           </button>
 
+          {/* create outfit */}
           <button
             onClick={() => setActiveTab('outfit')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
@@ -763,6 +801,7 @@ const Home = () => {
             <span className="text-xs font-medium">Create</span>
           </button>
 
+          {/* My outfits */}
           <button
             onClick={() => setActiveTab('my-outfits')}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
