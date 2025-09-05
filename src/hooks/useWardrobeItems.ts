@@ -14,22 +14,117 @@ export function getUniqueColors(items: ClothingItemType[]): string[] {
 
 export function getUniqueSeasons(items: ClothingItemType[]): string[] {
   if (!items || !Array.isArray(items)) return [];
-  // Handle both single and multiple seasons
+
   const allSeasons = items.flatMap(item => {
-    if (Array.isArray(item.season)) return item.season;
-    return item.season ? [item.season] : [];
+    // Try both 'seasons' (plural) and 'season' (singular) fields
+    const seasonData = item.seasons || item.season;
+
+    if (!seasonData) return [];
+
+    // If it's already an array
+    if (Array.isArray(seasonData)) {
+      return seasonData.flatMap(s => {
+        // Handle nested arrays or JSON strings
+        if (typeof s === 'string') {
+          // Check if it's a JSON string like '["spring"]'
+          if (s.startsWith('[') && s.endsWith(']')) {
+            try {
+              const parsed = JSON.parse(s);
+              return Array.isArray(parsed) ? parsed : [s];
+            } catch {
+              return [s];
+            }
+          }
+          return [s];
+        }
+        if (Array.isArray(s)) return s;
+        return [];
+      });
+    }
+
+    // If it's a string
+    if (typeof seasonData === 'string') {
+      // Check if it's a JSON string like '["spring"]'
+      if (seasonData.startsWith('[') && seasonData.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(seasonData);
+          return Array.isArray(parsed) ? parsed : [seasonData];
+        } catch {
+          return [seasonData];
+        }
+      }
+      return [seasonData];
+    }
+
+    return [];
   });
-  return [...new Set(allSeasons)].filter(Boolean);
+
+  // Clean up: remove empty values and ensure we only have strings
+  const cleanSeasons = allSeasons
+    .filter(
+      season => season && typeof season === 'string' && season.trim() !== ''
+    )
+    .map(season => season.trim());
+
+  return [...new Set(cleanSeasons)];
 }
 
 export function getUniqueOccasions(items: ClothingItemType[]): string[] {
   if (!items || !Array.isArray(items)) return [];
-  // Handle both single and multiple seasons
+
   const allOccasions = items.flatMap(item => {
-    if (Array.isArray(item.occasion)) return item.occasion;
-    return item.occasion ? [item.occasion] : [];
+    // Try both 'occasions' (plural) and 'occasion' (singular) fields
+    const occasionData = item.occasions || item.occasion;
+
+    if (!occasionData) return [];
+
+    // If it's already an array
+    if (Array.isArray(occasionData)) {
+      return occasionData.flatMap(o => {
+        // Handle nested arrays or JSON strings
+        if (typeof o === 'string') {
+          // Check if it's a JSON string like '["casual"]'
+          if (o.startsWith('[') && o.endsWith(']')) {
+            try {
+              const parsed = JSON.parse(o);
+              return Array.isArray(parsed) ? parsed : [o];
+            } catch {
+              return [o];
+            }
+          }
+          return [o];
+        }
+        if (Array.isArray(o)) return o;
+        return [];
+      });
+    }
+
+    // If it's a string
+    if (typeof occasionData === 'string') {
+      // Check if it's a JSON string like '["casual"]'
+      if (occasionData.startsWith('[') && occasionData.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(occasionData);
+          return Array.isArray(parsed) ? parsed : [occasionData];
+        } catch {
+          return [occasionData];
+        }
+      }
+      return [occasionData];
+    }
+
+    return [];
   });
-  return [...new Set(allOccasions)].filter(Boolean);
+
+  // Clean up: remove empty values and ensure we only have strings
+  const cleanOccasions = allOccasions
+    .filter(
+      occasion =>
+        occasion && typeof occasion === 'string' && occasion.trim() !== ''
+    )
+    .map(occasion => occasion.trim());
+
+  return [...new Set(cleanOccasions)];
 }
 
 // Global cache to share data across all hook instances
