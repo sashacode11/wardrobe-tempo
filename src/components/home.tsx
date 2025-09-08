@@ -34,6 +34,7 @@ import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import FilterPanel from './common/FilterPanel';
 import ResultsInfo from './common/ResultsInfo';
 import { Close } from '@radix-ui/react-dialog';
+import { capitalizeFirst } from '@/lib/utils';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -675,6 +676,50 @@ const Home = () => {
                     </Button>
                   </div>
                 </div>
+
+                {/* Active Filter Badges */}
+                {hasActiveFilters || activeCategory !== 'all' ? (
+                  <div className="px-4 p-2 border-b">
+                    <div className="flex flex-wrap gap-2">
+                      {(activeCategory !== 'all'
+                        ? [
+                            {
+                              key: 'category',
+                              label: 'Category',
+                              value: activeCategory,
+                            },
+                          ]
+                        : []
+                      )
+                        .concat(activeFilterEntries)
+                        .map(entry => (
+                          <div
+                            key={entry.key}
+                            className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1"
+                          >
+                            <span className="text-xs">
+                              {/* <strong>{entry.label}:</strong> {entry.value} */}
+                              {capitalizeFirst(entry.value)}
+                            </span>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (entry.key === 'category') {
+                                  setActiveCategory('all');
+                                } else {
+                                  clearFilter(entry.key);
+                                }
+                              }}
+                              className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg"
+                              aria-label={`Remove ${entry.label} filter`}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto p-4">
