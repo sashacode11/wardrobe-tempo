@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { ChevronDown } from 'lucide-react';
+import { FilterConfig } from '@/hooks/useFilters';
 
 interface FilterPanelProps {
   filters: FilterConfig[];

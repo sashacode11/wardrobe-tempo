@@ -82,6 +82,14 @@ const Home = () => {
     },
   ];
 
+  console.log('🏗️ FILTER CREATION DEBUG:');
+  console.log('occasions array:', occasions);
+  console.log('filters array:', filterConfigs);
+  console.log(
+    'occasions filter:',
+    filterConfigs.find(f => f.key === 'occasions')
+  );
+
   // Handle Filters
   const {
     activeFilters,
@@ -90,7 +98,8 @@ const Home = () => {
     clearAllFilters,
     hasActiveFilters,
     activeFilterEntries,
-  } = useFilters([], { filterConfigs });
+    filteredItems,
+  } = useFilters(items, { filterConfigs });
 
   // 🔹 Filter & Search States (elevated to Home)
   const { searchQuery, setSearchQuery, clearSearch } = useSearch([]);
@@ -587,6 +596,7 @@ const Home = () => {
                 activeFilters={activeFilters}
                 activeCategory={activeCategory}
                 onClearFilters={clearAllFilters}
+                filteredItems={filteredItems}
               />
             </TabsContent>
 

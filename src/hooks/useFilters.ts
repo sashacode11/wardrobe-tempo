@@ -29,28 +29,101 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
     return initial;
   });
 
+  // Helper function to check if a value contains the filter value
+  const valueContainsFilter = (value: any, filterValue: string): boolean => {
+    if (!value || !filterValue) return false;
+
+    // If it's an array, check if it includes the filter value
+    if (Array.isArray(value)) {
+      return value.includes(filterValue);
+    }
+
+    // If it's a string, check different formats
+    if (typeof value === 'string') {
+      // Direct match
+      if (value === filterValue) return true;
+
+      // Check if it's a JSON array string like '["exercise"]'
+      if (value.startsWith('[') && value.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return parsed.includes(filterValue);
+          }
+        } catch {
+          // If parsing fails, treat as regular string
+          return value === filterValue;
+        }
+      }
+
+      // Check if it contains the value (for comma-separated strings)
+      if (value.includes(',')) {
+        return value
+          .split(',')
+          .map(v => v.trim())
+          .includes(filterValue);
+      }
+    }
+
+    return false;
+  };
+
   // Apply filters to items
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      return filterConfigs.every(config => {
+    console.log('🔍 FILTERING START:');
+    console.log('Total items:', items?.length);
+    console.log('Active filters:', activeFilters);
+
+    if (!items || !Array.isArray(items)) {
+      console.log('❌ Items is not an array or is null/undefined');
+      return [];
+    }
+
+    const filtered = items.filter(item => {
+      // Check each filter
+      for (const config of filterConfigs) {
         const filterValue = activeFilters[config.key];
-        if (!filterValue) return true; // No filter applied
+        if (!filterValue) continue; // Skip if no filter value
 
-        const itemValue = (item as any)[config.key];
+        // Get the item's value for this field
+        let itemValue = (item as any)[config.key];
 
-        // Handle array fields (like seasons, occasions, tags)
-        if (Array.isArray(itemValue)) {
-          return itemValue.includes(filterValue);
+        // For seasons/occasions, also check singular forms
+        if (
+          !itemValue &&
+          (config.key === 'seasons' || config.key === 'occasions')
+        ) {
+          const singularKey = config.key.slice(0, -1); // remove 's'
+          itemValue = (item as any)[singularKey];
         }
 
-        // Handle string fields
-        return itemValue === filterValue;
-      });
+        console.log(`🔍 Checking ${config.key}:`, {
+          filterValue,
+          itemValue,
+          itemValueType: typeof itemValue,
+        });
+
+        // Check if this item matches the filter
+        const matches = valueContainsFilter(itemValue, filterValue);
+        console.log(`🎯 Match result for ${config.key}:`, matches);
+
+        if (!matches) {
+          return false; // If any filter doesn't match, exclude this item
+        }
+      }
+
+      return true; // All filters match
     });
+
+    console.log('🏁 Filtered items count:', filtered.length);
+    return filtered;
   }, [items, activeFilters, filterConfigs]);
 
   // Update a single filter
   const updateFilter = (key: string, value: string) => {
+    console.log('🔥 FILTER UPDATE TRIGGERED:');
+    console.log('Filter key:', key);
+    console.log('New value:', value);
     setActiveFilters(prev => ({
       ...prev,
       [key]: value,

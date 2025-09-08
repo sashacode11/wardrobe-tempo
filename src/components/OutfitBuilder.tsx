@@ -23,6 +23,7 @@ import {
 // import { Database } from '../types/supabase';
 import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { useFilters } from '@/hooks/useFilters';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -393,9 +394,11 @@ const OutfitBuilder = ({
   };
 
   const isEditing = !!editingOutfit;
-  const filteredItems = wardrobeItems.filter(
-    item => item.category === activeCategory
-  );
+  // const filteredItems = wardrobeItems.filter(
+  //   item => item.category === activeCategory
+  // );
+  const { filteredItems } = useFilters(wardrobeItems, { filterConfigs: [] });
+
   const selectedItemsCount = currentOutfit.filter(
     slot => slot.item !== null
   ).length;

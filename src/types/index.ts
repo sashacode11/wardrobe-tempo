@@ -72,4 +72,5 @@ export interface WardrobeGridProps {
   onClearFilters?: () => void;
   activeFilters?: FilterOptions;
   activeCategory?: string;
+  filteredItems?: ClothingItemType[];
 }

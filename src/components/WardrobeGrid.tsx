@@ -1,4 +1,4 @@
-// WardrobeGrid.tsx - Now with working search & filters
+// WardrobeGrid.tsx - Using pre-filtered data from parent
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from './ui/button';
 import ClothingItem from './ClothingItem';
@@ -18,11 +18,12 @@ const WardrobeGrid = ({
   searchQuery = '',
   activeCategory = 'all',
   activeFilters = {},
+  filteredItems = [], // Add this prop to receive pre-filtered items
   onAddItem = () => {},
   onAddToOutfit = () => {},
   onEditItem = () => {},
   onClearFilters = () => {},
-}: WardrobeGridProps) => {
+}: WardrobeGridProps & { filteredItems?: ClothingItemType[] }) => {
   const [items, setItems] = useState<ClothingItemType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +49,12 @@ const WardrobeGrid = ({
     }
   };
 
-  // 🔁 useMemo: Recalculate filtered items whenever props or items change
+  // Apply search and category filters to the pre-filtered items from parent
   const finalFilteredItems = useMemo(() => {
-    let result = [...items];
+    // Use filteredItems from parent if provided, otherwise use all items
+    let result = filteredItems.length > 0 ? [...filteredItems] : [...items];
 
-    // 1. Basic text search across fields
+    // Apply search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -65,30 +67,21 @@ const WardrobeGrid = ({
       );
     }
 
-    // 2. Category filter
+    // Apply category filter
     if (activeCategory !== 'all') {
       result = result.filter(item => item.category === activeCategory);
     }
 
-    // 3. Dynamic filters (color, seasons, occasions)
-    if (Object.keys(activeFilters).length > 0) {
-      result = result.filter(item => {
-        return Object.entries(activeFilters).every(([key, value]) => {
-          if (!value) return true;
-          if (key === 'color') return item.color === value;
-          if (key === 'seasons')
-            return Array.isArray(item.seasons) && item.seasons.includes(value);
-          if (key === 'occasions')
-            return (
-              Array.isArray(item.occasions) && item.occasions.includes(value)
-            );
-          return true;
-        });
-      });
-    }
+    console.log('🔍 WardrobeGrid Filter Summary:');
+    console.log('Total items loaded:', items.length);
+    console.log('Pre-filtered items from parent:', filteredItems.length);
+    console.log('After search/category:', result.length);
+    console.log('Search query:', searchQuery);
+    console.log('Active category:', activeCategory);
+    console.log('Active filters from parent:', activeFilters);
 
     return result;
-  }, [items, searchQuery, activeCategory, activeFilters]);
+  }, [filteredItems, items, searchQuery, activeCategory, activeFilters]);
 
   const totalCount = items.length;
   const filteredCount = finalFilteredItems.length;
@@ -178,6 +171,14 @@ const WardrobeGrid = ({
     );
   }
 
+  // Determine what state to show
+  const hasItems = items.length > 0;
+  const hasFilters =
+    searchQuery ||
+    activeCategory !== 'all' ||
+    Object.keys(activeFilters).some(key => activeFilters[key]);
+  const hasResults = finalFilteredItems.length > 0;
+
   return (
     <div className="w-full">
       {/* Header: Results Info + Selection Controls */}
@@ -203,7 +204,7 @@ const WardrobeGrid = ({
 
       {/* Items Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-6">
-        {finalFilteredItems.length > 0 ? (
+        {hasResults ? (
           finalFilteredItems.map((item, index) => (
             <div
               key={item.id}
@@ -243,9 +244,7 @@ const WardrobeGrid = ({
             <div className="text-center space-y-6 max-w-md mx-auto">
               <div className="relative">
                 <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-blue-100 rounded-3xl mx-auto flex items-center justify-center">
-                  {searchQuery ||
-                  activeCategory !== 'all' ||
-                  Object.keys(activeFilters).length ? (
+                  {hasFilters ? (
                     <Search className="w-10 h-10 text-gray-400" />
                   ) : (
                     <Shirt className="w-10 h-10 text-gray-400" />
@@ -257,9 +256,19 @@ const WardrobeGrid = ({
               </div>
 
               <div className="space-y-3">
-                {searchQuery ||
-                activeCategory !== 'all' ||
-                Object.keys(activeFilters).length ? (
+                {!hasItems ? (
+                  // No items at all in wardrobe
+                  <>
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      Your wardrobe is empty
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Start building your digital wardrobe by adding your first
+                      item. Upload photos and organize your clothing collection.
+                    </p>
+                  </>
+                ) : hasFilters && !hasResults ? (
+                  // Has items but no filtered results
                   <>
                     <h3 className="text-xl font-semibold text-gray-900">
                       No items found
@@ -270,22 +279,21 @@ const WardrobeGrid = ({
                     </p>
                   </>
                 ) : (
+                  // Fallback
                   <>
                     <h3 className="text-xl font-semibold text-gray-900">
                       Your wardrobe is empty
                     </h3>
                     <p className="text-gray-600 leading-relaxed">
                       Start building your digital wardrobe by adding your first
-                      item. Upload photos and organize your clothing collection.
+                      item.
                     </p>
                   </>
                 )}
               </div>
 
               <div className="flex flex-row gap-3 justify-center">
-                {searchQuery ||
-                activeCategory !== 'all' ||
-                Object.keys(activeFilters).length ? (
+                {hasFilters ? (
                   <>
                     <Button
                       variant="outline"

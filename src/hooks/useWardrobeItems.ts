@@ -1,3 +1,4 @@
+// useWardrobeItems.ts
 import { ClothingItemType } from '@/types';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { getCurrentUser, supabase } from '../lib/supabaseClient';
@@ -72,7 +73,13 @@ export function getUniqueSeasons(items: ClothingItemType[]): string[] {
 export function getUniqueOccasions(items: ClothingItemType[]): string[] {
   if (!items || !Array.isArray(items)) return [];
 
+  console.log('Items for occasions:', items);
+  console.log('First item structure:', items[0]);
+
   const allOccasions = items.flatMap(item => {
+    console.log('Processing item:', item);
+    console.log('item.occasions:', item.occasions);
+    console.log('item.occasion:', item.occasion);
     // Try both 'occasions' (plural) and 'occasion' (singular) fields
     const occasionData = item.occasions || item.occasion;
 
@@ -115,6 +122,8 @@ export function getUniqueOccasions(items: ClothingItemType[]): string[] {
 
     return [];
   });
+
+  console.log('All occasions before cleanup:', allOccasions);
 
   // Clean up: remove empty values and ensure we only have strings
   const cleanOccasions = allOccasions

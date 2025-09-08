@@ -20,7 +20,7 @@ export const useSearch = <T extends SearchableItem>(
 
   const { searchFields = ['name'], caseSensitive = false } = options;
 
-  const filteredItems = useMemo(() => {
+  const filteredItemsfromSearch = useMemo(() => {
     if (!searchQuery.trim()) {
       return items;
     }
@@ -58,7 +58,7 @@ export const useSearch = <T extends SearchableItem>(
   return {
     searchQuery,
     setSearchQuery,
-    filteredItems,
+    filteredItemsfromSearch,
     clearSearch,
     hasActiveSearch: searchQuery.trim().length > 0,
   };
