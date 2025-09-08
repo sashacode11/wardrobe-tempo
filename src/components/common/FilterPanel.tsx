@@ -35,7 +35,7 @@ const FilterPanel = ({
             className="flex items-center justify-between cursor-pointer"
             onClick={() => toggleExpand(filter.key)}
           >
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h4 className="text-sm text-gray-500  tracking-wide font-bold">
               {filter.label}
             </h4>
             <ChevronDown
@@ -45,7 +45,6 @@ const FilterPanel = ({
             />
           </div>
 
-          {/* Options */}
           {expandedFilters[filter.key] && (
             <div className="flex flex-wrap gap-2 mt-2">
               {filter.options.map(option => {
