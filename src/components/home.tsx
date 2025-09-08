@@ -642,20 +642,19 @@ const Home = () => {
                 {/* Header */}
                 <div className="p-2 pt-4 border-b flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Filters</h3>
-                  <div className="flex items-center gap-5">
-                    {hasActiveFilters ||
-                      (activeCategory !== 'all' && (
-                        <div
-                          // variant="outline"
-                          className="hidden text-sm md:inline text-blue-600"
-                          onClick={() => {
-                            clearAllFilters();
-                            setActiveCategory('all');
-                          }}
-                        >
-                          Clear All
-                        </div>
-                      ))}
+                  <div className="flex items-center gap-5 cursor-pointer">
+                    {hasActiveFilters || activeCategory !== 'all' ? (
+                      <div
+                        // variant="outline"
+                        className="hidden text-sm md:inline text-blue-600"
+                        onClick={() => {
+                          clearAllFilters();
+                          setActiveCategory('all');
+                        }}
+                      >
+                        Clear All
+                      </div>
+                    ) : null}
 
                     <Button
                       variant="ghost"
