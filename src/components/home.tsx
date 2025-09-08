@@ -787,7 +787,7 @@ const Home = () => {
                         setActiveCategory('all');
                       }}
                     >
-                      Clear
+                      Clear All
                     </Button>
                   ) : null}
                   <Button
