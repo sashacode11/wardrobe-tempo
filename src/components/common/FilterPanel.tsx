@@ -60,7 +60,13 @@ const FilterPanel = ({
                     className="text-xs px-3 py-1.5 rounded-md"
                     onClick={e => {
                       e.stopPropagation();
-                      onUpdateFilter(filter.key, option);
+                      const currentFilterValue = activeFilters[filter.key];
+                      if (currentFilterValue === option) {
+                        // Deselect if already selected
+                        onUpdateFilter(filter.key, '');
+                      } else {
+                        onUpdateFilter(filter.key, option);
+                      }
                     }}
                   >
                     {displayValue}
