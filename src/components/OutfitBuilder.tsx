@@ -409,7 +409,13 @@ const OutfitBuilder = ({
         <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 relative">
+      <div
+        className={`
+    max-w-7xl mx-auto
+    ${isEditing ? 'p-1' : 'p-4'}
+    relative
+  `}
+      >
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -431,9 +437,11 @@ const OutfitBuilder = ({
                   <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {isEditing ? 'Edit Outfit' : 'Create Outfit'}
                   </h1>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Mix and match your wardrobe items
-                  </p>
+                  {!isEditing && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      Mix and match your wardrobe items
+                    </p>
+                  )}
                 </div>
               </div>
               {isEditing && editingOutfit && (

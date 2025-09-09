@@ -489,62 +489,94 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           </div>
         )}
 
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              {/* Icon with gradient background */}
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                <Shirt className="h-8 w-8 text-white" />
-              </div>
-
+        {!showOutfitBuilder && (
+          <div className="w-full">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  My Outfits
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    {/* <TrendingUp className="h-4 w-4" /> */}
-                    <p className="text-sm font-medium">
-                      You have {outfits.length} saved outfit
-                      {outfits.length !== 1 ? 's' : ''}
-                    </p>
+                <div className="flex items-center gap-4 mb-2">
+                  {/* Icon with gradient background */}
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                    <Shirt className="h-8 w-8 text-white" />
                   </div>
-                  {outfits.length > 0 && (
-                    <div className="flex items-center gap-1 text-amber-600">
-                      <Sparkles className="h-4 w-4" />
-                      {/* <span className="text-sm font-medium">Collection</span> */}
+
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      My Outfits
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <p className="text-sm font-medium">
+                          You have {outfits.length} saved outfit
+                          {outfits.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      {outfits.length > 0 && (
+                        <div className="flex items-center gap-1 text-amber-600">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
+
+              <div className="flex items-center gap-3">
+                {/* Selection Controls */}
+                <SelectionControls
+                  isSelectionMode={isSelectionMode}
+                  selectedCount={selectedItems.size}
+                  totalFilteredCount={outfits.length}
+                  onToggleSelectionMode={toggleSelectionMode}
+                  onSelectAll={() => selectAllItems(outfits)}
+                  onDeselectAll={deselectAllItems}
+                  onDeleteSelected={() => setShowDeleteDialog(true)}
+                />
+
+                {/* Create button with gradient */}
+                {onCreateOutfit && !isSelectionMode && (
+                  <Button
+                    onClick={onCreateOutfit}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create New Outfit
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            {/* Selection Controls */}
-            <SelectionControls
-              isSelectionMode={isSelectionMode}
-              selectedCount={selectedItems.size}
-              totalFilteredCount={outfits.length}
-              onToggleSelectionMode={toggleSelectionMode}
-              onSelectAll={() => selectAllItems(outfits)}
-              onDeselectAll={deselectAllItems}
-              onDeleteSelected={() => setShowDeleteDialog(true)}
-            />
-
-            {/* Create button with gradient */}
-            {onCreateOutfit && !isSelectionMode && (
-              <Button
-                onClick={onCreateOutfit}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-              >
-                <Plus className="h-5 w-5" />
-                Create New Outfit
-              </Button>
+            {/* Outfits Grid */}
+            {outfits.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">👔</span>
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                  No outfits yet
+                </h3>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                  Create your first outfit by mixing and matching items from
+                  your wardrobe
+                </p>
+                {onCreateOutfit && (
+                  <Button
+                    onClick={onCreateOutfit}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                  >
+                    Create Your First Outfit
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
+                {outfits.map(outfit => (
+                  <OutfitCard key={outfit.id} outfit={outfit} />
+                ))}
+              </div>
             )}
           </div>
-        </div>
+        )}
 
         {/* Edit Modal */}
         {showOutfitBuilder && (
@@ -566,36 +598,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               setMyOutfitsEditingOutfit(null);
             }}
           />
-        )}
-
-        {/* Outfits Grid */}
-        {outfits.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">👔</span>
-            </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-3">
-              No outfits yet
-            </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-              Create your first outfit by mixing and matching items from your
-              wardrobe
-            </p>
-            {onCreateOutfit && (
-              <Button
-                onClick={onCreateOutfit}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
-              >
-                Create Your First Outfit
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
-            {outfits.map(outfit => (
-              <OutfitCard key={outfit.id} outfit={outfit} />
-            ))}
-          </div>
         )}
 
         {/* Reusable View Modal */}
