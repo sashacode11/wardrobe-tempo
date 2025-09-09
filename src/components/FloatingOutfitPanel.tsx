@@ -22,7 +22,7 @@ const FloatingOutfitPanel = ({
   return (
     <>
       {/* Desktop Version - Full Panel */}
-      <div className="hidden lg:block bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 order-2 xl:order-1">
+      <div className="hidden lg:block bg-gray-100 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 order-2 xl:order-1">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg">
@@ -138,7 +138,7 @@ const FloatingOutfitPanel = ({
         {/* Floating Badge/Button */}
         {!isExpanded && (
           <div
-            className="bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/20 cursor-pointer transform transition-all duration-300 hover:scale-105"
+            className="bg-gray-100 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/20 cursor-pointer transform transition-all duration-300 hover:scale-105"
             onClick={() => setIsExpanded(true)}
           >
             {/* Header Row */}

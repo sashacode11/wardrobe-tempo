@@ -469,7 +469,7 @@ const OutfitBuilder = ({
           />{' '}
           {/* Enhanced Item Selection */}
           <div className="flex flex-col order-1 xl:order-2">
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-2 md:p-6">
+            <div className="bg-white/70 sm:bg-gray-100 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-2 mb-2 md:mb-6">
                 <h2 className="text-xl font-semibold text-slate-800">
                   Browse Your Wardrobe
@@ -511,7 +511,7 @@ const OutfitBuilder = ({
 
                 {categories.map(category => (
                   <TabsContent key={category} value={category}>
-                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50">
+                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50 pb-16">
                       {loading ? (
                         <div className="flex items-center justify-center h-40">
                           <div className="text-center">
