@@ -72,14 +72,6 @@ const WardrobeGrid = ({
       result = result.filter(item => item.category === activeCategory);
     }
 
-    console.log('🔍 WardrobeGrid Filter Summary:');
-    console.log('Total items loaded:', items.length);
-    console.log('Pre-filtered items from parent:', filteredItems.length);
-    console.log('After search/category:', result.length);
-    console.log('Search query:', searchQuery);
-    console.log('Active category:', activeCategory);
-    console.log('Active filters from parent:', activeFilters);
-
     return result;
   }, [filteredItems, items, searchQuery, activeCategory, activeFilters]);
 

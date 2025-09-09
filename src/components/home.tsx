@@ -83,14 +83,6 @@ const Home = () => {
     },
   ];
 
-  console.log('🏗️ FILTER CREATION DEBUG:');
-  console.log('occasions array:', occasions);
-  console.log('filters array:', filterConfigs);
-  console.log(
-    'occasions filter:',
-    filterConfigs.find(f => f.key === 'occasions')
-  );
-
   // Handle Filters
   const {
     activeFilters,
@@ -377,7 +369,6 @@ const Home = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        console.log('Contact clicked');
                         setShowMobileMenu(false);
                       }}
                       className="p-2 ml-2"

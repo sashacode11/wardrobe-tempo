@@ -206,14 +206,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     outfit: OutfitWithItems,
     allCategories: string[]
   ) => {
-    console.log(
-      '🔧 [organizeOutfitItems] Input - allCategories:',
-      allCategories
-    );
-    console.log(
-      '📥 [organizeOutfitItems] Processing outfit_items:',
-      outfit.outfit_items
-    );
+    if (!outfit?.outfit_items) {
+      console.log('No outfit_items found in outfit:', outfit);
+      return {};
+    }
 
     const organized: Record<string, ClothingItemType | null> = {};
 
@@ -222,18 +218,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       organized[cat] = null;
     });
 
-    console.log('✅ [organizeOutfitItems] Initialized with:', organized);
-
     // Process each item
     outfit.outfit_items?.forEach(item => {
       const clothingItem = item.wardrobe_items;
       if (clothingItem) {
-        console.log('🧵 [organizeOutfitItems] Processing item:', {
-          name: clothingItem.name,
-          category: clothingItem.category,
-          image_url: clothingItem.image_url,
-        });
-
         const itemCategory = clothingItem.category.toLowerCase();
 
         const matchedCategory = allCategories.find(
@@ -242,22 +230,97 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
         if (matchedCategory) {
           organized[matchedCategory] = clothingItem;
-          console.log(
-            `🟢 Matched "${clothingItem.category}" → "${matchedCategory}"`
-          );
         } else {
           console.warn(`🔴 No match for category: "${clothingItem.category}"`);
         }
       }
     });
 
-    console.log('🎯 [organizeOutfitItems] Final organized:', organized);
     return organized;
+  };
+
+  // ViewModalContent component that properly uses categories
+  const ViewModalContent: React.FC<{ outfit: OutfitWithItems }> = ({
+    outfit,
+  }) => {
+    const { categories } = useWardrobeItems();
+    const items = organizeOutfitItems(outfit, categories);
+
+    return (
+      <div className="space-y-6">
+        {/* Occasions */}
+        {outfit.occasions && outfit.occasions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {outfit.occasions.map((occasion, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium"
+              >
+                {occasion}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Outfit Items */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(items).map(
+            ([category, item]) =>
+              item && (
+                <div
+                  key={category}
+                  className="flex flex-col gap-2 p-1 bg-gray-50 hover:shadow-sm transition-shadow"
+                >
+                  {/* <CardHeader className="pb-3">
+                    <CardTitle className="text-sm capitalize font-semibold text-gray-900">
+                      {category}
+                    </CardTitle>
+                  </CardHeader> */}
+                  {/* <CardContent className="pt-0 "> */}
+                  <div className="flex md:flex-col items-center gap-2">
+                    <div className="w-20 h-20 md:w-full md:h-auto bg-gray-100 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={item.image_url || ''}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">
+                        {item.name}
+                      </p>
+                      {item.color && (
+                        <p className="text-sm text-gray-600 capitalize mt-1">
+                          {item.color}
+                        </p>
+                      )}
+                      {Array.isArray(item.tags) && item.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {item.tags.slice(0, 2).map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs px-2 py-0.5"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* </CardContent> */}
+                </div>
+              )
+          )}
+        </div>
+      </div>
+    );
   };
 
   const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
     const { categories } = useWardrobeItems();
-    console.log('🏷️ [OutfitCard] Dynamic categories:', categories);
     const isSelected = selectedItems.has(outfit.id);
     const items = organizeOutfitItems(outfit, categories);
 
@@ -539,85 +602,22 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         <ViewModal
           isOpen={!!showViewModal}
           onClose={closeModals}
-          title={selectedItem?.name || 'Outfit Details'}
+          title={
+            selectedItem?.name ? `Outfit: ${selectedItem.name}` : 'Your Outfit'
+          }
           subtitle={
             selectedItem
-              ? `Created on ${new Date(
-                  selectedItem.created_at
-                ).toLocaleDateString()}`
+              ? (() => {
+                  const count = selectedItem.outfit_items?.length || 0;
+                  return `${count} item${
+                    count !== 1 ? 's' : ''
+                  } in this outfit`;
+                })()
               : ''
           }
           maxWidth="xl"
         >
-          {selectedItem && (
-            <div className="space-y-6">
-              {/* Occasions */}
-              {selectedItem.occasions && selectedItem.occasions.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedItem.occasions.map((occasion, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium"
-                    >
-                      {occasion}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Outfit Items */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(organizeOutfitItems(selectedItem, [])).map(
-                  ([category, item]) =>
-                    item && (
-                      <Card key={category} className="overflow-hidden">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-sm capitalize font-semibold text-gray-900">
-                            {category}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex items-center gap-3">
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                              <img
-                                src={item.image_url || ''}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">
-                                {item.name}
-                              </p>
-                              {item.color && (
-                                <p className="text-sm text-gray-600 capitalize mt-1">
-                                  {item.color}
-                                </p>
-                              )}
-                              {Array.isArray(item.tags) &&
-                                item.tags.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mt-2">
-                                    {item.tags.slice(0, 2).map((tag, index) => (
-                                      <Badge
-                                        key={index}
-                                        variant="outline"
-                                        className="text-xs px-2 py-0.5"
-                                      >
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                )}
-              </div>
-            </div>
-          )}
+          {selectedItem && <ViewModalContent outfit={selectedItem} />}
         </ViewModal>
 
         {/* Reusable Delete Modal */}

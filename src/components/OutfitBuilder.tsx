@@ -86,8 +86,6 @@ const OutfitBuilder = ({
   useEffect(() => {
     // Only run if categories exist and currentOutfit is still empty
     if (categories.length > 0 && currentOutfit.length === 0) {
-      console.log('🔧 Initializing currentOutfit with categories:', categories);
-
       const initialOutfit = categories.map(category => ({
         category,
         item: null,
@@ -189,41 +187,16 @@ const OutfitBuilder = ({
   };
 
   const handleAddItem = (item: ClothingItemType) => {
-    console.log('🔍 [handleAddItem] START — Attempting to add item:', {
-      id: item.id,
-      name: item.name,
-      category: item.category,
-      imageUrl: item.image_url,
-    });
-
-    // Log previous state
-    console.log('💾 [handleAddItem] Previous currentOutfit:', currentOutfit);
-
     // Update state
-    setCurrentOutfit(prev => {
-      console.log('🔄 [handleAddItem] Inside setCurrentOutfit - prev:', prev);
-
-      const updated = prev.map(outfitItem => {
-        console.log('🧩 [Mapping] Checking slot:', {
-          slotCategory: outfitItem.category,
-          hasItem: !!outfitItem.item,
-          matches: outfitItem.category === item.category,
-        });
-
+    // Update state
+    setCurrentOutfit(prev =>
+      prev.map(outfitItem => {
         if (outfitItem.category === item.category) {
-          console.log(
-            '✅ [Update] Match found! Replacing item in category:',
-            item.category
-          );
           return { ...outfitItem, item };
         }
-
         return outfitItem;
-      });
-
-      console.log('✅ [Success] Updated currentOutfit:', updated);
-      return updated;
-    });
+      })
+    );
   };
 
   const handleRemoveItem = (category: string) => {

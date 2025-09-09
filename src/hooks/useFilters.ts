@@ -70,12 +70,7 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
 
   // Apply filters to items
   const filteredItems = useMemo(() => {
-    console.log('🔍 FILTERING START:');
-    console.log('Total items:', items?.length);
-    console.log('Active filters:', activeFilters);
-
     if (!items || !Array.isArray(items)) {
-      console.log('❌ Items is not an array or is null/undefined');
       return [];
     }
 
@@ -88,7 +83,6 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
         // Get the item's value for this field
         let itemValue = (item as any)[config.key];
 
-        // For seasons/occasions, also check singular forms
         if (
           !itemValue &&
           (config.key === 'seasons' || config.key === 'occasions')
@@ -97,33 +91,21 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
           itemValue = (item as any)[singularKey];
         }
 
-        console.log(`🔍 Checking ${config.key}:`, {
-          filterValue,
-          itemValue,
-          itemValueType: typeof itemValue,
-        });
-
-        // Check if this item matches the filter
         const matches = valueContainsFilter(itemValue, filterValue);
-        console.log(`🎯 Match result for ${config.key}:`, matches);
 
         if (!matches) {
-          return false; // If any filter doesn't match, exclude this item
+          return false;
         }
       }
 
       return true; // All filters match
     });
 
-    console.log('🏁 Filtered items count:', filtered.length);
     return filtered;
   }, [items, activeFilters, filterConfigs]);
 
   // Update a single filter
   const updateFilter = (key: string, value: string) => {
-    console.log('🔥 FILTER UPDATE TRIGGERED:');
-    console.log('Filter key:', key);
-    console.log('New value:', value);
     setActiveFilters(prev => ({
       ...prev,
       [key]: value,
