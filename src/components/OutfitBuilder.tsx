@@ -24,6 +24,7 @@ import {
 import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useFilters } from '@/hooks/useFilters';
+import FloatingOutfitPanel from './FloatingOutfitPanel';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -417,9 +418,8 @@ const OutfitBuilder = ({
   `}
       >
         {/* Enhanced Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {/* <Button
+        <div className="flex items-center gap-4">
+          {/* <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
@@ -428,184 +428,61 @@ const OutfitBuilder = ({
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Back</span>
             </Button> */}
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {isEditing ? 'Edit Outfit' : 'Create Outfit'}
-                  </h1>
-                  {!isEditing && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      Mix and match your wardrobe items
-                    </p>
-                  )}
-                </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
-              {isEditing && editingOutfit && (
-                <div className="mt-3">
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  >
-                    Editing: {editingOutfit.name}
-                  </Badge>
-                </div>
-              )}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {isEditing ? 'Edit Outfit' : 'Create Outfit'}
+                </h1>
+                {!isEditing && (
+                  <p className="text-sm text-slate-600 mt-1">
+                    Mix and match your wardrobe items
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/20">
-              <Palette className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-slate-700">
-                {selectedItemsCount} items selected
-              </span>
-            </div>
+            {isEditing && editingOutfit && (
+              <div className="mt-3">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                >
+                  Editing: {editingOutfit.name}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 md:gap-8">
           {/* Enhanced Current Outfit Preview - List View */}
-          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 order-2 xl:order-1">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-slate-800">
-                  Your Outfit
-                </h2>
-              </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                {selectedItemsCount}{' '}
-                {selectedItemsCount === 1 ? 'item' : 'items'}
-              </Badge>
-            </div>
-
-            {selectedItemsCount > 0 ? (
-              <div className="space-y-3">
-                {currentOutfit
-                  .filter(outfitItem => outfitItem.item !== null)
-                  .map(outfitItem => {
-                    // const IconComponent = getCategoryIcon(outfitItem.category);
-                    return (
-                      <div
-                        key={outfitItem.category}
-                        className="flex items-center gap-4 p-3 bg-white/60 rounded-xl border border-slate-200/40 hover:bg-white/80 transition-all duration-300 group"
-                      >
-                        {/* Item Image */}
-                        <div className="relative w-16 h-16 flex-shrink-0">
-                          <img
-                            src={outfitItem.item.image_url}
-                            alt={outfitItem.item.name}
-                            className="w-full h-full object-cover rounded-lg shadow-sm"
-                          />
-                        </div>
-
-                        {/* Item Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {/* <IconComponent className="h-4 w-4 text-slate-500" /> */}
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                              {outfitItem.category}
-                            </span>
-                          </div>
-                          <h3 className="font-medium text-slate-800 truncate">
-                            {outfitItem.item.name}
-                          </h3>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {outfitItem.item.color && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs bg-white/80"
-                              >
-                                {outfitItem.item.color}
-                              </Badge>
-                            )}
-                            {Array.isArray(outfitItem.item.tags) &&
-                              outfitItem.item.tags.slice(0, 2).map(tag => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs bg-blue-100 text-blue-700"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Remove Button */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="flex-shrink-0 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                          onClick={() => handleRemoveItem(outfitItem.category)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              // Empty State
-              <div className="text-center py-12">
-                <div className="p-4 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-medium text-slate-600 mb-2">
-                  Start Building Your Outfit
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  Select items from your wardrobe to create the perfect look
-                </p>
-                {/* <Button
-                  variant="outline"
-                  onClick={() => setActiveCategory('tops')}
-                  className="bg-white/80 hover:bg-white border-slate-200"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Item
-                </Button> */}
-              </div>
-            )}
-
-            {selectedItemsCount > 0 && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">
-                      Outfit Ready!
-                    </span>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setSaveDialogOpen(true)}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs px-3 py-1 h-8"
-                  >
-                    <Save className="h-3 w-3 mr-1" />
-                    Save
-                  </Button>
-                </div>
-                <p className="text-xs text-blue-700 mt-1">
-                  Your outfit looks great! Save it to your collection.
-                </p>
-              </div>
-            )}
-          </div>
-
+          <FloatingOutfitPanel
+            currentOutfit={currentOutfit}
+            selectedItemsCount={selectedItemsCount}
+            handleRemoveItem={handleRemoveItem}
+            setSaveDialogOpen={setSaveDialogOpen}
+            setActiveCategory={setActiveCategory}
+          />{' '}
           {/* Enhanced Item Selection */}
           <div className="flex flex-col order-1 xl:order-2">
             <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-2 md:p-6">
-              <h2 className="text-xl font-semibold mb-2 md:mb-6 text-slate-800">
-                Browse Your Wardrobe
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-2 mb-2 md:mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Browse Your Wardrobe
+                </h2>
+                {/* <div className="w-full sm:w-auto flex justify-end">
+                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/20">
+                    <Palette className="h-4 w-4 text-blue-600" />
+                    <span className="text-xs font-medium text-slate-700">
+                      {selectedItemsCount} items selected
+                    </span>
+                  </div>
+                </div> */}
+              </div>
 
               <Tabs value={activeCategory} onValueChange={setActiveCategory}>
                 <div className="md:mb-6 -mx-6 px-6">
