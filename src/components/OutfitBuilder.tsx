@@ -544,17 +544,17 @@ const OutfitBuilder = ({
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="p-3">
-                                    <h4 className="font-medium truncate text-sm text-slate-800 mb-2">
+                                  <div className="px-3 py-1 sm:p-3">
+                                    <h4 className="font-medium truncate text-sm text-slate-800 mb-1">
                                       {item.name}
                                     </h4>
                                     <div className="flex flex-wrap gap-1">
-                                      {item.color && (
+                                      {item.location && (
                                         <Badge
                                           variant="outline"
                                           className="text-xs bg-white/80"
                                         >
-                                          {item.color}
+                                          {item.location}
                                         </Badge>
                                       )}
                                       {Array.isArray(item.tags) &&
