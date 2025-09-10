@@ -1,6 +1,6 @@
-// MyOutfits.tsx - Complete improved version with better styling
+// MyOutfits.tsx - Complete improved version with FlexSearch integration
 import React, { useState, useEffect } from 'react';
-import { Plus, Shirt, Sparkles, TrendingUp } from 'lucide-react';
+import { Plus, Shirt, Sparkles, TrendingUp, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -19,6 +19,7 @@ import OutfitBuilder from './OutfitBuilder';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
+import SearchBar from './common/SearchBar';
 import { getCurrentUser, supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 
@@ -29,13 +30,16 @@ import DeleteModal from './common/DeleteModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { useFlexSearch } from '../hooks/useFlexSearch';
 
 interface MyOutfitsProps {
+  searchQuery?: string; // Accept search query from parent if needed
   onCreateOutfit?: () => void;
   onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
 const MyOutfits: React.FC<MyOutfitsProps> = ({
+  searchQuery: externalSearchQuery,
   onCreateOutfit,
   onEditOutfit,
 }) => {
@@ -45,7 +49,73 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
   const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
 
-  // Add multiselect functionality
+  // FlexSearch Integration for outfits
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    clearSearch,
+    isIndexing,
+    hasResults,
+    hasQuery,
+    resultCount,
+  } = useFlexSearch(outfits, {
+    searchFields: [
+      'name',
+      'description',
+      'occasions',
+      'tags',
+      // We can also search within the outfit items
+      'outfit_items.wardrobe_items.name',
+      'outfit_items.wardrobe_items.description',
+      'outfit_items.wardrobe_items.color',
+      'outfit_items.wardrobe_items.category',
+      'outfit_items.wardrobe_items.brand',
+    ],
+    minQueryLength: 2,
+    maxResults: 50,
+    // Custom indexing function for complex nested data
+    customIndexer: (outfit: OutfitWithItems) => {
+      const searchableContent: string[] = [
+        outfit.name || '',
+        ...(outfit.occasions || []),
+        ...(outfit.tags || []),
+      ];
+
+      // Add content from outfit items
+      if (outfit.outfit_items) {
+        outfit.outfit_items.forEach(item => {
+          const wardrobeItem = item.wardrobe_items;
+          if (wardrobeItem) {
+            searchableContent.push(
+              wardrobeItem.name || '',
+              wardrobeItem.description || '',
+              wardrobeItem.color || '',
+              wardrobeItem.category || '',
+              wardrobeItem.brand || '',
+              ...(wardrobeItem.seasons || []),
+              ...(wardrobeItem.occasions || []),
+              ...(wardrobeItem.tags || [])
+            );
+          }
+        });
+      }
+
+      return searchableContent.join(' ');
+    },
+  });
+
+  // Use external search query if provided, otherwise use internal state
+  React.useEffect(() => {
+    if (externalSearchQuery !== undefined) {
+      setSearchQuery(externalSearchQuery);
+    }
+  }, [externalSearchQuery, setSearchQuery]);
+
+  // Get the final list of outfits to display (search results or all outfits)
+  const displayedOutfits = hasQuery ? searchResults : outfits;
+
+  // Add multiselect functionality - now works with displayed outfits
   const {
     isSelectionMode,
     selectedItems,
@@ -272,12 +342,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                   key={category}
                   className="flex flex-col gap-2 p-1 bg-gray-50 hover:shadow-sm transition-shadow"
                 >
-                  {/* <CardHeader className="pb-3">
-                    <CardTitle className="text-sm capitalize font-semibold text-gray-900">
-                      {category}
-                    </CardTitle>
-                  </CardHeader> */}
-                  {/* <CardContent className="pt-0 "> */}
                   <div className="flex md:flex-col items-center gap-2">
                     <div className="w-20 h-20 md:w-full md:h-auto bg-gray-100 flex-shrink-0 overflow-hidden">
                       <img
@@ -310,7 +374,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       )}
                     </div>
                   </div>
-                  {/* </CardContent> */}
                 </div>
               )
           )}
@@ -359,29 +422,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                     year: 'numeric',
                   })}
                 </p>
-
-                {/* Occasions with improved styling */}
-                {/* {outfit.occasions && outfit.occasions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {outfit.occasions.slice(0, 3).map((occasion, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 border-0 rounded-full font-medium"
-                      >
-                        {occasion}
-                      </Badge>
-                    ))}
-                    {outfit.occasions.length > 3 && (
-                      <Badge
-                        variant="outline"
-                        className="text-xs px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full"
-                      >
-                        +{outfit.occasions.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                )} */}
               </div>
 
               {/* Action buttons with improved positioning */}
@@ -509,6 +549,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                         <p className="text-sm font-medium">
                           You have {outfits.length} saved outfit
                           {outfits.length !== 1 ? 's' : ''}
+                          {hasQuery && (
+                            <span className="text-blue-600">
+                              {' '}
+                              ({resultCount} matching)
+                            </span>
+                          )}
                         </p>
                       </div>
                       {outfits.length > 0 && (
@@ -526,9 +572,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 <SelectionControls
                   isSelectionMode={isSelectionMode}
                   selectedCount={selectedItems.size}
-                  totalFilteredCount={outfits.length}
+                  totalFilteredCount={displayedOutfits.length}
                   onToggleSelectionMode={toggleSelectionMode}
-                  onSelectAll={() => selectAllItems(outfits)}
+                  onSelectAll={() => selectAllItems(displayedOutfits)}
                   onDeselectAll={deselectAllItems}
                   onDeleteSelected={() => setShowDeleteDialog(true)}
                 />
@@ -546,31 +592,92 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               </div>
             </div>
 
-            {/* Outfits Grid */}
-            {outfits.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-4xl">👔</span>
+            {/* Search Results Info */}
+            {hasQuery && (
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+                <div className="flex items-center gap-2">
+                  {isIndexing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b border-blue-600"></div>
+                      <span className="text-sm text-blue-800">
+                        Searching outfits...
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-blue-800">
+                      {resultCount > 0 ? (
+                        <>
+                          Found <strong>{resultCount}</strong> outfit
+                          {resultCount === 1 ? '' : 's'} matching "{searchQuery}
+                          "
+                        </>
+                      ) : (
+                        <>No outfits found for "{searchQuery}"</>
+                      )}
+                    </span>
+                  )}
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">
-                  No outfits yet
-                </h3>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-                  Create your first outfit by mixing and matching items from
-                  your wardrobe
-                </p>
-                {onCreateOutfit && (
-                  <Button
-                    onClick={onCreateOutfit}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
-                  >
-                    Create Your First Outfit
-                  </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+
+            {/* Outfits Grid */}
+            {displayedOutfits.length === 0 ? (
+              <div className="text-center py-16">
+                {hasQuery ? (
+                  // No search results
+                  <div>
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Search className="h-12 w-12 text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                      No matching outfits
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                      Try adjusting your search terms or browse all your outfits
+                    </p>
+                    <Button
+                      onClick={clearSearch}
+                      variant="outline"
+                      className="px-8 py-4"
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
+                ) : (
+                  // No outfits at all
+                  <div>
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <span className="text-4xl">👔</span>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                      No outfits yet
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                      Create your first outfit by mixing and matching items from
+                      your wardrobe
+                    </p>
+                    {onCreateOutfit && (
+                      <Button
+                        onClick={onCreateOutfit}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                      >
+                        Create Your First Outfit
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
-                {outfits.map(outfit => (
+                {displayedOutfits.map(outfit => (
                   <OutfitCard key={outfit.id} outfit={outfit} />
                 ))}
               </div>
