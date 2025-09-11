@@ -418,43 +418,49 @@ const OutfitBuilder = ({
   `}
       >
         {/* Enhanced Header */}
-        <div className="flex items-center gap-4">
-          {/* <Button
+        {/* Enhanced Header */}
+        <div className="flex justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {isEditing ? 'Edit Outfit' : 'Create Outfit'}
+                  </h1>
+                  {!isEditing && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      Mix and match your wardrobe items
+                    </p>
+                  )}
+                </div>
+              </div>
+              {isEditing && editingOutfit && (
+                <div className="mt-3">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  >
+                    Editing: {editingOutfit.name}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Close Button - positioned on the right */}
+          {isEditing && (
+            <Button
               variant="ghost"
               size="sm"
-              onClick={onClose}
-              className="flex items-center gap-2 hover:bg-white/50 backdrop-blur-sm"
+              onClick={handleClose}
+              className="flex gap-2 hover:bg-red-50 text-red-600 transition-colors  border-gray-200"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </Button> */}
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {isEditing ? 'Edit Outfit' : 'Create Outfit'}
-                </h1>
-                {!isEditing && (
-                  <p className="text-sm text-slate-600 mt-1">
-                    Mix and match your wardrobe items
-                  </p>
-                )}
-              </div>
-            </div>
-            {isEditing && editingOutfit && (
-              <div className="mt-3">
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-100 text-blue-700 hover:bg-blue-200"
-                >
-                  Editing: {editingOutfit.name}
-                </Badge>
-              </div>
-            )}
-          </div>
+              <X className="h-6 w-6" />
+            </Button>
+          )}
         </div>
 
         {/* Main Content Grid */}
