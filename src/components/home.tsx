@@ -1,4 +1,4 @@
-// home.tsx - Updated to use FlexSearch
+// home.tsx - Updated to use global context
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
@@ -21,34 +21,47 @@ import ItemUploadForm from './ItemUploadForm';
 import OutfitBuilder from './OutfitBuilder';
 import AuthDialog from './AuthDialog';
 import MyOutfits from './MyOutfits';
-import {
-  getClothingItems,
-  getCurrentUser,
-  signOut,
-  supabase,
-} from '../lib/supabaseClient';
+import { signOut, supabase } from '../lib/supabaseClient';
 import { ClothingItemType } from '../types';
-import { useFlexSearch } from '../hooks/useFlexSearch'; // Import the new hook
 import { FilterConfig, useFilters } from '@/hooks/useFilters';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import FilterPanel from './common/FilterPanel';
 import { capitalizeFirst } from '@/lib/utils';
+import { useWardrobe } from '../contexts/WardrobeContext';
+import UnifiedSearchResults from './SearchResults';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [wardrobeKey, setWardrobeKey] = useState(0);
-  const [user, setUser] = useState(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
 
-  // Load wardrobe items
-  const [items, setItems] = useState<ClothingItemType[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
+  // 🔹 Use global context instead of local state
+  const {
+    wardrobeItems: items,
+    outfits,
+    user,
+    itemsLoading: loadingItems,
+    outfitsLoading,
+    authLoading,
+    error: globalError,
+    searchQuery,
+    setSearchQuery,
+    clearSearch,
+    searchResults,
+    hasSearchResults,
+    hasSearchQuery,
+    checkUser,
+    setUser,
+    addItem,
+    updateItem,
+    refreshItems,
+    refreshAll,
+  } = useWardrobe();
 
   // Get wardrobe metadata (categories, colors, etc.)
   const {
@@ -58,30 +71,6 @@ const Home = () => {
     occasions,
     loading: metadataLoading,
   } = useWardrobeItems();
-
-  // 🔹 FlexSearch Integration
-  const {
-    searchQuery,
-    setSearchQuery,
-    searchResults,
-    clearSearch,
-    isIndexing,
-    hasResults,
-    hasQuery,
-    resultCount,
-  } = useFlexSearch(items, {
-    searchFields: [
-      'name',
-      'description',
-      'color',
-      'category',
-      'brand',
-      'seasons',
-      'occasions',
-    ],
-    minQueryLength: 2,
-    maxResults: 50,
-  });
 
   // Category filter
   const [activeCategory, setActiveCategory] = useState('all');
@@ -110,8 +99,11 @@ const Home = () => {
     },
   ];
 
-  // Handle Filters - now works with search results
-  const baseItems = hasQuery ? searchResults : items;
+  // Handle Filters - now works with search results from global context
+  const baseItems = useMemo(
+    () => (hasSearchQuery ? searchResults : items),
+    [hasSearchQuery, JSON.stringify(searchResults), JSON.stringify(items)]
+  );
   const {
     activeFilters,
     updateFilter,
@@ -141,6 +133,8 @@ const Home = () => {
   }, [filteredItems, activeCategory]);
 
   const handleItemSaved = () => {
+    // Refresh data from global context
+    refreshItems();
     setWardrobeKey(prev => prev + 1);
   };
 
@@ -151,13 +145,6 @@ const Home = () => {
   const handleSignOut = async () => {
     await signOut();
     setUser(null);
-  };
-
-  const checkUser = async () => {
-    setAuthLoading(true);
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-    setAuthLoading(false);
   };
 
   const handleAddItemClick = () => {
@@ -174,20 +161,8 @@ const Home = () => {
     setActiveTab('outfit');
   };
 
-  // Listen to auth changes
+  // Listen to auth changes (still needed for some auth events)
   useEffect(() => {
-    checkUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        setUser(session?.user || null);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
     const handleShowAuth = () => {
       setShowAuthDialog(true);
     };
@@ -195,36 +170,16 @@ const Home = () => {
     window.addEventListener('showAuth', handleShowAuth);
 
     return () => {
-      subscription.unsubscribe();
       window.removeEventListener('showAuth', handleShowAuth);
     };
   }, []);
 
-  // Load clothing items on mount & when user changes
-  useEffect(() => {
-    const loadItems = async () => {
-      if (!user) return;
-      setLoadingItems(true);
-      try {
-        const { data, error } = await getClothingItems(user.id);
-        if (error) throw error;
-        setItems(data || []);
-      } catch (err) {
-        console.error('Failed to load items:', err);
-      } finally {
-        setLoadingItems(false);
-      }
-    };
-
-    loadItems();
-  }, [user]);
-
-  // Reset filters when switching to wardrobe tab
+  // Reset filters when switching to wardrobe tab (but keep search query persistent)
   useEffect(() => {
     if (activeTab === 'wardrobe') {
       setActiveCategory('all');
-      setSearchQuery('');
       clearAllFilters();
+      // Note: We DON'T clear search query anymore - it stays persistent!
     }
   }, [activeTab]);
 
@@ -309,27 +264,19 @@ const Home = () => {
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onClear={clearSearch}
-                  placeholder={isIndexing ? 'Indexing...' : 'Search items...'}
+                  placeholder="Search items and outfits..."
                   className="w-64"
-                  disabled={isIndexing}
                 />
                 {/* Search results indicator */}
-                {hasQuery && (
+                {hasSearchQuery && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-lg shadow-lg z-10 p-2 text-xs text-gray-600">
-                    {isIndexing ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
-                        Indexing items...
-                      </div>
-                    ) : (
-                      <div>
-                        {resultCount > 0
-                          ? `Found ${resultCount} item${
-                              resultCount === 1 ? '' : 's'
-                            }`
-                          : 'No items found'}
-                      </div>
-                    )}
+                    <div>
+                      {searchResults.length > 0
+                        ? `Found ${searchResults.length} item${
+                            searchResults.length === 1 ? '' : 's'
+                          }`
+                        : 'No items found'}
+                    </div>
                   </div>
                 )}
               </div>
@@ -579,111 +526,129 @@ const Home = () => {
             className="w-full"
           >
             <TabsContent value="wardrobe" className="mt-0">
-              <div className="space-y-4">
-                {/* Search Results Info */}
-                {hasQuery && (
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2">
-                      {isIndexing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b border-blue-600"></div>
-                          <span className="text-sm text-blue-800">
-                            Searching...
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-blue-800">
-                          {resultCount > 0 ? (
-                            <>
-                              Found <strong>{resultCount}</strong> item
-                              {resultCount === 1 ? '' : 's'} for "{searchQuery}"
-                            </>
-                          ) : (
-                            <>No items found for "{searchQuery}"</>
-                          )}
+              {hasSearchQuery ? (
+                // Show unified search results when searching
+                <UnifiedSearchResults
+                  onAddItem={handleAddItemClick}
+                  onEditItem={item => {
+                    setEditingItem(item);
+                    setShowUploadForm(true);
+                  }}
+                  onAddToOutfit={handleAddToOutfit}
+                  onEditOutfit={outfit => {
+                    const outfitWithItems = {
+                      ...outfit,
+                      items: Array.isArray(outfit.outfit_items)
+                        ? outfit.outfit_items
+                        : [],
+                    };
+                    setEditingOutfit(outfitWithItems);
+                    setActiveTab('outfit');
+                  }}
+                  onCreateOutfit={() => setActiveTab('outfit')}
+                />
+              ) : (
+                // Show normal wardrobe content when not searching
+                <div className="space-y-4">
+                  {/* Filter Button */}
+                  <button
+                    onClick={() => setShowFilterModal(true)}
+                    className={`hidden md:flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                      hasActiveFilters
+                        ? 'text-blue-600'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    <div className="relative">
+                      <Filter className="h-5 w-5 mb-1" />
+                      {activeFilterCount > 0 && (
+                        <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
+                          {activeFilterCount}
                         </span>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearSearch}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                )}
+                    <span className="text-xs font-medium">Filter</span>
+                  </button>
 
-                {/* Filter Button */}
-                <button
-                  onClick={() => {
-                    if (activeTab === 'wardrobe') {
-                      setShowFilterModal(true);
-                    } else {
-                      setActiveTab('wardrobe');
-                      setTimeout(() => setShowFilterModal(true), 300);
-                    }
+                  {/* Category Tabs */}
+                  <Tabs
+                    defaultValue="all"
+                    value={activeCategory}
+                    onValueChange={setActiveCategory}
+                  >
+                    <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto">
+                      {categories.map(category => (
+                        <TabsTrigger
+                          key={category}
+                          value={category}
+                          className="capitalize"
+                        >
+                          {category}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+
+                  {/* Wardrobe Grid */}
+                  <WardrobeGrid
+                    key={wardrobeKey}
+                    items={finalItems}
+                    loading={loadingItems}
+                    onAddItem={handleAddItemClick}
+                    onAddToOutfit={handleAddToOutfit}
+                    onEditItem={item => {
+                      setEditingItem(item);
+                      setShowUploadForm(true);
+                    }}
+                    activeFilters={activeFilters}
+                    activeCategory={activeCategory}
+                    onClearFilters={() => {
+                      clearAllFilters();
+                      setActiveCategory('all');
+                    }}
+                  />
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="my-outfits" className="mt-0">
+              {hasSearchQuery ? (
+                // Show unified search results when searching
+                <UnifiedSearchResults
+                  onAddItem={handleAddItemClick}
+                  onEditItem={item => {
+                    setEditingItem(item);
+                    setShowUploadForm(true);
                   }}
-                  className={`hidden md:flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                    activeTab === 'wardrobe' && (hasActiveFilters || hasQuery)
-                      ? 'text-blue-600'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <div className="relative">
-                    <Filter className="h-5 w-5 mb-1" />
-                    {activeFilterCount > 0 && (
-                      <span
-                        className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium 
-                  w-4 h-4 rounded-full flex items-center justify-center 
-                  ring-2 ring-background z-10"
-                      >
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs font-medium">Filter</span>
-                </button>
-
-                {/* Category Tabs */}
-                <Tabs
-                  defaultValue="all"
-                  value={activeCategory}
-                  onValueChange={setActiveCategory}
-                >
-                  <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto">
-                    {categories.map(category => (
-                      <TabsTrigger
-                        key={category}
-                        value={category}
-                        className="capitalize"
-                      >
-                        {category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {/* Wardrobe Grid */}
-              <WardrobeGrid
-                key={wardrobeKey}
-                items={finalItems}
-                loading={loadingItems || isIndexing}
-                onAddItem={handleAddItemClick}
-                onAddToOutfit={handleAddToOutfit}
-                onEditItem={item => {
-                  setEditingItem(item);
-                  setShowUploadForm(true);
-                }}
-                activeFilters={activeFilters}
-                activeCategory={activeCategory}
-                onClearFilters={() => {
-                  clearAllFilters();
-                  setActiveCategory('all');
-                }}
-              />
+                  onAddToOutfit={handleAddToOutfit}
+                  onEditOutfit={outfit => {
+                    const outfitWithItems = {
+                      ...outfit,
+                      items: Array.isArray(outfit.outfit_items)
+                        ? outfit.outfit_items
+                        : [],
+                    };
+                    setEditingOutfit(outfitWithItems);
+                    setActiveTab('outfit');
+                  }}
+                  onCreateOutfit={() => setActiveTab('outfit')}
+                />
+              ) : (
+                // Show normal MyOutfits component when not searching
+                <MyOutfits
+                  onCreateOutfit={() => setActiveTab('outfit')}
+                  onEditOutfit={outfit => {
+                    const outfitWithItems = {
+                      ...outfit,
+                      items: Array.isArray(outfit.outfit_items)
+                        ? outfit.outfit_items
+                        : [],
+                    };
+                    setEditingOutfit(outfitWithItems);
+                    setActiveTab('outfit');
+                  }}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="outfit" className="mt-0">
@@ -698,27 +663,10 @@ const Home = () => {
                 }}
               />
             </TabsContent>
-
-            <TabsContent value="my-outfits" className="mt-0">
-              <MyOutfits
-                searchQuery={searchQuery}
-                onCreateOutfit={() => setActiveTab('outfit')}
-                onEditOutfit={outfit => {
-                  const outfitWithItems = {
-                    ...outfit,
-                    items: Array.isArray(outfit.outfit_items)
-                      ? outfit.outfit_items
-                      : [],
-                  };
-                  setEditingOutfit(outfitWithItems);
-                  setActiveTab('outfit');
-                }}
-              />
-            </TabsContent>
           </Tabs>
         )}
 
-        {/* Filter Modal */}
+        {/* Filter Modal - Same as before */}
         {showFilterModal && (
           <>
             <div
@@ -739,7 +687,7 @@ const Home = () => {
                   <div className="flex items-center gap-5 cursor-pointer">
                     {hasActiveFilters ||
                     activeCategory !== 'all' ||
-                    hasQuery ? (
+                    hasSearchQuery ? (
                       <div
                         className="hidden text-sm md:inline text-blue-600"
                         onClick={() => {
@@ -840,7 +788,7 @@ const Home = () => {
                       setActiveCategory('all');
                     }}
                     activeFilterEntries={[
-                      ...(hasQuery
+                      ...(hasSearchQuery
                         ? [
                             {
                               key: 'search',
@@ -861,7 +809,9 @@ const Home = () => {
                       ...activeFilterEntries,
                     ]}
                     hasActiveFilters={
-                      hasActiveFilters || activeCategory !== 'all' || hasQuery
+                      hasActiveFilters ||
+                      activeCategory !== 'all' ||
+                      hasSearchQuery
                     }
                     showFilters={true}
                     onToggleFilters={() => {}}

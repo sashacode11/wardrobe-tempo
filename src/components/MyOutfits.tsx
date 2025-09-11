@@ -1,6 +1,6 @@
-// MyOutfits.tsx - Complete improved version with FlexSearch integration
-import React, { useState, useEffect } from 'react';
-import { Plus, Shirt, Sparkles, TrendingUp, Search } from 'lucide-react';
+// MyOutfits.tsx - Updated to use global context
+import React, { useState } from 'react';
+import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,14 +14,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Input } from './ui/input';
 import OutfitBuilder from './OutfitBuilder';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
-import SearchBar from './common/SearchBar';
-import { getCurrentUser, supabase } from '../lib/supabaseClient';
-import { Database } from '../types/supabase';
+import { supabase } from '../lib/supabaseClient';
 
 // Import our reusable components
 import OutfitActions from './common/OutfitActions';
@@ -30,90 +27,40 @@ import DeleteModal from './common/DeleteModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
-import { useFlexSearch } from '../hooks/useFlexSearch';
+import { useWardrobe } from '../contexts/WardrobeContext'; // Use global context
 
 interface MyOutfitsProps {
-  searchQuery?: string; // Accept search query from parent if needed
+  searchQuery?: string; // Keep for backward compatibility but won't be used
   onCreateOutfit?: () => void;
   onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
 const MyOutfits: React.FC<MyOutfitsProps> = ({
-  searchQuery: externalSearchQuery,
+  searchQuery: externalSearchQuery, // Not used anymore since we use global search
   onCreateOutfit,
   onEditOutfit,
 }) => {
-  const [outfits, setOutfits] = useState<OutfitWithItems[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 🔹 Use global context instead of local state
+  const {
+    outfits,
+    outfitsLoading: loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    clearSearch,
+    outfitSearchResults,
+    hasSearchQuery,
+    refreshOutfits,
+    removeOutfit,
+  } = useWardrobe();
+
+  // Local UI state
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
   const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
 
-  // FlexSearch Integration for outfits
-  const {
-    searchQuery,
-    setSearchQuery,
-    searchResults,
-    clearSearch,
-    isIndexing,
-    hasResults,
-    hasQuery,
-    resultCount,
-  } = useFlexSearch(outfits, {
-    searchFields: [
-      'name',
-      'description',
-      'occasions',
-      'tags',
-      // We can also search within the outfit items
-      'outfit_items.wardrobe_items.name',
-      'outfit_items.wardrobe_items.description',
-      'outfit_items.wardrobe_items.color',
-      'outfit_items.wardrobe_items.category',
-      'outfit_items.wardrobe_items.brand',
-    ],
-    minQueryLength: 2,
-    maxResults: 50,
-    // Custom indexing function for complex nested data
-    customIndexer: (outfit: OutfitWithItems) => {
-      const searchableContent: string[] = [
-        outfit.name || '',
-        ...(outfit.occasions || []),
-        ...(outfit.tags || []),
-      ];
-
-      // Add content from outfit items
-      if (outfit.outfit_items) {
-        outfit.outfit_items.forEach(item => {
-          const wardrobeItem = item.wardrobe_items;
-          if (wardrobeItem) {
-            searchableContent.push(
-              wardrobeItem.name || '',
-              wardrobeItem.description || '',
-              wardrobeItem.color || '',
-              wardrobeItem.category || '',
-              wardrobeItem.brand || '',
-              ...(wardrobeItem.seasons || []),
-              ...(wardrobeItem.occasions || []),
-              ...(wardrobeItem.tags || [])
-            );
-          }
-        });
-      }
-
-      return searchableContent.join(' ');
-    },
-  });
-
-  // Use external search query if provided, otherwise use internal state
-  React.useEffect(() => {
-    if (externalSearchQuery !== undefined) {
-      setSearchQuery(externalSearchQuery);
-    }
-  }, [externalSearchQuery, setSearchQuery]);
-
   // Get the final list of outfits to display (search results or all outfits)
-  const displayedOutfits = hasQuery ? searchResults : outfits;
+  const displayedOutfits = hasSearchQuery ? outfitSearchResults : outfits;
+  const resultCount = displayedOutfits.length;
 
   // Add multiselect functionality - now works with displayed outfits
   const {
@@ -158,49 +105,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     setShowOutfitBuilder(true);
   };
 
-  useEffect(() => {
-    fetchOutfits();
-  }, []);
-
-  const fetchOutfits = async () => {
-    try {
-      setLoading(true);
-
-      const user = await getCurrentUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('outfits')
-        .select(
-          `
-          *,
-          outfit_items (
-            clothing_item_id,
-            wardrobe_items (*)
-          )
-        `
-        )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching outfits:', error);
-        setError('Failed to load outfits');
-        return;
-      }
-
-      setOutfits((data as OutfitWithItems[]) || []);
-    } catch (error) {
-      console.error('Error fetching outfits:', error);
-      setError('Failed to load outfits');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 🔹 Simplified delete function using global context
   const handleDeleteOutfit = async (outfitId: string) => {
     // First delete the outfit_items
     const { error: outfitItemsError } = await supabase
@@ -222,7 +127,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       throw new Error('Failed to delete outfit');
     }
 
-    setOutfits(prev => prev.filter(outfit => outfit.id !== outfitId));
+    // Update global state
+    removeOutfit(outfitId);
   };
 
   // Handle bulk delete function specifically for outfits
@@ -240,7 +146,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
       if (outfitItemsError) {
         console.error('Error deleting outfit items:', outfitItemsError);
-        setError('Failed to delete outfit items');
+        setMultiselectError('Failed to delete outfit items');
         return;
       }
 
@@ -252,14 +158,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
       if (outfitsError) {
         console.error('Error deleting outfits:', outfitsError);
-        setError('Failed to delete outfits');
+        setMultiselectError('Failed to delete outfits');
         return;
       }
 
-      // Update local state
-      setOutfits(prev =>
-        prev.filter(outfit => !idsToDelete.includes(outfit.id))
-      );
+      // Update global state - remove each outfit
+      idsToDelete.forEach(id => removeOutfit(id));
 
       // Reset multiselect state
       deselectAllItems();
@@ -267,7 +171,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       toggleSelectionMode(); // Exit selection mode
     } catch (error) {
       console.error('Error in bulk delete:', error);
-      setError('Failed to delete outfits');
+      setMultiselectError('Failed to delete outfits');
     }
   };
 
@@ -518,7 +422,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             </p>
             <button
               onClick={() => {
-                setError(null);
                 setMultiselectError(null);
                 setEntityError(null);
               }}
@@ -549,7 +452,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                         <p className="text-sm font-medium">
                           You have {outfits.length} saved outfit
                           {outfits.length !== 1 ? 's' : ''}
-                          {hasQuery && (
+                          {hasSearchQuery && (
                             <span className="text-blue-600">
                               {' '}
                               ({resultCount} matching)
@@ -593,29 +496,19 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             </div>
 
             {/* Search Results Info */}
-            {hasQuery && (
+            {hasSearchQuery && (
               <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
                 <div className="flex items-center gap-2">
-                  {isIndexing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b border-blue-600"></div>
-                      <span className="text-sm text-blue-800">
-                        Searching outfits...
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-sm text-blue-800">
-                      {resultCount > 0 ? (
-                        <>
-                          Found <strong>{resultCount}</strong> outfit
-                          {resultCount === 1 ? '' : 's'} matching "{searchQuery}
-                          "
-                        </>
-                      ) : (
-                        <>No outfits found for "{searchQuery}"</>
-                      )}
-                    </span>
-                  )}
+                  <span className="text-sm text-blue-800">
+                    {resultCount > 0 ? (
+                      <>
+                        Found <strong>{resultCount}</strong> outfit
+                        {resultCount === 1 ? '' : 's'} matching "{searchQuery}"
+                      </>
+                    ) : (
+                      <>No outfits found for "{searchQuery}"</>
+                    )}
+                  </span>
                 </div>
                 <Button
                   variant="ghost"
@@ -631,7 +524,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             {/* Outfits Grid */}
             {displayedOutfits.length === 0 ? (
               <div className="text-center py-16">
-                {hasQuery ? (
+                {hasSearchQuery ? (
                   // No search results
                   <div>
                     <div className="w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -695,12 +588,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               setMyOutfitsEditingOutfit(null);
             }}
             onEditComplete={() => {
-              fetchOutfits();
+              refreshOutfits(); // Use global refresh
               setShowOutfitBuilder(false);
               setMyOutfitsEditingOutfit(null);
             }}
             onOutfitSaved={() => {
-              fetchOutfits();
+              refreshOutfits(); // Use global refresh
               setShowOutfitBuilder(false);
               setMyOutfitsEditingOutfit(null);
             }}
