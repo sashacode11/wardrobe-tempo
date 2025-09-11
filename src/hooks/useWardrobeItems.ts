@@ -128,6 +128,11 @@ export function getUniqueOccasions(items: ClothingItemType[]): string[] {
   return [...new Set(cleanOccasions)];
 }
 
+export function getUniqueBrands(items: ClothingItemType[]): string[] {
+  if (!items || !Array.isArray(items)) return [];
+  return [...new Set(items.map(item => item.brand))].filter(Boolean);
+}
+
 // Global cache to share data across all hook instances
 let globalWardrobeCache: {
   data: ClothingItemType[] | null;
@@ -266,6 +271,11 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     [localData.items]
   );
 
+  const brands = useMemo(
+    () => getUniqueBrands(localData.items),
+    [localData.items]
+  );
+
   const refetch = useCallback(async () => {
     // Clear cache and fetch fresh data
     globalWardrobeCache.data = null;
@@ -298,6 +308,7 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     colors,
     seasons,
     occasions,
+    brands,
     loading: localData.loading,
     error: localData.error,
     refetch,
