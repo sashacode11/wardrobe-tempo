@@ -98,7 +98,7 @@ const OutfitBuilder = ({
 
   useEffect(() => {
     if (!editingOutfit) {
-      // Not editing → reset form
+      // Reset form
       setOutfitName('');
       setOccasions([]);
       setCurrentOutfit(
@@ -110,18 +110,15 @@ const OutfitBuilder = ({
       return;
     }
 
-    // Load basic fields safely
+    // Load basic fields
     setOutfitName(editingOutfit.name || 'Unnamed Outfit');
     setOccasions(
       Array.isArray(editingOutfit.occasions) ? editingOutfit.occasions : []
     );
 
-    // Handle missing or invalid `items`
     const outfitItems = editingOutfit.outfit_items;
 
-    // Check if items is a valid array
     if (!Array.isArray(outfitItems)) {
-      // Reset to empty slots
       setCurrentOutfit(
         categories.map(category => ({
           category,
@@ -131,40 +128,25 @@ const OutfitBuilder = ({
       return;
     }
 
-    // Map valid items by category
-    const itemMap = outfitItems.reduce<Record<string, ClothingItemType>>(
-      (acc, outfitItem) => {
-        if (
-          outfitItem &&
-          typeof outfitItem === 'object' &&
-          outfitItem.wardrobe_items &&
-          outfitItem.wardrobe_items.category
-        ) {
-          const wardrobeItem = outfitItem.wardrobe_items;
-          acc[wardrobeItem.category] = wardrobeItem;
-        } else {
-          console.warn('Invalid outfit item structure:', outfitItem);
-        }
-        return acc;
-      },
-      {}
-    );
-
-    // Update outfit slots
+    // ✅ Fixed: Map items by their category correctly
     const updatedOutfit = categories.map(category => {
-      // Find any item in this category from outfit_items
-      const outfitItemData = outfitItems.find(oi => oi.category === category);
-      const item = outfitItemData
-        ? itemMap.get(outfitItemData.item_id) || null
-        : null;
+      // Find outfit item that has a wardrobe_item with this category
+      const outfitItem = outfitItems.find(
+        oi =>
+          oi.wardrobe_items &&
+          oi.wardrobe_items.category?.toLowerCase() === category.toLowerCase()
+      );
+
+      const item = outfitItem ? outfitItem.wardrobe_items : null;
 
       return {
         category,
         item,
       };
     });
+
     setCurrentOutfit(updatedOutfit);
-  }, [editingOutfit]);
+  }, [editingOutfit, categories]);
 
   const loadWardrobeItems = async () => {
     try {
