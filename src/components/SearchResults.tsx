@@ -240,33 +240,6 @@ const UnifiedSearchResults: React.FC<UnifiedSearchResultsProps> = ({
           </div>
         </div>
       )}
-
-      {/* Section for when only one type has results */}
-      {searchResults.length === 0 && outfitSearchResults.length > 0 && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg mx-4">
-          <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600 mb-3">
-            No individual items match "{searchQuery}"
-          </p>
-          <Button onClick={onAddItem} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Item
-          </Button>
-        </div>
-      )}
-
-      {outfitSearchResults.length === 0 && searchResults.length > 0 && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg mx-4">
-          <Shirt className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600 mb-3">
-            No outfits contain items matching "{searchQuery}"
-          </p>
-          <Button onClick={onCreateOutfit} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Outfit with These Items
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
