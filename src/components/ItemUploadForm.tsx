@@ -30,6 +30,7 @@ import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
 import { capitalizeFirst, parseArrayField } from '../lib/utils';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { toast } from 'sonner';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -234,17 +235,17 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   const handleSave = async () => {
     if (!itemData.imagePreview) {
-      alert('Please upload an image for your item');
+      toast.error('Please upload an image for your item');
       return;
     }
 
     if (!itemData.category) {
-      alert('Please select a category for your item');
+      toast.warning('Please select a category for your item');
       return;
     }
 
     if (currentTag.trim()) {
-      alert('Please press Enter or click Add to include the tag.');
+      toast.warning('Please press Enter or click Add to include the tag.');
       return;
     }
 
@@ -279,7 +280,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             errorMessage = imageError.message;
           }
 
-          alert(errorMessage);
+          toast.error(errorMessage);
           setSaving(false);
           return;
         }
@@ -319,16 +320,16 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         );
         if (error) {
           console.error('Error updating clothing item:', error);
-          alert('Failed to update item. Please try again.');
+          toast.error('Failed to update item. Please try again.');
           setSaving(false);
           return;
         }
-        alert('Item updated successfully!');
+        toast.success('Item updated successfully!');
       } else {
         const { data, error } = await createClothingItem(clothingItem);
         if (error) {
           console.error('Error creating clothing item:', error);
-          alert('Failed to save item. Please try again.');
+          toast.error('Failed to save item. Please try again.');
           setSaving(false);
           return;
         }
@@ -347,14 +348,14 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         });
         setActiveTab('upload');
 
-        alert('Item created successfully!');
+        toast.success('Item created successfully!');
       }
 
       onSave?.();
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving item:', error);
-      alert('An unexpected error occurred. Please try again.');
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setSaving(false);
     }

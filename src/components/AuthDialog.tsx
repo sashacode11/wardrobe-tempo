@@ -16,6 +16,7 @@ import {
 } from '../lib/supabaseClient';
 import { Eye, EyeOff } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 interface AuthDialogProps {
   open?: boolean;
@@ -127,7 +128,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       if (error) {
         setError(error.message);
       } else {
-        alert('Check your email for the confirmation link!');
+        toast.warning('Check your email for the confirmation link!');
         onOpenChange(false);
         // Reset form
         setEmail('');

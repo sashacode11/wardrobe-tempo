@@ -25,6 +25,7 @@ import { ClothingItemType, OutfitBuilderProps, OutfitItem } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useFilters } from '@/hooks/useFilters';
 import FloatingOutfitPanel from './FloatingOutfitPanel';
+import { toast } from 'sonner';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -205,7 +206,7 @@ const OutfitBuilder = ({
 
   const handleSaveOutfit = async () => {
     if (!outfitName.trim()) {
-      alert('Please enter an outfit name');
+      toast.warning('Please enter an outfit name');
       return;
     }
 
@@ -213,11 +214,11 @@ const OutfitBuilder = ({
     const selectedItems = currentOutfit.filter(slot => slot.item !== null);
 
     if (selectedItems.length === 0) {
-      alert('Please add at least one item to your outfit');
+      toast.warning('Please add at least one item to your outfit');
       return;
     }
     if (occasionInput.trim()) {
-      alert('Please press Enter or click Add to include the occasion.');
+      toast.warning('Please press Enter or click Add to include the occasion.');
       return;
     }
 
@@ -276,7 +277,7 @@ const OutfitBuilder = ({
           throw itemsError;
         }
 
-        alert('Outfit updated successfully!');
+        toast.success('Outfit updated successfully!');
       } else {
         // Create the outfit
         const { data: newOutfit, error: outfitError } = await supabase
@@ -312,7 +313,7 @@ const OutfitBuilder = ({
           throw itemsError;
         }
 
-        alert('Outfit saved successfully!');
+        toast.success('Outfit saved successfully!');
       }
 
       // Close the save dialog first
@@ -343,7 +344,7 @@ const OutfitBuilder = ({
         errorMessage += ` Details: ${error.details}`;
       }
 
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
