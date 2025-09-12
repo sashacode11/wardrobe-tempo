@@ -239,6 +239,11 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       return;
     }
 
+    if (!itemData.name) {
+      toast.error('Please give this item a name');
+      return;
+    }
+
     if (!itemData.category) {
       toast.warning('Please select a category for your item');
       return;
@@ -287,12 +292,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         imageUrl = imageData.publicUrl;
       }
 
-      // Auto-generate name if empty
-      const finalName = itemData.name.trim() || `${itemData.category} Item`;
-
       const clothingItem = {
         user_id: user.id,
-        name: finalName,
+        name: itemData.name,
         category: itemData.category.toLowerCase().trim(),
         color: itemData.color ? itemData.color.toLowerCase().trim() : null,
         brand: itemData.brand ? itemData.brand.trim() : null,
@@ -406,9 +408,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col mx-0">
+      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-bold ">
             {editingItem ? 'Edit Clothing Item' : 'Add New Clothing Item'}
           </DialogTitle>
         </DialogHeader>
@@ -511,14 +513,17 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
           <TabsContent value="details" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Item Name (Optional)</Label>
+                <Label htmlFor="name">
+                  Item Name
+                  <span className="ml-1 text-red-500 text-xs">*</span>
+                </Label>
                 <Input
                   id="name"
                   value={itemData.name}
                   onChange={e =>
                     setItemData({ ...itemData, name: e.target.value })
                   }
-                  placeholder="E.g., Blue Denim Jacket (auto-generated if empty)"
+                  placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
                 />
               </div>
 
@@ -890,14 +895,19 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             </div>
           </TabsContent>
         </Tabs>
-        <DialogFooter className="flex justify-between mt-4">
+        <DialogFooter className="flex flex-row justify-end gap-2 bg-white mt-4 sticky bottom-0 ">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!itemData.imagePreview || !itemData.category || saving}
+            // disabled={
+            //   !itemData.imagePreview ||
+            //   !itemData.category ||
+            //   !itemData.name ||
+            //   saving
+            // }
           >
             {saving ? 'Saving...' : editingItem ? 'Update Item' : 'Save Item'}
           </Button>
