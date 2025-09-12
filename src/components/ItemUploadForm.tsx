@@ -245,7 +245,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
 
     if (!itemData.category) {
-      toast.warning('Please select a category for your item');
+      toast.error('Please select a category for your item');
       return;
     }
 

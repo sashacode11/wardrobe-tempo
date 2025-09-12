@@ -206,7 +206,7 @@ const OutfitBuilder = ({
 
   const handleSaveOutfit = async () => {
     if (!outfitName.trim()) {
-      toast.warning('Please enter an outfit name');
+      toast.error('Please enter an outfit name');
       return;
     }
 
@@ -214,7 +214,7 @@ const OutfitBuilder = ({
     const selectedItems = currentOutfit.filter(slot => slot.item !== null);
 
     if (selectedItems.length === 0) {
-      toast.warning('Please add at least one item to your outfit');
+      toast.error('Please add at least one item to your outfit');
       return;
     }
     if (occasionInput.trim()) {
