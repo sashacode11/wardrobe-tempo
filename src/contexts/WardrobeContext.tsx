@@ -1,4 +1,4 @@
-// contexts/WardrobeContext.tsx
+// contexts/WardrobeContext.tsx - Clean version with imported types
 import React, {
   createContext,
   useContext,
@@ -12,32 +12,12 @@ import {
   getCurrentUser,
   supabase,
 } from '../lib/supabaseClient';
-import { ClothingItemType } from '../types';
-
-// Types based on your existing structure
-export interface OutfitItem {
-  id: string;
-  outfit_id: string;
-  clothing_item_id: number;
-  created_at: string;
-  wardrobe_items?: ClothingItemType; // Join data
-}
-
-export interface Outfit {
-  id: string;
-  user_id: string;
-  name: string;
-  description?: string;
-  occasions?: string[];
-  created_at: string;
-  updated_at: string;
-  outfit_items?: OutfitItem[];
-}
-
-export interface OutfitWithItems extends Outfit {
-  items: ClothingItemType[]; // Flattened items for easier use
-  outfit_items: OutfitItem[];
-}
+import {
+  ClothingItemType,
+  OutfitItem,
+  Outfit,
+  OutfitWithItems,
+} from '../types';
 
 interface WardrobeContextType {
   // Data
@@ -62,6 +42,10 @@ interface WardrobeContextType {
   hasSearchResults: boolean;
   hasSearchQuery: boolean;
 
+  // New properties for incomplete outfits
+  incompleteOutfits: OutfitWithItems[];
+  incompleteCount: number;
+
   // Methods
   refreshItems: () => Promise<void>;
   refreshOutfits: () => Promise<void>;
@@ -80,6 +64,15 @@ interface WardrobeContextType {
   addOutfit: (outfit: OutfitWithItems) => void;
   updateOutfit: (outfit: OutfitWithItems) => void;
   removeOutfit: (id: string) => void;
+
+  // New methods for incomplete outfit management
+  markOutfitsAsIncomplete: (itemIds: string[]) => Promise<void>;
+  getAffectedOutfits: (itemIds: string[]) => Promise<OutfitWithItems[]>;
+  repairOutfit: (
+    outfitId: string,
+    replacementItems: ClothingItemType[]
+  ) => Promise<void>;
+  deleteIncompleteOutfit: (outfitId: string) => Promise<void>;
 }
 
 const WardrobeContext = createContext<WardrobeContextType | null>(null);
@@ -104,6 +97,11 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Rest of your implementation stays the same...
+  // (All the existing logic from your context)
+
+  // Add these missing implementations to your WardrobeContext.tsx
 
   // Simple text-based search (you can enhance this later with FlexSearch)
   const searchResults = useMemo(() => {
@@ -156,6 +154,13 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   const hasSearchResults =
     searchResults.length > 0 || outfitSearchResults.length > 0;
 
+  // Computed incomplete outfits
+  const incompleteOutfits = useMemo(() => {
+    return outfits.filter(outfit => !outfit.is_complete);
+  }, [outfits]);
+
+  const incompleteCount = incompleteOutfits.length;
+
   // Clear search
   const clearSearch = () => {
     setSearchQuery('');
@@ -201,7 +206,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     }
   };
 
-  // Fetch outfits with items
+  // Enhanced refresh outfits to include completion status
   const refreshOutfits = async () => {
     if (!user) {
       setOutfits([]);
@@ -217,28 +222,32 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         .from('outfits')
         .select(
           `
+        *,
+        outfit_items (
           *,
-          outfit_items (
-            *,
-            wardrobe_items (*)
-          )
-        `
+          wardrobe_items (*)
+        )
+      `
         )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      // Transform the data to match your existing structure
-      const transformedOutfits: OutfitWithItems[] = (data || []).map(
-        outfit => ({
+      // Transform the data and calculate completion status
+      const transformedOutfits: OutfitWithItems[] = (data || []).map(outfit => {
+        const validItems =
+          outfit.outfit_items?.filter(oi => oi.wardrobe_items) || [];
+        const totalItems = outfit.outfit_items?.length || 0;
+
+        return {
           ...outfit,
-          items:
-            outfit.outfit_items?.map(oi => oi.wardrobe_items).filter(Boolean) ||
-            [],
+          items: validItems.map(oi => oi.wardrobe_items),
           outfit_items: outfit.outfit_items || [],
-        })
-      );
+          is_complete: validItems.length === totalItems && totalItems > 0,
+          missing_items_count: totalItems - validItems.length,
+        };
+      });
 
       setOutfits(transformedOutfits);
     } catch (err) {
@@ -286,7 +295,159 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     setOutfits(prev => prev.filter(outfit => outfit.id !== id));
   };
 
-  // Initial auth check
+  // Check which outfits will be affected by deleting items
+  const getAffectedOutfits = async (
+    itemIds: string[]
+  ): Promise<OutfitWithItems[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('outfit_items')
+        .select(
+          `
+        outfit_id,
+        outfits (
+          *,
+          outfit_items (
+            *,
+            wardrobe_items (*)
+          )
+        )
+      `
+        )
+        .in('clothing_item_id', itemIds);
+
+      if (error) throw error;
+
+      // Transform and deduplicate outfits
+      const affectedOutfitsMap = new Map();
+
+      data?.forEach(item => {
+        if (item.outfits && !affectedOutfitsMap.has(item.outfits.id)) {
+          const outfit = {
+            ...item.outfits,
+            items:
+              item.outfits.outfit_items
+                ?.map(oi => oi.wardrobe_items)
+                .filter(Boolean) || [],
+            outfit_items: item.outfits.outfit_items || [],
+          };
+          affectedOutfitsMap.set(item.outfits.id, outfit);
+        }
+      });
+
+      return Array.from(affectedOutfitsMap.values());
+    } catch (error) {
+      console.error('Error getting affected outfits:', error);
+      return [];
+    }
+  };
+
+  // Mark outfits as incomplete after item deletion
+  const markOutfitsAsIncomplete = async (deletedItemIds: string[]) => {
+    try {
+      // Get affected outfits
+      const affectedOutfits = await getAffectedOutfits(deletedItemIds);
+
+      if (affectedOutfits.length === 0) return;
+
+      const outfitIds = affectedOutfits.map(outfit => outfit.id);
+
+      // Update outfits in database
+      const { error } = await supabase
+        .from('outfits')
+        .update({
+          is_complete: false,
+          last_incomplete_at: new Date().toISOString(),
+        })
+        .in('id', outfitIds);
+
+      if (error) throw error;
+
+      // Update local state
+      setOutfits(prev =>
+        prev.map(outfit =>
+          outfitIds.includes(outfit.id)
+            ? {
+                ...outfit,
+                is_complete: false,
+                last_incomplete_at: new Date().toISOString(),
+              }
+            : outfit
+        )
+      );
+    } catch (error) {
+      console.error('Error marking outfits as incomplete:', error);
+      throw error;
+    }
+  };
+
+  // Repair an outfit by adding replacement items
+  const repairOutfit = async (
+    outfitId: string,
+    replacementItems: ClothingItemType[]
+  ) => {
+    try {
+      // Add new outfit items
+      const outfitItems = replacementItems.map(item => ({
+        outfit_id: outfitId,
+        clothing_item_id: parseInt(item.id),
+      }));
+
+      if (outfitItems.length > 0) {
+        const { error: insertError } = await supabase
+          .from('outfit_items')
+          .insert(outfitItems);
+
+        if (insertError) throw insertError;
+      }
+
+      // Mark outfit as complete
+      const { error: updateError } = await supabase
+        .from('outfits')
+        .update({
+          is_complete: true,
+          last_incomplete_at: null,
+        })
+        .eq('id', outfitId);
+
+      if (updateError) throw updateError;
+
+      // Refresh outfits to get updated data
+      await refreshOutfits();
+    } catch (error) {
+      console.error('Error repairing outfit:', error);
+      throw error;
+    }
+  };
+
+  // Delete an incomplete outfit
+  const deleteIncompleteOutfit = async (outfitId: string) => {
+    try {
+      // Delete outfit items first
+      const { error: outfitItemsError } = await supabase
+        .from('outfit_items')
+        .delete()
+        .eq('outfit_id', outfitId);
+
+      if (outfitItemsError) throw outfitItemsError;
+
+      // Delete the outfit
+      const { error: outfitError } = await supabase
+        .from('outfits')
+        .delete()
+        .eq('id', outfitId);
+
+      if (outfitError) throw outfitError;
+
+      // Update local state
+      removeOutfit(outfitId);
+    } catch (error) {
+      console.error('Error deleting incomplete outfit:', error);
+      throw error;
+    }
+  };
+
+  // Add useEffect hooks for initialization
   useEffect(() => {
     checkUser();
 
@@ -344,6 +505,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     hasSearchResults,
     hasSearchQuery,
 
+    // New properties
+    incompleteOutfits,
+    incompleteCount,
+
     // Methods
     refreshItems,
     refreshOutfits,
@@ -360,6 +525,12 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     addOutfit,
     updateOutfit,
     removeOutfit,
+
+    // New methods
+    markOutfitsAsIncomplete,
+    getAffectedOutfits,
+    repairOutfit,
+    deleteIncompleteOutfit,
   };
 
   return (
@@ -369,7 +540,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   );
 };
 
-// Custom hook to use the wardrobe context
 export const useWardrobe = () => {
   const context = useContext(WardrobeContext);
   if (!context) {

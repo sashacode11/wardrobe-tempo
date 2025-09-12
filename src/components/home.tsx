@@ -29,6 +29,8 @@ import FilterPanel from './common/FilterPanel';
 import { capitalizeFirst } from '@/lib/utils';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import UnifiedSearchResults from './SearchResults';
+import OutfitRepairView from './OutfitRepairView';
+import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -39,7 +41,7 @@ const Home = () => {
   const [selectedItemForOutfit, setSelectedItemForOutfit] = useState(null);
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
-
+  const [showRepairView, setShowRepairView] = useState(false);
   // 🔹 Use global context instead of local state
   const {
     wardrobeItems: items,
@@ -664,6 +666,27 @@ const Home = () => {
               />
             </TabsContent>
           </Tabs>
+        )}
+
+        {/* Show repair view if active */}
+        {showRepairView ? (
+          <OutfitRepairView onClose={() => setShowRepairView(false)} />
+        ) : (
+          <>
+            {/* Incomplete outfits notification - show on all tabs */}
+            <IncompleteOutfitsNotification
+              onFixOutfits={() => setShowRepairView(true)}
+            />
+
+            {/* Your existing tabs content */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              {/* ... your existing TabsContent components ... */}
+            </Tabs>
+          </>
         )}
 
         {/* Filter Modal - Same as before */}
