@@ -164,21 +164,68 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   }, [editingItem]);
 
   useEffect(() => {
-    const mergedCategories = [
-      ...new Set([...categories, ...existingCategories]),
-    ];
-    setCategories(mergedCategories);
-  }, [existingCategories]);
+    const normalized = new Set<string>();
+    const uniqueOccasions: string[] = [];
+
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueOccasions.push(capitalizeFirst(lower));
+        }
+      });
+    };
+
+    addIfNotExists(occasions);
+    addIfNotExists(existingOccasions);
+    itemData.occasions.forEach(o => addIfNotExists([o]));
+
+    setOccasions(uniqueOccasions);
+  }, [existingOccasions, itemData.occasions]);
 
   useEffect(() => {
-    const mergedColors = [...new Set([...colors, ...existingColors])];
-    setColors(mergedColors);
-  }, [existingColors]);
+    const normalized = new Set<string>();
+    const uniqueColors: string[] = [];
+
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueColors.push(capitalizeFirst(lower));
+        }
+      });
+    };
+
+    addIfNotExists(colors);
+    addIfNotExists(existingColors);
+    addIfNotExists([itemData.color]);
+
+    setColors(uniqueColors);
+  }, [existingColors, itemData.color]);
 
   useEffect(() => {
-    const mergedOccasions = [...new Set([...occasions, ...existingOccasions])];
-    setOccasions(mergedOccasions);
-  }, [existingOccasions]);
+    const normalized = new Set<string>();
+    const uniqueCategories: string[] = [];
+
+    // Helper to add only if not already present (case-insensitive)
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueCategories.push(capitalizeFirst(lower)); // Store consistently capitalized
+        }
+      });
+    };
+
+    addIfNotExists(categories); // Add current hardcoded + user-added
+    addIfNotExists(existingCategories); // Add fetched ones
+    addIfNotExists([itemData.category]); // Include current editing value if missing
+
+    setCategories(uniqueCategories);
+  }, [existingCategories, itemData.category]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -543,17 +590,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {capitalizeFirst(category)}
-                        </SelectItem>
-                      ))}
-                      {itemData.category &&
-                        !categories.includes(itemData.category) && (
-                          <SelectItem value={itemData.category}>
-                            {itemData.category}
+                      {categories
+                        .filter(category => category.trim() !== '') // Remove empty/whitespace
+                        .map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
                           </SelectItem>
-                        )}
+                        ))}
                     </SelectContent>
                   </Select>
 
@@ -622,16 +665,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       <SelectValue placeholder="Select color" />
                     </SelectTrigger>
                     <SelectContent>
-                      {colors.map(color => (
-                        <SelectItem key={color} value={color}>
-                          {capitalizeFirst(color)}
-                        </SelectItem>
-                      ))}
-                      {itemData.color && !colors.includes(itemData.color) && (
-                        <SelectItem value={itemData.color}>
-                          {itemData.color}
-                        </SelectItem>
-                      )}
+                      {colors
+                        .filter(colorOption => colorOption.trim() !== '') // Avoid empty/whitespace
+                        .map(colorOption => (
+                          <SelectItem key={colorOption} value={colorOption}>
+                            {colorOption}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
 
