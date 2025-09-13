@@ -110,7 +110,22 @@ const ClothingItem = ({
           <h3 className="font-medium text-sm truncate text-blue-400">
             {capitalizeFirst(name)}
           </h3>
-          <p className="text-xs text-muted-foreground">{color}</p>
+          {/* <p className="text-xs text-muted-foreground">{color}</p> */}
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-gray-500 capitalize">{location}</span>
+            {color && (
+              <div
+                className="w-4 h-4 rounded-full border border-gray-300"
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            )}
+          </div>
+          {/* {brand && (
+    <p className="text-xs text-gray-500 mt-1 truncate">
+      {brand}
+    </p>
+  )} */}
         </CardContent>
       </Card>
 

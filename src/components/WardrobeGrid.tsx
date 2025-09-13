@@ -5,6 +5,7 @@ import { ClothingItemType } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
+import ClothingItem from './ClothingItem';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ interface WardrobeGridProps {
   activeFilters: Record<string, string>;
   activeCategory: string;
   onClearFilters: () => void;
+  searchQuery?: string;
 }
 
 const WardrobeGrid: React.FC<WardrobeGridProps> = ({
@@ -40,6 +42,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
   activeFilters,
   activeCategory,
   onClearFilters,
+  searchQuery = '',
 }) => {
   // Get global context
   const { removeItem, markOutfitsAsIncomplete, getAffectedOutfits } =
@@ -135,6 +138,33 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
     await checkOutfitImpact(idsToDelete);
   };
 
+  // Handle individual item deletion
+  const handleDeleteItem = async (id: string) => {
+    await checkOutfitImpact([id]);
+  };
+
+  // Handle editing individual item
+  const handleEditItem = (id: string) => {
+    const itemToEdit = items.find(item => item.id === id);
+    if (itemToEdit) {
+      onEditItem(itemToEdit);
+    }
+  };
+
+  // Handle adding item to outfit
+  const handleAddToOutfit = (id: string) => {
+    const item = items.find(item => item.id === id);
+    if (item && onAddToOutfit) {
+      onAddToOutfit(item);
+    }
+  };
+
+  // Handle view outfit from item
+  const handleViewOutfitFromItem = (outfit: any) => {
+    // Implement outfit viewing logic here
+    console.log('View outfit:', outfit);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -226,84 +256,58 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
         />
       </div>
 
-      {/* Items Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
-        {items.map(item => {
-          const isSelected = selectedItems.has(item.id);
-
-          return (
-            <div
-              key={item.id}
-              className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group ${
-                isSelectionMode && isSelected
-                  ? 'ring-2 ring-blue-500 ring-offset-2'
-                  : ''
-              }`}
-            >
+      {/* Clothing Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-grow px-2 w-full">
+        {items.length > 0 ? (
+          items.map(item => (
+            <div key={item.id} className="relative">
+              {/* Reusable Selection Checkbox Component */}
               <SelectionCheckbox
                 isSelectionMode={isSelectionMode}
-                isSelected={isSelected}
+                isSelected={selectedItems.has(item.id)}
                 onToggleSelection={() => toggleItemSelection(item.id)}
               />
 
-              <div className="aspect-square relative overflow-hidden bg-gray-50">
-                {item.image_url ? (
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <Plus className="h-12 w-12" />
-                  </div>
-                )}
-
-                {!isSelectionMode && (
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => onEditItem(item)}
-                        className="px-3 py-1 bg-white text-black text-sm rounded hover:bg-gray-100 transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onAddToOutfit(item)}
-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                      >
-                        Add to Outfit
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3">
-                <h3 className="font-medium text-sm text-gray-900 truncate">
-                  {item.name}
-                </h3>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-gray-500 capitalize">
-                    {item.category}
-                  </span>
-                  {item.color && (
-                    <div
-                      className="w-4 h-4 rounded-full border border-gray-300"
-                      style={{ backgroundColor: item.color }}
-                      title={item.color}
-                    />
-                  )}
-                </div>
-                {item.brand && (
-                  <p className="text-xs text-gray-500 mt-1 truncate">
-                    {item.brand}
-                  </p>
-                )}
-              </div>
+              <ClothingItem
+                id={item.id}
+                image={item.image_url}
+                name={item.name}
+                category={item.category}
+                color={item.color}
+                location={item.location}
+                seasons={item.seasons}
+                occasions={item.occasions}
+                tags={item.tags}
+                onEdit={handleEditItem}
+                onDelete={handleDeleteItem}
+                onAddToOutfit={handleAddToOutfit}
+                isSelected={selectedItems.has(item.id)}
+                isSelectionMode={isSelectionMode}
+                onViewOutfit={handleViewOutfitFromItem}
+              />
             </div>
-          );
-        })}
+          ))
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
+            <p className="text-muted-foreground mb-4">
+              {items.length === 0
+                ? 'No items in your wardrobe yet'
+                : searchQuery
+                ? `No items found matching "${searchQuery}"`
+                : 'No items found matching your filters'}
+            </p>
+            {items.length === 0 ? (
+              <Button onClick={onAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Item
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={onClearFilters}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Initial Delete Confirmation Dialog */}
