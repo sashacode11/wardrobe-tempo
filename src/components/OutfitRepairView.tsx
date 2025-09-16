@@ -1,21 +1,31 @@
-// components/OutfitRepairView.tsx - Full-screen overlay for fixing incomplete outfits
-import React, { useState, useMemo } from 'react';
+// OutfitRepairView.tsx - Simplified to match MyOutfits pattern
+import React, { useState } from 'react';
 import {
   X,
   AlertTriangle,
-  Plus,
   Trash2,
   CheckCircle,
   Shirt,
-  Search,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useWardrobe } from '../contexts/WardrobeContext';
-import { OutfitWithItems } from '../contexts/WardrobeContext';
-import { ClothingItemType } from '../types';
+import { OutfitWithItems } from '../types';
+import { useMultiselect } from '../hooks/useMultiSelect';
+import OutfitActions from './common/OutfitActions';
+import OutfitBuilder from './OutfitBuilder';
 import { supabase } from '../lib/supabaseClient';
 
 interface OutfitRepairViewProps {
@@ -23,104 +33,59 @@ interface OutfitRepairViewProps {
 }
 
 const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
-  const {
-    incompleteOutfits,
-    incompleteCount,
-    wardrobeItems,
-    refreshOutfits,
-    removeOutfit,
-  } = useWardrobe();
+  const { incompleteOutfits, incompleteCount, refreshOutfits, removeOutfit } =
+    useWardrobe();
 
-  const [selectedOutfit, setSelectedOutfit] = useState<OutfitWithItems | null>(
+  // OutfitBuilder state (same as MyOutfits)
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
     null
   );
-  const [selectedReplacements, setSelectedReplacements] = useState<
-    ClothingItemType[]
-  >([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [fixingOutfit, setFixingOutfit] = useState<string | null>(null);
   const [deletingOutfit, setDeletingOutfit] = useState<string | null>(null);
-  const [isRepairing, setIsRepairing] = useState(false);
 
-  // Filter available items for replacement suggestions
-  const availableItems = useMemo(() => {
-    if (!selectedOutfit) return [];
+  // Multiselect functionality using the reusable hook
+  const multiselect = useMultiselect<OutfitWithItems>({
+    onDelete: async outfitIds => {
+      // Delete outfit_items first, then outfits
+      const { error: outfitItemsError } = await supabase
+        .from('outfit_items')
+        .delete()
+        .in('outfit_id', outfitIds);
 
-    const query = searchQuery.toLowerCase();
-    return wardrobeItems.filter(item => {
-      // Don't show items already in the outfit
-      const isAlreadyInOutfit = selectedOutfit.items.some(
-        outfitItem => outfitItem.id === item.id
-      );
-      if (isAlreadyInOutfit) return false;
+      if (outfitItemsError) throw new Error('Failed to delete outfit items');
 
-      // Apply search filter
-      if (
-        searchQuery &&
-        !item.name?.toLowerCase().includes(query) &&
-        !item.category?.toLowerCase().includes(query) &&
-        !item.color?.toLowerCase().includes(query)
-      ) {
-        return false;
+      const { error: outfitsError } = await supabase
+        .from('outfits')
+        .delete()
+        .in('id', outfitIds);
+
+      if (outfitsError) throw new Error('Failed to delete outfits');
+    },
+    onSuccess: deletedIds => {
+      deletedIds.forEach(id => removeOutfit(id));
+
+      // If we were editing one of the deleted outfits, close the editor
+      if (editingOutfit && deletedIds.includes(editingOutfit.id)) {
+        setEditingOutfit(null);
+        setShowOutfitBuilder(false);
       }
+    },
+    onError: error => {
+      console.error('Bulk delete failed:', error);
+    },
+  });
 
-      return true;
-    });
-  }, [wardrobeItems, selectedOutfit, searchQuery]);
-
-  // Group available items by category for better organization
-  const itemsByCategory = useMemo(() => {
-    const grouped: Record<string, ClothingItemType[]> = {};
-    availableItems.forEach(item => {
-      const category = item.category || 'Other';
-      if (!grouped[category]) grouped[category] = [];
-      grouped[category].push(item);
-    });
-    return grouped;
-  }, [availableItems]);
-
-  const handleSelectReplacement = (item: ClothingItemType) => {
-    setSelectedReplacements(prev =>
-      prev.find(r => r.id === item.id)
-        ? prev.filter(r => r.id !== item.id)
-        : [...prev, item]
-    );
+  // Handle edit outfit (same as MyOutfits)
+  const handleEditOutfit = (outfit: OutfitWithItems) => {
+    setEditingOutfit(outfit);
+    setShowOutfitBuilder(true);
   };
 
-  const handleRepairOutfit = async () => {
-    if (!selectedOutfit || selectedReplacements.length === 0) return;
-
-    try {
-      setIsRepairing(true);
-
-      // Add each selected item to the outfit
-      for (const item of selectedReplacements) {
-        await supabase.from('outfit_items').insert({
-          outfit_id: selectedOutfit.id,
-          clothing_item_id: parseInt(item.id),
-        });
-      }
-
-      // Reset state
-      setSelectedOutfit(null);
-      setSelectedReplacements([]);
-      setSearchQuery('');
-
-      // Refresh to get updated data
-      await refreshOutfits();
-    } catch (error) {
-      console.error('Error repairing outfit:', error);
-    } finally {
-      setIsRepairing(false);
-    }
-  };
-
-  // Handle deleting outfit
+  // Handle single delete (same as MyOutfits)
   const handleDeleteOutfit = async (outfitId: string) => {
     try {
       setDeletingOutfit(outfitId);
 
-      // Delete outfit_items first
       const { error: outfitItemsError } = await supabase
         .from('outfit_items')
         .delete()
@@ -128,7 +93,6 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
 
       if (outfitItemsError) throw outfitItemsError;
 
-      // Delete outfit
       const { error: outfitError } = await supabase
         .from('outfits')
         .delete()
@@ -136,13 +100,11 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
 
       if (outfitError) throw outfitError;
 
-      // Update local state
       removeOutfit(outfitId);
 
-      // If we were editing this outfit, close the editor
-      if (selectedOutfit?.id === outfitId) {
-        setSelectedOutfit(null);
-        setSelectedReplacements([]);
+      if (editingOutfit?.id === outfitId) {
+        setEditingOutfit(null);
+        setShowOutfitBuilder(false);
       }
     } catch (error) {
       console.error('Error deleting outfit:', error);
@@ -151,30 +113,143 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
     }
   };
 
-  const handleAddItemToOutfit = async (outfitId: string, itemId: string) => {
-    try {
-      setFixingOutfit(outfitId);
+  // OutfitCard component (simplified version of MyOutfits card)
+  const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
+    const isSelected = multiselect.selectedItems.has(outfit.id);
+    const itemCount = outfit.items?.length || 0;
 
-      // Add item to outfit_items table
-      const { error } = await supabase.from('outfit_items').insert({
-        outfit_id: outfitId,
-        clothing_item_id: parseInt(itemId),
-      });
+    return (
+      <div className="relative">
+        {/* Selection checkbox */}
+        {multiselect.isSelectionMode && (
+          <div className="absolute top-2 md:top-3 right-2 md:right-3 z-10">
+            <div
+              className={`w-7 h-7 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-green-500 border-green-500'
+                  : 'border-gray-300 bg-white hover:border-gray-400'
+              }`}
+              onClick={() => multiselect.toggleItemSelection(outfit.id)}
+            >
+              {isSelected && <Check className="h-4 w-4 text-white" />}
+            </div>
+          </div>
+        )}
 
-      if (error) throw error;
+        <Card
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 ${
+            multiselect.isSelectionMode && isSelected
+              ? 'ring-2 ring-green-500 ring-offset-2'
+              : ''
+          }`}
+        >
+          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                  {outfit.name}
+                </CardTitle>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge
+                    variant="secondary"
+                    className="bg-gray-100 text-gray-700 text-xs"
+                  >
+                    {itemCount} items
+                  </Badge>
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Incomplete
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Created:{' '}
+                  {new Date(outfit.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
 
-      // Refresh outfits to get updated data
-      await refreshOutfits();
-    } catch (error) {
-      console.error('Error adding item to outfit:', error);
-    } finally {
-      setFixingOutfit(null);
-    }
+              {/* Action buttons (same as MyOutfits) */}
+              {!multiselect.isSelectionMode && (
+                <div className="group-hover:opacity-100 transition-opacity duration-200 ml-3">
+                  <OutfitActions
+                    onView={() => {}} // No view action needed for repair
+                    onEdit={() => handleEditOutfit(outfit)}
+                    onDelete={() => handleDeleteOutfit(outfit.id)}
+                    viewTitle="View outfit details"
+                    editTitle="Edit outfit"
+                    deleteTitle="Delete outfit"
+                    showView={false} // Hide view button for repair interface
+                  />
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-0 pb-6 py-2">
+            {/* Items preview */}
+            {itemCount > 0 ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  {outfit.items.slice(0, 3).map((item, index) => (
+                    <div key={index} className="group/item relative">
+                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
+                        <img
+                          src={item.image_url || ''}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="mt-1 text-center">
+                        <p className="text-xs font-medium text-gray-700 capitalize truncate">
+                          {item.category}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {itemCount > 3 && (
+                  <p className="text-xs text-gray-500 text-center">
+                    +{itemCount - 3} more items
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Shirt className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="text-gray-500 text-xs font-medium">
+                  No items in this outfit
+                </p>
+              </div>
+            )}
+
+            {/* Occasions */}
+            {outfit.occasions && outfit.occasions.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-3">
+                {outfit.occasions.slice(0, 2).map((occasion, index) => (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="text-xs bg-white border-gray-300"
+                  >
+                    {occasion}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   if (incompleteCount === 0) {
     return (
-      <div className="fixed inset-0 bg-background z-50 overflow-hidden">
+      <div className="fixed inset-0 bg-background z-50 overflow-hidden pb-20 md:pb-0">
         <div className="h-full flex flex-col items-center justify-center p-6">
           <div className="max-w-md text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -195,19 +270,19 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-hidden">
+    <div className="fixed inset-0 bg-background z-50 overflow-hidden pb-20 md:pb-0">
       {/* Header */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b z-10 px-6 py-6">
+      <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b z-10 px-4 md:px-6 py-4 md:py-6">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-6">
-            <div className="p-3 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl shadow-sm">
-              <AlertTriangle className="h-7 w-7 text-amber-600" />
+          <div className="flex items-center gap-3 md:gap-6">
+            <div className="p-2 md:p-3 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg md:rounded-xl shadow-sm">
+              <AlertTriangle className="h-5 w-5 md:h-7 md:w-7 text-amber-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 Fix Incomplete Outfits
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm md:text-base">
                 {incompleteCount} outfit{incompleteCount !== 1 ? 's' : ''} need
                 attention
               </p>
@@ -216,394 +291,147 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
           <Button
             variant="ghost"
             onClick={onClose}
-            size="lg"
-            className="rounded-full"
+            size="sm"
+            className="rounded-full p-2 md:p-3"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Panel - Incomplete Outfits List */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+      {!showOutfitBuilder ? (
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+            {/* Error display */}
+            {multiselect.error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+                <p className="text-red-800 text-sm font-medium">
+                  {multiselect.error}
+                </p>
+                <button
+                  onClick={() => multiselect.setError(null)}
+                  className="text-red-600 hover:text-red-800 hover:underline text-sm mt-2 font-medium transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Header Section (same structure as MyOutfits) */}
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
+                    <AlertTriangle className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-red-900">
-                      {incompleteCount} Incomplete Outfits
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      Incomplete Outfits
                     </h2>
-                    <p className="text-red-700 text-sm">
-                      Select an outfit to add items
+                    <p className="text-sm font-medium text-gray-600 mt-1">
+                      {incompleteCount} outfit{incompleteCount !== 1 ? 's' : ''}{' '}
+                      need{incompleteCount === 1 ? 's' : ''} fixing
                     </p>
                   </div>
                 </div>
               </div>
 
-              <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <Shirt className="h-6 w-6 text-blue-600" />
-                    Outfits to Fix
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 max-h-96 overflow-y-auto">
-                  {incompleteOutfits.map(outfit => (
-                    <div
-                      key={outfit.id}
-                      className={`group p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        selectedOutfit?.id === outfit.id
-                          ? 'border-blue-500 bg-blue-50 shadow-lg'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                      onClick={() => {
-                        setSelectedOutfit(outfit);
-                        setSelectedReplacements([]);
-                        setSearchQuery('');
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 truncate text-lg">
-                            {outfit.name}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Badge
-                              variant="secondary"
-                              className="bg-gray-100 text-gray-700"
-                            >
-                              {outfit.items?.length || 0} items
-                            </Badge>
-                            <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              Incomplete
-                            </Badge>
-                          </div>
-                          {outfit.occasions && outfit.occasions.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {outfit.occasions
-                                .slice(0, 2)
-                                .map((occasion, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="outline"
-                                    className="text-xs bg-white border-gray-300"
-                                  >
-                                    {occasion}
-                                  </Badge>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteOutfit(outfit.id);
-                          }}
-                          disabled={deletingOutfit === outfit.id}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          {deletingOutfit === outfit.id ? (
-                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-
-                      {/* Quick add suggestions */}
-                      {outfit.items && outfit.items.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-gray-100">
-                          <div className="flex flex-wrap gap-2">
-                            {outfit.items.slice(0, 3).map((item, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-2 text-xs bg-gray-50 rounded-lg px-2 py-1"
-                              >
-                                <span className="truncate max-w-16">
-                                  {item.name}
-                                </span>
-                                <span className="text-gray-500">
-                                  ({item.category})
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Panel - Repair Interface */}
-            <div className="space-y-6">
-              {selectedOutfit ? (
-                <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-xl text-blue-900">
-                      Repair: {selectedOutfit.name}
-                    </CardTitle>
-                    <div className="flex items-center gap-3 mt-3">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder="Search for items to add..."
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          className="pl-10 bg-white border-gray-200 focus:ring-2 focus:ring-blue-500"
-                        />
-                        <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Current Items */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        Current Items
-                        <Badge variant="secondary" className="text-xs">
-                          {selectedOutfit.items?.length || 0}
-                        </Badge>
-                      </h4>
-                      {selectedOutfit.items &&
-                      selectedOutfit.items.length > 0 ? (
-                        <div className="grid grid-cols-3 gap-3">
-                          {selectedOutfit.items.map(item => (
-                            <div
-                              key={item.id}
-                              className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-200"
-                            >
-                              <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden shadow-sm">
-                                {item.image_url ? (
-                                  <img
-                                    src={item.image_url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Shirt className="h-8 w-8 text-gray-400" />
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-xs font-medium truncate text-gray-900">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-gray-600 capitalize mt-1">
-                                {item.category}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                          <Shirt className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                          <p className="text-gray-500 text-sm font-medium">
-                            This outfit has no items yet
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Selected Items to Add */}
-                    {selectedReplacements.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                          Items to Add
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">
-                            {selectedReplacements.length}
-                          </Badge>
-                        </h4>
-                        <div className="grid grid-cols-3 gap-3">
-                          {selectedReplacements.map(item => (
-                            <div
-                              key={item.id}
-                              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 text-center relative border border-blue-200"
-                            >
-                              <button
-                                onClick={() => handleSelectReplacement(item)}
-                                className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-blue-700 transition-colors shadow-lg"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                              <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden shadow-sm">
-                                {item.image_url ? (
-                                  <img
-                                    src={item.image_url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Shirt className="h-8 w-8 text-gray-400" />
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-xs font-medium truncate text-blue-900">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-blue-700 capitalize mt-1">
-                                {item.category}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Available Items */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                        Available Items
-                      </h4>
-                      <div className="max-h-72 overflow-y-auto space-y-4 bg-gray-50 rounded-xl p-4">
-                        {Object.entries(itemsByCategory).length > 0 ? (
-                          Object.entries(itemsByCategory).map(
-                            ([category, items]) => (
-                              <div key={category}>
-                                <h5 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                  {category}
-                                  <Badge variant="outline" className="text-xs">
-                                    {items.length}
-                                  </Badge>
-                                </h5>
-                                <div className="grid grid-cols-4 gap-3">
-                                  {items.map(item => {
-                                    const isSelected =
-                                      selectedReplacements.some(
-                                        r => r.id === item.id
-                                      );
-                                    return (
-                                      <div
-                                        key={item.id}
-                                        className={`relative cursor-pointer rounded-xl p-2 transition-all duration-200 ${
-                                          isSelected
-                                            ? 'bg-blue-100 border-2 border-blue-500 shadow-lg scale-105'
-                                            : 'bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-md'
-                                        }`}
-                                        onClick={() =>
-                                          handleSelectReplacement(item)
-                                        }
-                                      >
-                                        {isSelected && (
-                                          <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
-                                            <Plus className="h-3 w-3" />
-                                          </div>
-                                        )}
-                                        <div className="aspect-square bg-gray-100 rounded-lg mb-2 overflow-hidden">
-                                          {item.image_url ? (
-                                            <img
-                                              src={item.image_url}
-                                              alt={item.name}
-                                              className="w-full h-full object-cover"
-                                            />
-                                          ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                              <Shirt className="h-6 w-6 text-gray-400" />
-                                            </div>
-                                          )}
-                                        </div>
-                                        <p className="text-xs font-medium truncate text-center">
-                                          {item.name}
-                                        </p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )
-                          )
-                        ) : (
-                          <div className="text-center py-8">
-                            <Search className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                            <p className="text-gray-500 text-sm font-medium">
-                              {searchQuery
-                                ? `No items found matching "${searchQuery}"`
-                                : 'No items available to add'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4 pt-4 border-t border-gray-200">
-                      <Button
-                        onClick={handleRepairOutfit}
-                        disabled={
-                          selectedReplacements.length === 0 || isRepairing
-                        }
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg"
-                        size="lg"
-                      >
-                        {isRepairing ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Adding Items...
-                          </div>
-                        ) : (
-                          `Add ${selectedReplacements.length} Item${
-                            selectedReplacements.length !== 1 ? 's' : ''
-                          }`
-                        )}
-                      </Button>
+              <div className="flex items-center gap-3">
+                {/* Selection Controls (same as MyOutfits) */}
+                <div className="flex items-center gap-2">
+                  {multiselect.isSelectionMode ? (
+                    <>
                       <Button
                         variant="outline"
-                        onClick={() => handleDeleteOutfit(selectedOutfit.id)}
-                        disabled={deletingOutfit === selectedOutfit.id}
-                        className="text-red-600 border-red-300 hover:bg-red-50 font-semibold py-3 px-6 rounded-xl"
-                        size="lg"
+                        size="sm"
+                        onClick={
+                          multiselect.selectedCount === incompleteOutfits.length
+                            ? multiselect.deselectAllItems
+                            : () =>
+                                multiselect.selectAllItems(incompleteOutfits)
+                        }
+                        className="text-xs px-2 md:px-3"
                       >
-                        {deletingOutfit === selectedOutfit.id
-                          ? 'Deleting...'
-                          : 'Delete'}
+                        {multiselect.selectedCount === incompleteOutfits.length
+                          ? 'Deselect All'
+                          : 'Select All'}
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-                  <CardContent className="flex items-center justify-center py-24">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Shirt className="h-10 w-10 text-blue-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Select an Outfit to Repair
-                      </h3>
-                      <p className="text-gray-600">
-                        Choose an incomplete outfit from the list to start
-                        adding items
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                      {multiselect.hasSelection && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => multiselect.setShowDeleteDialog(true)}
+                          className="text-xs px-2 md:px-3"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete ({multiselect.selectedCount})
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={multiselect.toggleSelectionMode}
+                        className="text-xs px-2 md:px-3"
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={multiselect.toggleSelectionMode}
+                      className="text-xs px-2 md:px-3"
+                    >
+                      Select Multiple
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Outfits Grid (same as MyOutfits) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
+              {incompleteOutfits.map(outfit => (
+                <OutfitCard key={outfit.id} outfit={outfit} />
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* OutfitBuilder (same as MyOutfits) */
+        <OutfitBuilder
+          isOpen={true}
+          editingOutfit={editingOutfit}
+          onClose={() => {
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+          onEditComplete={() => {
+            refreshOutfits();
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+          onOutfitSaved={() => {
+            refreshOutfits();
+            setShowOutfitBuilder(false);
+            setEditingOutfit(null);
+          }}
+        />
+      )}
 
       {/* Footer */}
-      <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t p-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="text-sm">
+      <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t p-4 md:p-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+          <div className="text-sm order-2 sm:order-1">
             {incompleteCount === 0 ? (
               <div className="flex items-center gap-2 text-green-600 font-medium">
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
                 All outfits are complete!
               </div>
             ) : (
-              <span className="text-gray-600 font-medium">
+              <span className="text-gray-600 font-medium text-center sm:text-left">
                 {incompleteCount} outfit{incompleteCount !== 1 ? 's' : ''} still
                 need attention
               </span>
@@ -612,12 +440,51 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
           <Button
             onClick={onClose}
             size="lg"
-            className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg"
+            className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold px-6 md:px-8 py-3 rounded-lg md:rounded-xl shadow-lg order-1 sm:order-2 w-full sm:w-auto"
           >
             Done
           </Button>
         </div>
       </div>
+
+      {/* Bulk Delete Confirmation Dialog (same as MyOutfits) */}
+      <AlertDialog
+        open={multiselect.showDeleteDialog}
+        onOpenChange={multiselect.setShowDeleteDialog}
+      >
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+              Delete Selected Outfits
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              Are you sure you want to delete {multiselect.selectedCount} outfit
+              {multiselect.selectedCount !== 1 ? 's' : ''}? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="px-6">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={multiselect.deleteSelectedItems}
+              className="bg-red-600 hover:bg-red-700 text-white px-6"
+              disabled={multiselect.deletingItems}
+            >
+              {multiselect.deletingItems ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Deleting...
+                </div>
+              ) : (
+                <>
+                  Delete {multiselect.selectedCount} outfit
+                  {multiselect.selectedCount !== 1 ? 's' : ''}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
