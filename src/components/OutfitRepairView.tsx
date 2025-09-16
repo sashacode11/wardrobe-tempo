@@ -320,23 +320,6 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
 
             {/* Header Section (same structure as MyOutfits) */}
             <div className="flex flex-col md:flex-row items-center justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
-                    <AlertTriangle className="h-8 w-8 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      Incomplete Outfits
-                    </h2>
-                    <p className="text-sm font-medium text-gray-600 mt-1">
-                      {incompleteCount} outfit{incompleteCount !== 1 ? 's' : ''}{' '}
-                      need{incompleteCount === 1 ? 's' : ''} fixing
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <div className="flex items-center gap-3">
                 {/* Selection Controls (same as MyOutfits) */}
                 <div className="flex items-center gap-2">
