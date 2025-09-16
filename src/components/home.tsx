@@ -579,6 +579,10 @@ const Home = () => {
                     onValueChange={setActiveCategory}
                   >
                     <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto">
+                      <TabsTrigger key="all" value="all" className="capitalize">
+                        All
+                      </TabsTrigger>
+
                       {categories.map(category => (
                         <TabsTrigger
                           key={category}
