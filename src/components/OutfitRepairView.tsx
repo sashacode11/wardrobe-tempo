@@ -270,7 +270,8 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-hidden pb-20 md:pb-0">
+    <div className="fixed inset-0 bg-background z-50 pb-20 md:pb-0 flex flex-col">
+      {' '}
       {/* Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b z-10 px-4 md:px-6 py-4 md:py-6">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
@@ -298,7 +299,6 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
           </Button>
         </div>
       </div>
-
       {/* Content */}
       {!showOutfitBuilder ? (
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -319,7 +319,7 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
             )}
 
             {/* Header Section (same structure as MyOutfits) */}
-            <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex flex-row items-center justify-end sm:justify-between">
               <div className="flex items-center gap-3">
                 {/* Selection Controls (same as MyOutfits) */}
                 <div className="flex items-center gap-2">
@@ -403,11 +403,10 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
           }}
         />
       )}
-
       {/* Footer */}
-      <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t p-4 md:p-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
-          <div className="text-sm order-2 sm:order-1">
+      <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t p-4 py-1 md:p-6">
+        <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-3 sm:gap-0">
+          <div className="text-sm order-1">
             {incompleteCount === 0 ? (
               <div className="flex items-center gap-2 text-green-600 font-medium">
                 <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
@@ -423,13 +422,12 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
           <Button
             onClick={onClose}
             size="lg"
-            className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold px-6 md:px-8 py-3 rounded-lg md:rounded-xl shadow-lg order-1 sm:order-2 w-full sm:w-auto"
+            className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold px-6 md:px-8 py-3 rounded-lg md:rounded-xl shadow-lg order-1 sm:order-2 w-auto"
           >
             Done
           </Button>
         </div>
       </div>
-
       {/* Bulk Delete Confirmation Dialog (same as MyOutfits) */}
       <AlertDialog
         open={multiselect.showDeleteDialog}
