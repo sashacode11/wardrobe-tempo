@@ -875,19 +875,23 @@ const Home = () => {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
-        <div className="flex items-center justify-around py-2 px-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-50 shadow-lg">
+        <div className="flex items-center justify-around px-1 py-1 pb-safe">
           {/* Home button */}
           <button
             onClick={() => setActiveTab('wardrobe')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'wardrobe'
-                ? 'text-blue-600'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'text-blue-600 bg-blue-50 scale-105'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
             }`}
           >
-            <HomeIcon className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Home</span>
+            <HomeIcon
+              className={`h-5 w-5 mb-1 transition-transform ${
+                activeTab === 'wardrobe' ? 'scale-110' : ''
+              }`}
+            />
+            <span className="text-[10px] font-medium leading-tight">Home</span>
           </button>
 
           {/* Filter Button */}
@@ -900,59 +904,77 @@ const Home = () => {
                 setTimeout(() => setShowFilterModal(true), 300);
               }
             }}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors relative ${
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] relative ${
               activeFilterCount > 0
-                ? 'text-blue-600'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
             }`}
           >
-            <Filter className="h-5 w-5 mb-1" />
-            {activeFilterCount > 0 && (
-              <span
-                className="absolute -top-0 -right-0 bg-blue-600 text-white text-xs font-medium 
-                  w-4 h-4 rounded-full flex items-center justify-center 
-                  ring-2 ring-background z-10"
-              >
-                {activeFilterCount}
-              </span>
-            )}
-            <span className="text-xs font-medium">Filter</span>
+            <div className="relative">
+              <Filter
+                className={`h-5 w-5 mb-1 transition-transform ${
+                  activeFilterCount > 0 ? 'scale-110' : ''
+                }`}
+              />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium leading-tight">
+              Filter
+            </span>
           </button>
 
-          {/* Add item button */}
+          {/* Add item button - Make it stand out */}
           <button
             onClick={handleAddItemClick}
-            className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-muted-foreground"
+            className="flex flex-col items-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[60px] text-white bg-gradient-to-t from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 active:scale-95 shadow-lg"
             type="button"
           >
-            <Plus className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Add Item</span>
+            <div className="bg-white/20 rounded-full p-1 mb-1">
+              <Plus className="h-4 w-4" />
+            </div>
+            <span className="text-[10px] font-medium leading-tight">Add</span>
           </button>
 
-          {/* create outfit */}
+          {/* Create outfit */}
           <button
             onClick={() => setActiveTab('outfit')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'outfit'
-                ? 'text-blue-600'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'text-blue-600 bg-blue-50 scale-105'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
             }`}
           >
-            <Package className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Create</span>
+            <Package
+              className={`h-5 w-5 mb-1 transition-transform ${
+                activeTab === 'outfit' ? 'scale-110' : ''
+              }`}
+            />
+            <span className="text-[10px] font-medium leading-tight">
+              Create
+            </span>
           </button>
 
           {/* My outfits */}
           <button
             onClick={() => setActiveTab('my-outfits')}
-            className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'my-outfits'
-                ? 'text-blue-600'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'text-blue-600 bg-blue-50 scale-105'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
             }`}
           >
-            <Shirt className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">My Outfits</span>
+            <Shirt
+              className={`h-5 w-5 mb-1 transition-transform ${
+                activeTab === 'my-outfits' ? 'scale-110' : ''
+              }`}
+            />
+            <span className="text-[10px] font-medium leading-tight">
+              Outfits
+            </span>
           </button>
         </div>
       </div>
