@@ -12,6 +12,9 @@ import {
   Package,
   Filter,
   X,
+  Globe,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -31,6 +34,7 @@ import { useWardrobe } from '../contexts/WardrobeContext';
 import UnifiedSearchResults from './SearchResults';
 import OutfitRepairView from './OutfitRepairView';
 import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
+import LanguageSelector from './LanguageSelector';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -42,6 +46,29 @@ const Home = () => {
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const [showRepairView, setShowRepairView] = useState(false);
+
+  /* Global languages */
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('en'); // Default to English
+
+  const handleLanguageChange = language => {
+    setCurrentLanguage(language);
+    setShowLanguageMenu(false);
+    // Add your language change logic here
+    // e.g., i18n.changeLanguage(language);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (!event.target.closest('.language-selector')) {
+        setShowLanguageMenu(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   // 🔹 Use global context instead of local state
   const {
     wardrobeItems: items,
@@ -283,6 +310,8 @@ const Home = () => {
                 )}
               </div>
             )}
+
+            <LanguageSelector variant="desktop" />
 
             <button
               onClick={handleAddItemClick}
