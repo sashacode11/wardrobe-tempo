@@ -240,7 +240,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       )}
 
       {/* Selection Controls */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 px-2">
         <div className="text-sm text-gray-600">
           {items.length} item{items.length !== 1 ? 's' : ''}
         </div>
