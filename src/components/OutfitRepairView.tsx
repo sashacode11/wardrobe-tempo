@@ -152,7 +152,7 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
                 <div className="flex items-center gap-2 mt-1">
                   <Badge
                     variant="secondary"
-                    className="bg-gray-100 text-gray-700 text-xs"
+                    className="bg-gray-100 text-gray-700 text-xs px-1"
                   >
                     {itemCount} items
                   </Badge>
