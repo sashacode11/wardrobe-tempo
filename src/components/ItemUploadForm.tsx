@@ -296,6 +296,12 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       return;
     }
 
+    // if (!itemData.location) {
+    //   toast.warning(
+    //     'Pro tip: Add a location to easily find this item in your closet'
+    //   );
+    // }
+
     if (currentTag.trim()) {
       toast.warning('Please press Enter or click Add to include the tag.');
       return;
@@ -749,6 +755,12 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   }
                   placeholder="E.g., Bedroom closet, Dresser drawer 2"
                 />
+                {!itemData.location && (
+                  <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                    💡 Tip: Adding a location helps you find this item quickly
+                    in your wardrobe
+                  </div>
+                )}
               </div>
 
               <div>
