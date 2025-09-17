@@ -15,6 +15,7 @@ import {
   Globe,
   ChevronDown,
   Check,
+  Settings,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -373,42 +374,47 @@ const Home = () => {
               <div className="flex flex-col h-full">
                 <div className="py-4 px-2">
                   <div className="flex items-center justify-between border-b">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="p-2"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="p-2"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
 
-                    {user && (
-                      <div className="p-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {user.user_metadata.full_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
+                      {user && (
+                        <div className="p-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                              <User className="h-5 w-5 text-primary-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {user.user_metadata.full_name}
+                              </p>
+                              {/* <p className="text-xs text-muted-foreground truncate">
                               {user.email}
-                            </p>
+                            </p> */}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
+                    {/* Settings Icon */}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setShowMobileMenu(false);
+                        // Handle settings click - you can add your settings logic here
+                        console.log('Settings clicked');
+                        // setShowSettings(true); // or navigate to settings
                       }}
                       className="p-2 ml-2"
                     >
-                      <Headphones className="h-5 w-5" />
+                      <Settings className="h-6 w-6 text-muted-foreground hover:text-foreground" />
                     </Button>
                   </div>
                 </div>
@@ -417,16 +423,16 @@ const Home = () => {
                   {user ? (
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-4">
+                        {/* <h3 className="text-lg font-semibold text-foreground mb-4">
                           Shortcut
-                        </h3>
+                        </h3> */}
                         <div className="grid grid-cols-4 gap-4">
                           <button
                             onClick={handleAddItemClick}
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Plus className="h-5 w-5 text-blue-400" />
+                              <Plus className="h-5 w-5" />
                             </div>
                             <span className="text-xs sm:text-sm font-medium text-gray-700">
                               Add Item
@@ -441,7 +447,7 @@ const Home = () => {
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Package className="h-5 w-5 text-blue-400" />
+                              <Package className="h-5 w-5" />
                             </div>
                             <span className="text-xs sm:text-sm font-medium text-gray-700">
                               Create Outfit
@@ -456,10 +462,24 @@ const Home = () => {
                             className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Shirt className="h-5 w-5 text-blue-400" />
+                              <Shirt className="h-5 w-5" />
                             </div>
                             <span className="text-xs sm:text-sm font-medium text-gray-700">
                               My Outfits
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setShowMobileMenu(false);
+                            }}
+                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                              <Headphones className="h-5 w-5" />{' '}
+                            </div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-700">
+                              Customer Service
                             </span>
                           </button>
                         </div>
