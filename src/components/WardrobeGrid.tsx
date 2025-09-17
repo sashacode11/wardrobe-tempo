@@ -1,6 +1,6 @@
-// WardrobeGrid.tsx - Enhanced with outfit impact warning
+// WardrobeGrid.tsx - Fixed filter button implementation
 import React, { useState } from 'react';
-import { Plus, AlertTriangle, Shirt } from 'lucide-react';
+import { Plus, AlertTriangle, Shirt, Filter } from 'lucide-react';
 import { ClothingItemType } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
@@ -31,6 +31,7 @@ interface WardrobeGridProps {
   activeCategory: string;
   onClearFilters: () => void;
   searchQuery?: string;
+  onShowFilterModal?: () => void;
 }
 
 const WardrobeGrid: React.FC<WardrobeGridProps> = ({
@@ -43,6 +44,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
   activeCategory,
   onClearFilters,
   searchQuery = '',
+  onShowFilterModal, // Add this prop
 }) => {
   // Get global context
   const { removeItem, markOutfitsAsIncomplete, getAffectedOutfits } =
@@ -67,6 +69,14 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
     deselectAllItems,
     toggleSelectionMode,
   } = useMultiselect();
+
+  // Calculate active filters
+  const hasActiveFilters =
+    Object.values(activeFilters).some(value => value && value !== '') ||
+    activeCategory !== 'all';
+  const activeFilterCount =
+    Object.values(activeFilters).filter(value => value && value !== '').length +
+    (activeCategory !== 'all' ? 1 : 0);
 
   // Check outfit impact before showing delete confirmation
   const checkOutfitImpact = async (itemIds: string[]) => {
@@ -239,12 +249,45 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
         </div>
       )}
 
-      {/* Selection Controls */}
+      {/* count items and multiselect */}
       <div className="flex justify-between items-center mb-4 px-2">
+        {/* Left side: Filter button and item count */}
+        {/* <div className="flex items-center gap-8"> */}
+        {/* Filter button */}
+        <button
+          onClick={() => {
+            console.log('Filter button clicked', {
+              onShowFilterModal: typeof onShowFilterModal,
+            });
+            if (onShowFilterModal) {
+              onShowFilterModal();
+            } else {
+              console.error('onShowFilterModal is not defined');
+            }
+          }}
+          className={`hidden md:flex flex-row gap-1 items-center py-2 px-3 rounded-lg transition-colors ${
+            hasActiveFilters
+              ? 'text-blue-600'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+          }`}
+        >
+          <div className="relative">
+            <Filter className="h-5 w-5 mb-1" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-medium">Filter</span>
+        </button>
+        {/* </div> */}
         <div className="text-sm text-gray-600">
-          {items.length} item{items.length !== 1 ? 's' : ''}
+          {/* {items.length} item{items.length !== 1 ? 's' : ''} */}
+          You have {items.length} items totals
         </div>
 
+        {/* Right side: Selection controls */}
         <SelectionControls
           isSelectionMode={isSelectionMode}
           selectedCount={selectedItems.size}
@@ -257,7 +300,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       </div>
 
       {/* Clothing Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-grow px-2 w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-grow px-2 w-full !mt-2">
         {items.length > 0 ? (
           items.map(item => (
             <div key={item.id} className="relative">

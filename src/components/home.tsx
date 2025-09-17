@@ -553,7 +553,7 @@ const Home = () => {
                 // Show normal wardrobe content when not searching
                 <div className="space-y-4">
                   {/* Filter Button */}
-                  <button
+                  {/* <button
                     onClick={() => setShowFilterModal(true)}
                     className={`hidden md:flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
                       hasActiveFilters
@@ -570,7 +570,7 @@ const Home = () => {
                       )}
                     </div>
                     <span className="text-xs font-medium">Filter</span>
-                  </button>
+                  </button> */}
 
                   {/* Category Tabs */}
                   <Tabs
@@ -612,6 +612,7 @@ const Home = () => {
                       clearAllFilters();
                       setActiveCategory('all');
                     }}
+                    onShowFilterModal={() => setShowFilterModal(true)}
                   />
                 </div>
               )}
