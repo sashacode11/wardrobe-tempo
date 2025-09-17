@@ -161,14 +161,14 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
                     Incomplete
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                {/* <p className="text-xs text-gray-500 mt-1">
                   Created:{' '}
                   {new Date(outfit.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
                   })}
-                </p>
+                </p> */}
               </div>
 
               {/* Action buttons (same as MyOutfits) */}
@@ -217,7 +217,7 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-6">
+              <div className="text-center py-2 sm:py-6">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Shirt className="h-6 w-6 text-gray-400" />
                 </div>
@@ -301,7 +301,7 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
       </div>
       {/* Content */}
       {!showOutfitBuilder ? (
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-2 md:p-6">
           <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
             {/* Error display */}
             {multiselect.error && (

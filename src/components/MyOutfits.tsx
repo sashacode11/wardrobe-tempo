@@ -318,14 +318,14 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 <CardTitle className="text-l font-semibold text-gray-900 mb-1 truncate">
                   {outfit.name}
                 </CardTitle>
-                <p className="text-sm text-gray-500">
+                {/* <p className="text-sm text-gray-500">
                   Created:{' '}
                   {new Date(outfit.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
                   })}
-                </p>
+                </p> */}
               </div>
 
               {/* Action buttons with improved positioning */}
