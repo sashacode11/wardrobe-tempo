@@ -1,5 +1,5 @@
-// MyOutfits.tsx - Updated to use global context
-import React, { useState } from 'react';
+// MyOutfits.tsx - Fixed outfit creation handling
+import React, { useState, useEffect } from 'react';
 import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +57,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   // Local UI state
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
   const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
+  const [isCreatingNewOutfit, setIsCreatingNewOutfit] = useState(false);
+
+  // Note: Removed useEffect for refreshOutfits - relies on global context initialization
 
   // Get the final list of outfits to display (search results or all outfits)
   const displayedOutfits = hasSearchQuery ? outfitSearchResults : outfits;
@@ -99,8 +102,21 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     },
   });
 
+  // ✅ FIXED: Handle creating new outfit
+  const handleCreateNewOutfit = () => {
+    setIsCreatingNewOutfit(true);
+    setMyOutfitsEditingOutfit(null); // Ensure we're not editing
+    setShowOutfitBuilder(true);
+
+    // Call the parent's onCreateOutfit if provided
+    if (onCreateOutfit) {
+      onCreateOutfit();
+    }
+  };
+
   // Keep your original edit function exactly as it was
   const handleEditOutfit = (outfit: OutfitWithItems) => {
+    setIsCreatingNewOutfit(false);
     setMyOutfitsEditingOutfit(outfit);
     setShowOutfitBuilder(true);
   };
@@ -175,6 +191,35 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     }
   };
 
+  // ✅ FIXED: Handle outfit builder close with proper state cleanup
+  const handleOutfitBuilderClose = () => {
+    setShowOutfitBuilder(false);
+    setMyOutfitsEditingOutfit(null);
+    setIsCreatingNewOutfit(false);
+  };
+
+  // ✅ FIXED: Handle successful outfit save/update
+  const handleOutfitSaved = async () => {
+    console.log('Outfit saved successfully, refreshing outfits...');
+
+    // Refresh the outfits list to show the new/updated outfit
+    await refreshOutfits();
+
+    // Close the outfit builder
+    handleOutfitBuilderClose();
+  };
+
+  // ✅ FIXED: Handle successful outfit edit
+  const handleEditComplete = async () => {
+    console.log('Outfit edit completed, refreshing outfits...');
+
+    // Refresh the outfits list to show the updated outfit
+    await refreshOutfits();
+
+    // Close the outfit builder
+    handleOutfitBuilderClose();
+  };
+
   // Helper function to organize outfit items by category
   const organizeOutfitItems = (
     outfit: OutfitWithItems,
@@ -192,7 +237,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       organized[cat] = null;
     });
 
-    // Process each item
+    // ✅ FIXED: Handle multiple items per category properly
+    // For display purposes, just show the first item in each category
     outfit.outfit_items?.forEach(item => {
       const clothingItem = item.wardrobe_items;
       if (clothingItem) {
@@ -203,7 +249,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         );
 
         if (matchedCategory) {
-          organized[matchedCategory] = clothingItem;
+          // Only set if not already set (first item in category)
+          if (!organized[matchedCategory]) {
+            organized[matchedCategory] = clothingItem;
+          }
         } else {
           console.warn(`🔴 No match for category: "${clothingItem.category}"`);
         }
@@ -218,7 +267,34 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     outfit,
   }) => {
     const { categories } = useWardrobeItems();
-    const items = organizeOutfitItems(outfit, categories);
+
+    // ✅ FIXED: Group items by category for display
+    const itemsByCategory: Record<string, ClothingItemType[]> = {};
+
+    // Initialize categories
+    categories.forEach(cat => {
+      itemsByCategory[cat] = [];
+    });
+
+    // Group items by category
+    outfit.outfit_items?.forEach(item => {
+      const clothingItem = item.wardrobe_items;
+      if (clothingItem) {
+        const itemCategory = clothingItem.category.toLowerCase();
+        const matchedCategory = categories.find(
+          cat => cat.toLowerCase() === itemCategory
+        );
+
+        if (matchedCategory) {
+          itemsByCategory[matchedCategory].push(clothingItem);
+        }
+      }
+    });
+
+    // Filter out empty categories
+    const categoriesWithItems = Object.entries(itemsByCategory).filter(
+      ([category, items]) => items.length > 0
+    );
 
     return (
       <div className="space-y-6">
@@ -237,29 +313,32 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           </div>
         )}
 
-        {/* Outfit Items */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(items).map(
-            ([category, item]) =>
-              item && (
-                <div
-                  key={category}
-                  className="flex flex-col gap-2 p-1 bg-gray-50 hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex md:flex-col items-center gap-2">
-                    <div className="w-20 h-20 md:w-full md:h-auto bg-gray-100 flex-shrink-0 overflow-hidden">
+        {/* Outfit Items by Category */}
+        <div className="space-y-6">
+          {categoriesWithItems.map(([category, items]) => (
+            <div key={category} className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900 capitalize border-b border-gray-200 pb-2">
+                {category} ({items.length})
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {items.map(item => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg hover:shadow-sm transition-shadow"
+                  >
+                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                       <img
                         src={item.image_url || ''}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm truncate">
                         {item.name}
                       </p>
                       {item.color && (
-                        <p className="text-sm text-gray-600 capitalize mt-1">
+                        <p className="text-xs text-gray-600 capitalize mt-1">
                           {item.color}
                         </p>
                       )}
@@ -269,7 +348,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                             <Badge
                               key={index}
                               variant="outline"
-                              className="text-xs px-2 py-0.5"
+                              className="text-xs px-1 py-0.5"
                             >
                               {tag}
                             </Badge>
@@ -278,9 +357,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       )}
                     </div>
                   </div>
-                </div>
-              )
-          )}
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -296,6 +376,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       ([category, item]) => item !== null
     );
 
+    const totalItemCount = outfit.outfit_items?.length || 0;
+    const maxDisplayItems = 2;
+    const hasMoreItems = totalItemCount > maxDisplayItems;
+
     return (
       <div className="relative">
         {/* Selection checkbox */}
@@ -306,26 +390,18 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 ${
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 h-[280px] flex flex-col overflow-hidden ${
             isSelectionMode && isSelected
               ? 'ring-2 ring-blue-500 ring-offset-2'
               : ''
           }`}
         >
-          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4">
+          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-l font-semibold text-gray-900 mb-1 truncate">
                   {outfit.name}
                 </CardTitle>
-                {/* <p className="text-sm text-gray-500">
-                  Created:{' '}
-                  {new Date(outfit.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </p> */}
               </div>
 
               {/* Action buttons with improved positioning */}
@@ -344,54 +420,106 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             </div>
           </CardHeader>
 
-          <CardContent className="pt-0 pb-6 py-2">
-            {/* Items display with improved layout */}
+          <CardContent className="pt-0 pb-4 px-4 flex-1 flex flex-col overflow-hidden">
+            {/* Items display with fixed height */}
             {itemsWithContent.length > 0 ? (
-              <div className="space-y-0">
+              <div className="flex-1 flex flex-col">
                 {/* Item count indicator */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
                   <span className="text-sm font-medium text-gray-700">
-                    {itemsWithContent.length} item
-                    {itemsWithContent.length !== 1 ? 's' : ''}
+                    {totalItemCount} item{totalItemCount !== 1 ? 's' : ''}
                   </span>
+                  {hasMoreItems && (
+                    <div
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 cursor-pointer group/hint"
+                      onClick={() => handleView(outfit)}
+                    >
+                      <span className="text-xs font-medium">View all</span>
+                      <svg
+                        className="w-3 h-3 group-hover/hint:translate-x-0.5 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
-                {/* Items grid with better spacing */}
-                <div className="grid grid-cols-3 gap-3">
-                  {itemsWithContent.map(([category, item]) => (
-                    <div key={category} className="group/item relative">
-                      {/* Image container with better aspect ratio */}
-                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-100 shadow-sm group-hover/item:shadow-md transition-all duration-200">
-                        <img
-                          src={item.image_url || ''}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
-                        />
-                        {/* Overlay on hover */}
-                        <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
-                      </div>
+                {/* Items grid with fixed height container */}
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <div className="grid grid-cols-3 gap-2 h-full max-h-full">
+                    {itemsWithContent
+                      .slice(0, maxDisplayItems)
+                      .map(([category, item], index) => (
+                        <div
+                          key={category}
+                          className="group/item relative flex flex-col"
+                        >
+                          {/* Image container with consistent aspect ratio */}
+                          <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-100 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
+                            <img
+                              src={item.image_url || ''}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
+                            />
+                            {/* Overlay on hover */}
+                            <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
+                          </div>
 
-                      {/* Category label with better typography */}
-                      <div className="mt-2 text-center">
-                        <p className="text-xs font-medium text-gray-700 capitalize tracking-wide">
-                          {category}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate mt-0.5 max-w-full">
-                          {item.name}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                          {/* Category label with fixed height */}
+                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
+                            <p className="text-xs font-medium text-gray-700 capitalize tracking-wide leading-tight truncate">
+                              {category}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate leading-tight">
+                              {item.name}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+
+                    {/* Show "+X more" indicator if needed */}
+                    {hasMoreItems &&
+                      itemsWithContent.length > maxDisplayItems && (
+                        <div
+                          className="group/item relative cursor-pointer flex flex-col"
+                          onClick={() => handleView(outfit)}
+                        >
+                          <div className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 flex flex-col items-center justify-center hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-200 transition-all duration-200 flex-shrink-0">
+                            <span className="text-lg font-semibold text-blue-600">
+                              +{totalItemCount - maxDisplayItems}
+                            </span>
+                            <span className="text-xs text-blue-500 font-medium">
+                              more
+                            </span>
+                          </div>
+                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
+                            <p className="text-xs font-medium text-blue-600 truncate">
+                              View all
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">👔</span>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">👔</span>
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">
+                    No items in this outfit
+                  </p>
                 </div>
-                <p className="text-gray-500 text-sm font-medium">
-                  No items in this outfit
-                </p>
               </div>
             )}
           </CardContent>
@@ -483,9 +611,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 />
 
                 {/* Create button with gradient */}
-                {onCreateOutfit && !isSelectionMode && (
+                {!isSelectionMode && (
                   <Button
-                    onClick={onCreateOutfit}
+                    onClick={handleCreateNewOutfit}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                   >
                     <Plus className="h-5 w-5" />
@@ -557,14 +685,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       Create your first outfit by mixing and matching items from
                       your wardrobe
                     </p>
-                    {onCreateOutfit && (
-                      <Button
-                        onClick={onCreateOutfit}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
-                      >
-                        Create Your First Outfit
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handleCreateNewOutfit}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                    >
+                      Create Your First Outfit
+                    </Button>
                   </div>
                 )}
               </div>
@@ -578,25 +704,13 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           </div>
         )}
 
-        {/* Edit Modal */}
+        {/* ✅ FIXED: Outfit Builder with proper props */}
         {showOutfitBuilder && (
           <OutfitBuilder
-            isOpen={true}
-            editingOutfit={myOutfitsEditingOutfit}
-            onClose={() => {
-              setShowOutfitBuilder(false);
-              setMyOutfitsEditingOutfit(null);
-            }}
-            onEditComplete={() => {
-              refreshOutfits(); // Use global refresh
-              setShowOutfitBuilder(false);
-              setMyOutfitsEditingOutfit(null);
-            }}
-            onOutfitSaved={() => {
-              refreshOutfits(); // Use global refresh
-              setShowOutfitBuilder(false);
-              setMyOutfitsEditingOutfit(null);
-            }}
+            onClose={handleOutfitBuilderClose}
+            editingOutfit={isCreatingNewOutfit ? null : myOutfitsEditingOutfit}
+            onEditComplete={handleEditComplete}
+            onOutfitSaved={handleOutfitSaved}
           />
         )}
 

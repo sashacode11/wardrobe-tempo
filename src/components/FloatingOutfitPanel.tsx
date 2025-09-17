@@ -18,6 +18,24 @@ const FloatingOutfitPanel = ({
   setActiveCategory,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Get categories that have items
+  const categoriesWithItems = Object.entries(currentOutfit).filter(
+    ([category, items]) => items && items.length > 0
+  );
+
+  // Get all items flattened for mobile thumbnails
+  const allSelectedItems = Object.values(currentOutfit).flat();
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
 
   return (
     <>
@@ -38,61 +56,123 @@ const FloatingOutfitPanel = ({
         </div>
 
         {selectedItemsCount > 0 ? (
-          <div className="space-y-3">
-            {currentOutfit
-              .filter(outfitItem => outfitItem.item !== null)
-              .map(outfitItem => (
+          <div className="space-y-4">
+            {categoriesWithItems.map(([category, items]) => (
+              <div key={category} className="space-y-2">
+                {/* Category Header */}
                 <div
-                  key={outfitItem.category}
-                  className="flex items-center gap-4 p-3 bg-white/60 rounded-xl border border-slate-200/40 hover:bg-white/80 transition-all duration-300 group"
+                  className="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-white/40 transition-colors"
+                  onClick={() => toggleCategory(category)}
                 >
-                  <div className="relative w-16 h-16 flex-shrink-0">
-                    <img
-                      src={outfitItem.item.image_url}
-                      alt={outfitItem.item.name}
-                      className="w-full h-full object-cover rounded-lg shadow-sm"
-                    />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                      {category}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {items.length}
+                    </Badge>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                        {outfitItem.category}
-                      </span>
-                    </div>
-                    <h3 className="font-medium text-slate-800 truncate">
-                      {outfitItem.item.name}
-                    </h3>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {outfitItem.item.color && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs bg-white/80"
-                        >
-                          {outfitItem.item.color}
-                        </Badge>
-                      )}
-                      {Array.isArray(outfitItem.item.tags) &&
-                        outfitItem.item.tags.slice(0, 2).map(tag => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="text-xs bg-blue-100 text-blue-700"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setActiveCategory(category);
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-6"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                    {expandedCategories[category] ? (
+                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                    )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="flex-shrink-0 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                    onClick={() => handleRemoveItem(outfitItem.category)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-              ))}
+
+                {/* Category Items */}
+                {(expandedCategories[category] || items.length === 1) && (
+                  <div className="space-y-2 ml-4">
+                    {items.map(item => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-200/40 hover:bg-white/80 transition-all duration-300 group"
+                      >
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded-lg shadow-sm"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-slate-800 truncate text-sm">
+                            {item.name}
+                          </h3>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.color && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-white/80"
+                              >
+                                {item.color}
+                              </Badge>
+                            )}
+                            {Array.isArray(item.tags) &&
+                              item.tags.slice(0, 2).map(tag => (
+                                <Badge
+                                  key={tag}
+                                  variant="secondary"
+                                  className="text-xs bg-blue-100 text-blue-700"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                          onClick={() => handleRemoveItem(category, item.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Collapsed view for multiple items */}
+                {!expandedCategories[category] && items.length > 1 && (
+                  <div className="ml-4 flex -space-x-2">
+                    {items.slice(0, 3).map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="relative w-10 h-10 rounded-lg overflow-hidden border-2 border-white shadow-sm"
+                        style={{ zIndex: 10 - index }}
+                      >
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                    {items.length > 3 && (
+                      <div className="relative w-10 h-10 rounded-lg bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center">
+                        <span className="text-xs font-medium text-slate-600">
+                          +{items.length - 3}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -161,23 +241,21 @@ const FloatingOutfitPanel = ({
 
             {/* Content Row */}
             {selectedItemsCount > 0 ? (
-              // When items are selected - show count and thumbnails
               <>
                 <div className="flex justify-between items-center">
                   {/* Images on the left */}
                   <div className="flex -space-x-1">
-                    {currentOutfit
-                      .filter(outfitItem => outfitItem.item !== null)
+                    {allSelectedItems
                       .slice(0, 4) // Show max 4 items
-                      .map((outfitItem, index) => (
+                      .map((item, index) => (
                         <div
-                          key={outfitItem.category}
-                          className="relative w-9 h-9 overflow-hidden border-2 border-white shadow-sm"
+                          key={item.id}
+                          className="relative w-9 h-9 rounded-lg overflow-hidden border-2 border-white shadow-sm"
                           style={{ zIndex: 10 - index }}
                         >
                           <img
-                            src={outfitItem.item.image_url}
-                            alt={outfitItem.item.name}
+                            src={item.image_url}
+                            alt={item.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -185,7 +263,7 @@ const FloatingOutfitPanel = ({
                     {/* Show "more items" indicator if there are more than 4 */}
                     {selectedItemsCount > 4 && (
                       <div
-                        className="relative w-9 h-9 rounded-full bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center"
+                        className="relative w-9 h-9 rounded-lg bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center"
                         style={{ zIndex: 5 }}
                       >
                         <span className="text-xs font-medium text-slate-600">
@@ -217,7 +295,7 @@ const FloatingOutfitPanel = ({
                 </div>
                 <div>
                   <p className="text-slate-600 text-xs">
-                    Select items from your wardrobe to bulding your outfit
+                    Select items from your wardrobe to build your outfit
                   </p>
                 </div>
               </div>
@@ -260,39 +338,64 @@ const FloatingOutfitPanel = ({
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
               {selectedItemsCount > 0 ? (
-                <div className="space-y-3">
-                  {currentOutfit
-                    .filter(outfitItem => outfitItem.item !== null)
-                    .map(outfitItem => (
-                      <div
-                        key={outfitItem.category}
-                        className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-200/40"
-                      >
-                        <div className="relative w-12 h-12 flex-shrink-0">
-                          <img
-                            src={outfitItem.item.image_url}
-                            alt={outfitItem.item.name}
-                            className="w-full h-full object-cover rounded-lg shadow-sm"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                            {outfitItem.category}
+                <div className="space-y-4">
+                  {categoriesWithItems.map(([category, items]) => (
+                    <div key={category} className="space-y-2">
+                      {/* Category Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                            {category}
                           </span>
-                          <h3 className="font-medium text-slate-800 truncate text-sm">
-                            {outfitItem.item.name}
-                          </h3>
+                          <Badge variant="outline" className="text-xs">
+                            {items.length}
+                          </Badge>
                         </div>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-red-500"
-                          onClick={() => handleRemoveItem(outfitItem.category)}
+                          size="sm"
+                          onClick={() => setActiveCategory(category)}
+                          className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-6"
                         >
-                          <X className="h-4 w-4" />
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add
                         </Button>
                       </div>
-                    ))}
+
+                      {/* Category Items */}
+                      <div className="space-y-2">
+                        {items.map(item => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-200/40"
+                          >
+                            <div className="relative w-10 h-10 flex-shrink-0">
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-lg shadow-sm"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-slate-800 truncate text-sm">
+                                {item.name}
+                              </h3>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-red-500"
+                              onClick={() =>
+                                handleRemoveItem(category, item.id)
+                              }
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
