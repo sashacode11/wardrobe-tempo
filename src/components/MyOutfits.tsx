@@ -31,13 +31,13 @@ import { useWardrobe } from '../contexts/WardrobeContext'; // Use global context
 
 interface MyOutfitsProps {
   searchQuery?: string; // Keep for backward compatibility but won't be used
-  onCreateOutfit?: () => void;
+  // onCreateOutfit?: () => void;
   onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
 const MyOutfits: React.FC<MyOutfitsProps> = ({
   searchQuery: externalSearchQuery, // Not used anymore since we use global search
-  onCreateOutfit,
+  // onCreateOutfit,
   onEditOutfit,
 }) => {
   // 🔹 Use global context instead of local state
@@ -340,6 +340,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       {item.color && (
                         <p className="text-xs text-gray-600 capitalize mt-1">
                           {item.color}
+                        </p>
+                      )}
+                      {item.location && (
+                        <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                          {item.location}
                         </p>
                       )}
                       {Array.isArray(item.tags) && item.tags.length > 0 && (

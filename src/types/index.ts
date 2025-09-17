@@ -14,8 +14,9 @@ export interface OutfitItem {
   id: string;
   outfit_id: string;
   clothing_item_id: number;
-  created_at: string;
-  wardrobe_items?: ClothingItemType; // Join data
+  // created_at: string;
+  wardrobe_items?: ClothingItemType;
+  location: string;
 }
 
 export interface Outfit {
