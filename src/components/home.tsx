@@ -36,6 +36,7 @@ import UnifiedSearchResults from './SearchResults';
 import OutfitRepairView from './OutfitRepairView';
 import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 import LanguageSelector from './LanguageSelector';
+import SettingsModal from './SettingsModal';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -47,6 +48,7 @@ const Home = () => {
   const [editingOutfit, setEditingOutfit] = useState(null);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const [showRepairView, setShowRepairView] = useState(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   /* Global languages */
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
@@ -407,17 +409,19 @@ const Home = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        // Handle settings click - you can add your settings logic here
-                        console.log('Settings clicked');
-                        // setShowSettings(true); // or navigate to settings
-                      }}
+                      onClick={() => setShowSettings(true)}
                       className="p-2 ml-2"
                     >
                       <Settings className="h-6 w-6 text-muted-foreground hover:text-foreground" />
                     </Button>
                   </div>
                 </div>
+
+                {/* Settings Modal */}
+                <SettingsModal
+                  isOpen={showSettings}
+                  onClose={() => setShowSettings(false)}
+                />
 
                 <div className="flex-1 p-4">
                   {user ? (
