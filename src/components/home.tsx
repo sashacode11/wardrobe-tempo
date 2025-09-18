@@ -243,7 +243,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 pt-2 px-2 md:px-20 sm:pb-4 sm:pt-4">
+      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 px-2 md:px-20 sm:pb-4 pt-4">
         <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
@@ -539,7 +539,7 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto md:p-4 pb-20 md:pb-4">
+      <main className="container mx-auto py-4 px-2 md:p-4 pb-20 md:pb-4">
         {authLoading ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -627,7 +627,7 @@ const Home = () => {
                     value={activeCategory}
                     onValueChange={setActiveCategory}
                   >
-                    <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto">
+                    <TabsList className="bg-transparent w-full overflow-x-auto flex-nowrap justify-start h-auto">
                       <TabsTrigger key="all" value="all" className="capitalize">
                         All
                       </TabsTrigger>
