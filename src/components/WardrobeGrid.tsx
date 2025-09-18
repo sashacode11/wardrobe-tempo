@@ -134,7 +134,10 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       deselectAllItems();
       setShowDeleteDialog(false);
       setShowOutfitWarning(false);
-      toggleSelectionMode();
+      // toggleSelectionMode();
+      if (isSelectionMode) {
+        toggleSelectionMode();
+      }
     } catch (error) {
       console.error('Error in confirmed delete:', error);
       setMultiselectError('Failed to delete items');
