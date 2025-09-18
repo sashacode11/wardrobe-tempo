@@ -20,6 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabaseClient';
 import { useWardrobe } from '../contexts/WardrobeContext';
+import OutfitRepairView from './OutfitRepairView';
+import { Tabs } from '@radix-ui/react-tabs';
+import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 
 interface WardrobeGridProps {
   items: ClothingItemType[];
@@ -54,6 +57,9 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
   const [showOutfitWarning, setShowOutfitWarning] = useState(false);
   const [affectedOutfits, setAffectedOutfits] = useState([]);
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+  const [showRepairView, setShowRepairView] = useState(false);
+  const [activeTab, setActiveTab] = useState('wardrobe');
+  const [isNotificationDismissed, setIsNotificationDismissed] = useState(false);
 
   // Add multiselect functionality
   const {
@@ -255,51 +261,74 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       {/* count items and multiselect */}
       <div className="flex justify-between items-center mb-4 px-2">
         {/* Left side: Filter button and item count */}
-        {/* <div className="flex items-center gap-8"> */}
-        {/* Filter button */}
-        <button
-          onClick={() => {
-            console.log('Filter button clicked', {
-              onShowFilterModal: typeof onShowFilterModal,
-            });
-            if (onShowFilterModal) {
-              onShowFilterModal();
-            } else {
-              console.error('onShowFilterModal is not defined');
-            }
-          }}
-          className={`hidden md:flex flex-row gap-1 items-center py-2 px-3 rounded-lg transition-colors ${
-            hasActiveFilters
-              ? 'text-blue-600'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-          }`}
-        >
-          <div className="relative">
-            <Filter className="h-5 w-5 mb-1" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
-                {activeFilterCount}
-              </span>
-            )}
+        <div className="flex items-center gap-8">
+          {/* Filter button */}
+          <button
+            onClick={() => {
+              console.log('Filter button clicked', {
+                onShowFilterModal: typeof onShowFilterModal,
+              });
+              if (onShowFilterModal) {
+                onShowFilterModal();
+              } else {
+                console.error('onShowFilterModal is not defined');
+              }
+            }}
+            className={`hidden md:flex flex-row gap-1 items-center py-2 px-3 rounded-lg transition-colors ${
+              hasActiveFilters
+                ? 'text-blue-600'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <div className="relative">
+              <Filter className="h-5 w-5 mb-1" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
+            <span className="text-xs font-medium">Filter</span>
+          </button>
+          {/* </div> */}
+          <div className="text-sm text-gray-600">
+            {/* {items.length} item{items.length !== 1 ? 's' : ''} */}
+            You have {items.length} items totals
           </div>
-          <span className="text-xs font-medium">Filter</span>
-        </button>
-        {/* </div> */}
-        <div className="text-sm text-gray-600">
-          {/* {items.length} item{items.length !== 1 ? 's' : ''} */}
-          You have {items.length} items totals
         </div>
 
-        {/* Right side: Selection controls */}
-        <SelectionControls
-          isSelectionMode={isSelectionMode}
-          selectedCount={selectedItems.size}
-          totalFilteredCount={items.length}
-          onToggleSelectionMode={toggleSelectionMode}
-          onSelectAll={() => selectAllItems(items)}
-          onDeselectAll={deselectAllItems}
-          onDeleteSelected={() => setShowDeleteDialog(true)}
-        />
+        <div className="flex items-center gap-2">
+          {/* Show repair view if active */}
+          {showRepairView ? (
+            <OutfitRepairView onClose={() => setShowRepairView(false)} />
+          ) : (
+            <>
+              {/* Incomplete outfits notification - show on all tabs */}
+              {/* <IncompleteOutfitsNotification
+                onFixOutfits={() => setShowRepairView(true)}
+              /> */}
+
+              {/* Your existing tabs content */}
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                {/* ... your existing TabsContent components ... */}
+              </Tabs>
+            </>
+          )}
+          {/* Right side: Selection controls */}
+          <SelectionControls
+            isSelectionMode={isSelectionMode}
+            selectedCount={selectedItems.size}
+            totalFilteredCount={items.length}
+            onToggleSelectionMode={toggleSelectionMode}
+            onSelectAll={() => selectAllItems(items)}
+            onDeselectAll={deselectAllItems}
+            onDeleteSelected={() => setShowDeleteDialog(true)}
+          />
+        </div>
       </div>
 
       {/* Clothing Grid */}
@@ -355,6 +384,14 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
           </div>
         )}
       </div>
+
+      {!isNotificationDismissed && (
+        <IncompleteOutfitsNotification
+          onFixOutfits={() => setShowRepairView(true)}
+          onDismiss={() => setIsNotificationDismissed(true)}
+          showDismiss={true}
+        />
+      )}
 
       {/* Initial Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

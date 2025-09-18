@@ -772,25 +772,22 @@ const Home = () => {
         />
 
         {/* Show repair view if active */}
-        {showRepairView ? (
+        {/* {showRepairView ? (
           <OutfitRepairView onClose={() => setShowRepairView(false)} />
         ) : (
           <>
-            {/* Incomplete outfits notification - show on all tabs */}
             <IncompleteOutfitsNotification
               onFixOutfits={() => setShowRepairView(true)}
             />
 
-            {/* Your existing tabs content */}
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
-              {/* ... your existing TabsContent components ... */}
             </Tabs>
           </>
-        )}
+        )} */}
 
         {/* Filter Modal - Same as before */}
         {showFilterModal && (
