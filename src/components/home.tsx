@@ -16,6 +16,8 @@ import {
   ChevronDown,
   Check,
   Settings,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -53,13 +55,34 @@ const Home = () => {
   /* Global languages */
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en'); // Default to English
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const handleLanguageChange = language => {
-    setCurrentLanguage(language);
-    setShowLanguageMenu(false);
-    // Add your language change logic here
-    // e.g., i18n.changeLanguage(language);
+  // Add this effect to check current theme
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+  }, []);
+
+  // Add this handler function
+  const handleThemeChange = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   };
+
+  // const handleLanguageChange = language => {
+  //   setCurrentLanguage(language);
+  //   setShowLanguageMenu(false);
+  //   // Add your language change logic here
+  //   // e.g., i18n.changeLanguage(language);
+  // };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -315,6 +338,19 @@ const Home = () => {
             )}
 
             <LanguageSelector variant="desktop" />
+
+            {/* Theme Toggle - Sun/Moon */}
+            <button
+              onClick={handleThemeChange}
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              type="button"
+            >
+              {isDarkMode ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </button>
 
             {/* Settings Icon for Desktop */}
             <button
