@@ -316,6 +316,15 @@ const Home = () => {
 
             <LanguageSelector variant="desktop" />
 
+            {/* Settings Icon for Desktop */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              type="button"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+
             <button
               onClick={handleAddItemClick}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
@@ -416,12 +425,6 @@ const Home = () => {
                     </Button>
                   </div>
                 </div>
-
-                {/* Settings Modal */}
-                <SettingsModal
-                  isOpen={showSettings}
-                  onClose={() => setShowSettings(false)}
-                />
 
                 <div className="flex-1 p-4">
                   {user ? (
@@ -725,6 +728,12 @@ const Home = () => {
             </TabsContent>
           </Tabs>
         )}
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
 
         {/* Show repair view if active */}
         {showRepairView ? (

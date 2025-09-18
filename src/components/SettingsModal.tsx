@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { useLanguage } from '../hooks/useLanguage';
+import { useWardrobe } from '../contexts/WardrobeContext';
+import { signOut } from '../lib/supabaseClient';
 import {
   X,
   Check,
@@ -15,7 +17,11 @@ import {
   Shield,
   HelpCircle,
   ChevronRight,
+  LogOut,
+  UserPlus,
+  Globe,
 } from 'lucide-react';
+import LanguageSelectionModal from './LanguageSelectionModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,11 +29,25 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { currentLanguage, supportedLanguages, handleLanguageChange } =
-    useLanguage();
+  const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+  const { currentLanguage, currentLanguageData } = useLanguage();
+  const { user, setUser } = useWardrobe();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<boolean>(true);
   const [autoBackup, setAutoBackup] = useState<boolean>(true);
+
+  // Detect if we're on desktop
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   // Check current theme on mount
   useEffect(() => {
@@ -81,32 +101,45 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const handleExportData = (): void => {
     console.log('Exporting user data...');
     // TODO: Implement export functionality
-    // You can integrate with your Supabase data export here
   };
 
   const handleClearCache = (): void => {
-    // Clear app-specific cache
     const cacheKeys = ['wardrobe-cache', 'outfit-cache', 'user-preferences'];
     cacheKeys.forEach(key => {
       localStorage.removeItem(key);
     });
     console.log('Cache cleared');
-    // You could show a toast notification here
   };
 
   const handleAccountSettings = (): void => {
     console.log('Navigate to account settings');
-    // TODO: Navigate to account settings page or open account modal
   };
 
   const handlePrivacySettings = (): void => {
     console.log('Navigate to privacy settings');
-    // TODO: Navigate to privacy settings page or open privacy modal
   };
 
   const handleHelpSupport = (): void => {
     console.log('Navigate to help & support');
-    // TODO: Navigate to help page or open support modal
+  };
+
+  const handleSignOut = async (): Promise<void> => {
+    try {
+      await signOut();
+      setUser(null);
+      onClose(); // Close the settings modal
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleSwitchAccount = (): void => {
+    // First sign out the current user, then trigger auth dialog
+    handleSignOut().then(() => {
+      // Trigger the auth dialog to show
+      window.dispatchEvent(new CustomEvent('showAuth'));
+    });
   };
 
   if (!isOpen) return null;
@@ -119,10 +152,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         onClick={onClose}
       />
 
-      {/* Settings Panel */}
+      {/* Settings Panel - Responsive positioning */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+          isDesktop
+            ? `w-96  rounded-xl border ${
+                isOpen
+                  ? 'translate-y-0 opacity-100'
+                  : '-translate-y-4 opacity-0'
+              }`
+            : ` w-full max-w-md ${
+                isOpen ? 'translate-x-0' : 'translate-x-full'
+              }`
         }`}
       >
         {/* Header */}
@@ -135,32 +176,69 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6 h-full pb-20">
-          {/* Language Section */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Language</h3>
-            <div className="space-y-2">
-              {supportedLanguages.map(language => (
-                <button
-                  key={language.code}
-                  onClick={() => handleLanguageChange(language.code)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all duration-200 ${
-                    currentLanguage === language.code
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{language.flag}</span>
-                      <span className="font-medium">{language.name}</span>
-                    </div>
-                    {currentLanguage === language.code && (
-                      <Check className="h-5 w-5 text-blue-600" />
-                    )}
+          {/* User Info Section */}
+          {user && (
+            <div className="space-y-3">
+              {/* <h3 className="text-lg font-medium text-gray-900">Account</h3> */}
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-white" />
                   </div>
-                </button>
-              ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">
+                      {user.user_metadata?.full_name || 'User'}
+                    </p>
+                    {/* <p className="text-sm text-gray-600 truncate">
+                      {user.email}
+                    </p> */}
+                  </div>
+                </div>
+
+                {/* Account Actions */}
+                <div className="space-y-2">
+                  <button
+                    onClick={handleSwitchAccount}
+                    className="w-full flex items-center gap-3 p-2 text-left rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">
+                      Switch Account
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-3 p-2 text-left rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-600">
+                      Sign Out
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* Language Section - Now opens modal */}
+          <div className="block sm:hidden space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">Language</h3>
+            <button
+              onClick={() => setShowLanguageModal(true)}
+              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="h-5 w-5 text-gray-600" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Language</p>
+                  <p className="text-sm text-gray-600">
+                    {currentLanguageData.flag} {currentLanguageData.name}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </button>
           </div>
 
           {/* Appearance Section */}
@@ -197,22 +275,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Notifications Section */}
+          {/* Preferences Section */}
           <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+            <h3 className="text-lg font-medium text-gray-900">Preferences</h3>
+
+            {/* Notifications Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-200 rounded-lg">
-                  <Bell className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Push Notifications
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Get notified about outfit suggestions
-                  </p>
-                </div>
+                <Bell className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Notifications</span>
               </div>
               <button
                 onClick={handleNotificationsChange}
@@ -227,26 +298,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 />
               </button>
             </div>
-          </div>
 
-          {/* Data & Privacy Section */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">
-              Data & Privacy
-            </h3>
-
-            {/* Auto Backup */}
+            {/* Auto Backup Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-200 rounded-lg">
-                  <Database className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Auto Backup</p>
-                  <p className="text-sm text-gray-600">
-                    Automatically backup your wardrobe
-                  </p>
-                </div>
+                <Database className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Auto Backup</span>
               </div>
               <button
                 onClick={handleAutoBackupChange}
@@ -261,108 +318,91 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 />
               </button>
             </div>
-
-            {/* Export Data */}
-            <button
-              onClick={handleExportData}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="p-2 bg-gray-200 rounded-lg">
-                <Download className="h-5 w-5" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Export Data</p>
-                <p className="text-sm text-gray-600">
-                  Download your wardrobe data
-                </p>
-              </div>
-            </button>
-
-            {/* Clear Cache */}
-            <button
-              onClick={handleClearCache}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="p-2 bg-gray-200 rounded-lg">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Clear Cache</p>
-                <p className="text-sm text-gray-600">Free up storage space</p>
-              </div>
-            </button>
           </div>
 
-          {/* Account Section */}
+          {/* Quick Actions Section */}
           <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Account</h3>
+            <h3 className="text-lg font-medium text-gray-900">Data</h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleExportData}
+                className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Download className="h-5 w-5 text-gray-600" />
+                <span className="text-sm font-medium text-gray-900">
+                  Export
+                </span>
+              </button>
+
+              <button
+                onClick={handleClearCache}
+                className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Trash2 className="h-5 w-5 text-gray-600" />
+                <span className="text-sm font-medium text-gray-900">
+                  Clear Cache
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* More Settings Section */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">More</h3>
 
             <button
               onClick={handleAccountSettings}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <div className="p-2 bg-gray-200 rounded-lg">
-                <User className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">
+                  Profile Settings
+                </span>
               </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Account Settings</p>
-                <p className="text-sm text-gray-600">
-                  Manage your profile and preferences
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
+              <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
 
             <button
               onClick={handlePrivacySettings}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <div className="p-2 bg-gray-200 rounded-lg">
-                <Shield className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Privacy</span>
               </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Privacy & Security</p>
-                <p className="text-sm text-gray-600">
-                  Control your data and privacy
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
+              <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
-          </div>
-
-          {/* About Section */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">About</h3>
-
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-gray-900">App Version</p>
-                <p className="text-sm text-gray-600">1.2.0</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-900">Last Updated</p>
-                <p className="text-sm text-gray-600">Dec 2024</p>
-              </div>
-            </div>
 
             <button
               onClick={handleHelpSupport}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <div className="p-2 bg-gray-200 rounded-lg">
-                <HelpCircle className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <HelpCircle className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">
+                  Help & Support
+                </span>
               </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Help & Support</p>
-                <p className="text-sm text-gray-600">
-                  Get help and contact support
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
+              <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
+          </div>
+
+          {/* App Info */}
+          <div className="pb-16 sm:pb-0 pt-4 border-t border-gray-200">
+            <div className="text-center text-sm text-gray-500">
+              <p>Vesti v1.2.0</p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Language Selection Modal */}
+      <LanguageSelectionModal
+        isOpen={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+      />
     </>
   );
 };
