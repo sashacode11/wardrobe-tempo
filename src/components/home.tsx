@@ -528,14 +528,14 @@ const Home = () => {
                         </div>
                       </div>
 
-                      <div>
+                      {/* <div>
                         <h3 className="text-lg font-semibold text-foreground mb-4">
                           Recommend
                         </h3>
                         <div className="text-sm text-muted-foreground italic text-center py-8">
                           Coming soon...
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   ) : (
                     <div className="space-y-3">
