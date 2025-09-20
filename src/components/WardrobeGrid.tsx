@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, X, Trash2 } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Checkbox } from './ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
+// WardrobeGrid.tsx - Fixed filter button implementation
+import React, { useState } from 'react';
+import { Plus, AlertTriangle, Shirt, Filter } from 'lucide-react';
+import { ClothingItemType } from '../types';
+import { useMultiselect } from '../hooks/useMultiSelect';
+import SelectionControls from './common/SelectionControls';
+import SelectionCheckbox from './common/SelectionCheckbox';
+import ClothingItem from './ClothingItem';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,54 +15,53 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from './ui/alert-dialog';
-import ClothingItem from './ClothingItem';
-import SelectionControls from './common/SelectionControls';
-import SelectionCheckbox from './common/SelectionCheckbox';
-import {
-  supabase,
-  getCurrentUser,
-  getClothingItems,
-  deleteClothingItem,
-} from '../lib/supabaseClient';
-import { Database } from '../types/supabase';
-import { ClothingItemType, OutfitWithItems } from '../types';
-import { useMultiselect } from '../hooks/useMultiSelect';
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { supabase } from '../lib/supabaseClient';
+import { useWardrobe } from '../contexts/WardrobeContext';
+import OutfitRepairView from './OutfitRepairView';
+import { Tabs } from '@radix-ui/react-tabs';
+import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 
 interface WardrobeGridProps {
+  items: ClothingItemType[];
+  loading?: boolean;
+  onAddItem: () => void;
+  onAddToOutfit: (item: ClothingItemType) => void;
+  onEditItem: (item: ClothingItemType) => void;
+  activeFilters: Record<string, string>;
+  activeCategory: string;
+  onClearFilters: () => void;
   searchQuery?: string;
-  selectedCategory?: string;
-  onAddItem?: () => void;
-  onSelectItem?: (item: ClothingItemType) => void;
-  onAddToOutfit?: (item: ClothingItemType) => void;
-  onEditItem?: (item: ClothingItemType) => void;
+  onShowFilterModal?: () => void;
 }
 
-const WardrobeGrid = ({
+const WardrobeGrid: React.FC<WardrobeGridProps> = ({
+  items,
+  loading = false,
+  onAddItem,
+  onAddToOutfit,
+  onEditItem,
+  activeFilters,
+  activeCategory,
+  onClearFilters,
   searchQuery = '',
-  selectedCategory = 'all',
-  onAddItem = () => {},
-  onSelectItem = () => {},
-  onAddToOutfit = () => {},
-  onEditItem = () => {},
-}: WardrobeGridProps) => {
-  const [items, setItems] = useState<ClothingItemType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState(selectedCategory);
-  const [activeFilters, setActiveFilters] = useState<{
-    color: string;
-    season: string;
-    occasion: string;
-  }>({
-    color: '',
-    season: '',
-    occasion: '',
-  });
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedOutfitForView, setSelectedOutfitForView] =
-    useState<OutfitWithItems | null>(null);
+  onShowFilterModal, // Add this prop
+}) => {
+  // Get global context
+  const { removeItem, markOutfitsAsIncomplete, getAffectedOutfits } =
+    useWardrobe();
 
-  // Use the multiselect hook
+  // State for outfit impact warning
+  const [showOutfitWarning, setShowOutfitWarning] = useState(false);
+  const [affectedOutfits, setAffectedOutfits] = useState([]);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+  const [showRepairView, setShowRepairView] = useState(false);
+  const [activeTab, setActiveTab] = useState('wardrobe');
+  const [isNotificationDismissed, setIsNotificationDismissed] = useState(false);
+
+  // Add multiselect functionality
   const {
     isSelectionMode,
     selectedItems,
@@ -81,64 +74,95 @@ const WardrobeGrid = ({
     selectAllItems,
     deselectAllItems,
     toggleSelectionMode,
-    deleteSelectedItems,
   } = useMultiselect();
 
-  const [error, setError] = useState<string | null>(null);
+  // Calculate active filters
+  const hasActiveFilters =
+    Object.values(activeFilters).some(value => value && value !== '') ||
+    activeCategory !== 'all';
+  const activeFilterCount =
+    Object.values(activeFilters).filter(value => value && value !== '').length +
+    (activeCategory !== 'all' ? 1 : 0);
 
-  // Update activeCategory when selectedCategory prop changes
-  useEffect(() => {
-    setActiveCategory(selectedCategory);
-  }, [selectedCategory]);
-
-  // Load clothing items from Supabase
-  useEffect(() => {
-    loadClothingItems();
-  }, []);
-
-  const loadClothingItems = async () => {
+  // Check outfit impact before showing delete confirmation
+  const checkOutfitImpact = async (itemIds: string[]) => {
     try {
-      const user = await getCurrentUser();
-      if (!user) {
-        setLoading(false);
+      const affected = await getAffectedOutfits(itemIds);
+      setAffectedOutfits(affected);
+      setPendingDeleteIds(itemIds);
+
+      if (affected.length > 0) {
+        setShowOutfitWarning(true);
+      } else {
+        // No outfits affected, proceed directly to delete
+        await handleConfirmedDelete(itemIds);
+      }
+    } catch (error) {
+      console.error('Error checking outfit impact:', error);
+      setMultiselectError('Failed to check outfit impact');
+    }
+  };
+
+  // Handle the actual deletion after user confirmation
+  const handleConfirmedDelete = async (itemIds: string[]) => {
+    try {
+      // First mark affected outfits as incomplete
+      await markOutfitsAsIncomplete(itemIds);
+
+      // Delete related outfit_items
+      const { error: outfitItemsError } = await supabase
+        .from('outfit_items')
+        .delete()
+        .in('clothing_item_id', itemIds);
+
+      if (outfitItemsError) {
+        console.error('Error deleting related outfit items:', outfitItemsError);
+        setMultiselectError('Failed to delete related outfit items');
         return;
       }
 
-      const { data, error } = await getClothingItems(user.id);
-      if (error) {
-        console.error('Error loading clothing items:', error);
-        setError('Failed to load items');
-      } else {
-        setItems(data || []);
+      // Delete the wardrobe items
+      const { error: itemsError } = await supabase
+        .from('wardrobe_items')
+        .delete()
+        .in('id', itemIds);
+
+      if (itemsError) {
+        console.error('Error deleting wardrobe items:', itemsError);
+        setMultiselectError('Failed to delete items');
+        return;
+      }
+
+      // Update global state
+      itemIds.forEach(id => removeItem(id));
+
+      // Reset states
+      deselectAllItems();
+      setShowDeleteDialog(false);
+      setShowOutfitWarning(false);
+      // toggleSelectionMode();
+      if (isSelectionMode) {
+        toggleSelectionMode();
       }
     } catch (error) {
-      console.error('Error loading clothing items:', error);
-      setError('Failed to load items');
-    } finally {
-      setLoading(false);
+      console.error('Error in confirmed delete:', error);
+      setMultiselectError('Failed to delete items');
     }
   };
 
+  // Handle bulk delete - now with outfit impact check
+  const handleBulkDeleteItems = async () => {
+    if (selectedItems.size === 0) return;
+    const idsToDelete = Array.from(selectedItems);
+    await checkOutfitImpact(idsToDelete);
+  };
+
+  // Handle individual item deletion
   const handleDeleteItem = async (id: string) => {
-    try {
-      const { error } = await deleteClothingItem(id);
-      if (error) {
-        console.error('Error deleting item:', error);
-        setError('Failed to delete item');
-      } else {
-        // Remove item from local state
-        setItems(items.filter(item => item.id !== id));
-      }
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      setError('Failed to delete item');
-    }
+    await checkOutfitImpact([id]);
   };
 
-  const handleViewOutfitFromItem = (outfit: OutfitWithItems) => {
-    setSelectedOutfitForView(outfit);
-  };
-
+  // Handle editing individual item
   const handleEditItem = (id: string) => {
     const itemToEdit = items.find(item => item.id === id);
     if (itemToEdit) {
@@ -146,6 +170,7 @@ const WardrobeGrid = ({
     }
   };
 
+  // Handle adding item to outfit
   const handleAddToOutfit = (id: string) => {
     const item = items.find(item => item.id === id);
     if (item && onAddToOutfit) {
@@ -153,343 +178,143 @@ const WardrobeGrid = ({
     }
   };
 
-  // Handle bulk delete success
-  const handleBulkDeleteSuccess = (deletedIds: string[]) => {
-    setItems(prev => prev.filter(item => !deletedIds.includes(item.id)));
+  // Handle view outfit from item
+  const handleViewOutfitFromItem = (outfit: any) => {
+    // Implement outfit viewing logic here
+    console.log('View outfit:', outfit);
   };
-
-  // Filter items based on search query and active filters
-  const filteredItems = items.filter(item => {
-    // Search filter
-    if (
-      searchQuery &&
-      !item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
-
-    // Category filter
-    if (activeCategory !== 'all' && item.category !== activeCategory) {
-      return false;
-    }
-
-    // Color filter
-    if (activeFilters.color && item.color !== activeFilters.color) {
-      return false;
-    }
-
-    // Season filter
-    if (
-      activeFilters.season &&
-      item.seasons &&
-      !item.seasons.includes(activeFilters.season)
-    ) {
-      return false;
-    }
-
-    // Occasion filter
-    if (
-      activeFilters.occasion &&
-      item.occasions &&
-      !item.occasions.includes(activeFilters.occasion)
-    ) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const clearFilters = () => {
-    setActiveFilters({
-      color: '',
-      season: '',
-      occasion: '',
-    });
-    setActiveCategory('all');
-  };
-
-  const categories = [
-    'all',
-    'tops',
-    'bottoms',
-    'dresses',
-    'outerwear',
-    'shoes',
-    'accessories',
-    'formal',
-  ];
-  const colors = [
-    'black',
-    'white',
-    'blue',
-    'red',
-    'green',
-    'yellow',
-    'purple',
-    'pink',
-    'brown',
-    'gray',
-  ];
-  const seasons = ['spring', 'summer', 'fall', 'winter', 'all'];
-  const occasions = [
-    'casual',
-    'formal',
-    'business',
-    'party',
-    'sporty',
-    'semi-formal',
-  ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading wardrobe...</p>
+          <p className="text-muted-foreground">Loading items...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    const hasActiveFilters =
+      Object.values(activeFilters).some(Boolean) || activeCategory !== 'all';
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+        <div className="text-center space-y-4 max-w-md">
+          {hasActiveFilters ? (
+            <>
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold">No items found</h3>
+              <p className="text-muted-foreground">
+                No items match your current filters. Try adjusting your search
+                criteria.
+              </p>
+              <button
+                onClick={onClearFilters}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold">Your wardrobe is empty</h3>
+              <p className="text-muted-foreground">
+                Start building your digital wardrobe by adding your first
+                clothing item.
+              </p>
+              <button
+                onClick={onAddItem}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
+              >
+                <Plus className="h-4 w-4" />
+                Add Your First Item
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full bg-background flex flex-col gap-2 md:gap-4">
+    <>
       {/* Error display */}
-      {(error || multiselectError) && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-          <p className="text-destructive text-sm">
-            {error || multiselectError}
-          </p>
+      {multiselectError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm mb-4">
+          <p className="text-red-800 text-sm font-medium">{multiselectError}</p>
           <button
-            onClick={() => {
-              setError(null);
-              setMultiselectError(null);
-            }}
-            className="text-destructive hover:underline text-sm mt-1"
+            onClick={() => setMultiselectError(null)}
+            className="text-red-600 hover:text-red-800 hover:underline text-sm mt-2 font-medium transition-colors"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-1">
-        <div className="flex gap-4 items-center">
-          {/* Filter Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex flex-col items-center group"
-            type="button"
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-              <Filter className="h-5 w-5 text-blue-400" />
-              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" /> */}
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Filter
-            </span>
-          </button>
-
-          {/* Add Item Button */}
-          <button
-            onClick={onAddItem}
-            className="flex flex-col items-center group"
-            type="button"
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-              <Plus className="h-5 w-5 text-blue-400" />
-              {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full" /> */}
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Add Item
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Active Filters */}
-      {(activeFilters.color ||
-        activeFilters.season ||
-        activeFilters.occasion ||
-        activeCategory !== 'all') && (
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
-
-          {activeCategory !== 'all' && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Category: {activeCategory}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => setActiveCategory('all')}
-              />
-            </Badge>
-          )}
-
-          {activeFilters.color && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Color: {activeFilters.color}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() =>
-                  setActiveFilters({ ...activeFilters, color: '' })
-                }
-              />
-            </Badge>
-          )}
-
-          {activeFilters.season && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Season: {activeFilters.season}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() =>
-                  setActiveFilters({ ...activeFilters, season: '' })
-                }
-              />
-            </Badge>
-          )}
-
-          {activeFilters.occasion && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Occasion: {activeFilters.occasion}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() =>
-                  setActiveFilters({ ...activeFilters, occasion: '' })
-                }
-              />
-            </Badge>
-          )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="h-7"
-          >
-            Clear all
-          </Button>
-        </div>
-      )}
-
-      {/* Filter Options */}
-      {showFilters && (
-        <div className="bg-muted/30 p-4 rounded-md grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Color</label>
-            <Select
-              value={activeFilters.color}
-              onValueChange={value =>
-                setActiveFilters({ ...activeFilters, color: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select color" />
-              </SelectTrigger>
-              <SelectContent>
-                {colors.map(color => (
-                  <SelectItem key={color} value={color}>
-                    {color.charAt(0).toUpperCase() + color.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-1 block">Season</label>
-            <Select
-              value={activeFilters.season}
-              onValueChange={value =>
-                setActiveFilters({ ...activeFilters, season: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select season" />
-              </SelectTrigger>
-              <SelectContent>
-                {seasons.map(season => (
-                  <SelectItem key={season} value={season}>
-                    {season.charAt(0).toUpperCase() + season.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-1 block">Occasion</label>
-            <Select
-              value={activeFilters.occasion}
-              onValueChange={value =>
-                setActiveFilters({ ...activeFilters, occasion: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select occasion" />
-              </SelectTrigger>
-              <SelectContent>
-                {occasions.map(occasion => (
-                  <SelectItem key={occasion} value={occasion}>
-                    {occasion.charAt(0).toUpperCase() + occasion.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      {/* Category Tabs */}
-      {!searchQuery && (
-        <Tabs
-          defaultValue="all"
-          value={activeCategory}
-          onValueChange={setActiveCategory}
+      {/* count items and multiselect */}
+      <div className="flex justify-between items-center mb-4 px-2 !mt-2">
+        {/* Left side: Filter button and item count */}
+        {/* <div className="flex items-center gap-8"> */}
+        {/* Filter button */}
+        <button
+          onClick={() => {
+            console.log('Filter button clicked', {
+              onShowFilterModal: typeof onShowFilterModal,
+            });
+            if (onShowFilterModal) {
+              onShowFilterModal();
+            } else {
+              console.error('onShowFilterModal is not defined');
+            }
+          }}
+          className={`hidden md:flex flex-row gap-1 items-center py-2 px-3 rounded-lg transition-colors ${
+            hasActiveFilters
+              ? 'text-blue-600'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+          }`}
         >
-          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto py-2">
-            {categories.map(category => (
-              <TabsTrigger
-                key={category}
-                value={category}
-                className="capitalize"
-              >
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      <div className="flex items-center justify-between gap-2 px-4">
-        {/* Results info */}
-        <div className="text-sm text-muted-foreground">
-          {searchQuery
-            ? `Found ${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } matching "${searchQuery}"`
-            : `${filteredItems.length} item${
-                filteredItems.length !== 1 ? 's' : ''
-              } ${activeCategory !== 'all' ? `in ${activeCategory}` : 'total'}`}
+          <div className="relative">
+            <Filter className="h-5 w-5 mb-1" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-medium">Filter</span>
+        </button>
+        {/* </div> */}
+        {/* </div> */}
+        <div className="text-sm bg-gray-50 sm:bg-transparent p-1 text-gray-600">
+          {/* {items.length} item{items.length !== 1 ? 's' : ''} */}
+          You have {items.length} items totals
         </div>
 
-        {/* Multiselects */}
-        <div className="flex-shrink-0">
-          <SelectionControls
-            isSelectionMode={isSelectionMode}
-            selectedCount={selectedItems.size}
-            totalFilteredCount={filteredItems.length}
-            onToggleSelectionMode={toggleSelectionMode}
-            onSelectAll={() => selectAllItems(filteredItems)}
-            onDeselectAll={deselectAllItems}
-            onDeleteSelected={() => setShowDeleteDialog(true)}
-          />
-        </div>
+        {/* <div className="flex items-center gap-2"> */}
+        {/* Right side: Selection controls */}
+        <SelectionControls
+          isSelectionMode={isSelectionMode}
+          selectedCount={selectedItems.size}
+          totalFilteredCount={items.length}
+          onToggleSelectionMode={toggleSelectionMode}
+          onSelectAll={() => selectAllItems(items)}
+          onDeselectAll={deselectAllItems}
+          onDeleteSelected={() => setShowDeleteDialog(true)}
+        />
+        {/* </div> */}
       </div>
 
       {/* Clothing Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  overflow-y-auto flex-grow px-2 w-full">
-        {filteredItems.length > 0 ? (
-          filteredItems.map(item => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-grow px-2 w-full !mt-2">
+        {items.length > 0 ? (
+          items.map(item => (
             <div key={item.id} className="relative">
               {/* Reusable Selection Checkbox Component */}
               <SelectionCheckbox
@@ -532,7 +357,7 @@ const WardrobeGrid = ({
                 Add Your First Item
               </Button>
             ) : (
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={onClearFilters}>
                 Clear filters
               </Button>
             )}
@@ -540,36 +365,107 @@ const WardrobeGrid = ({
         )}
       </div>
 
-      {/* Delete confirmation dialog */}
+      {!isNotificationDismissed && (
+        <IncompleteOutfitsNotification
+          onFixOutfits={() => setShowRepairView(true)}
+          onDismiss={() => setIsNotificationDismissed(true)}
+          showDismiss={true}
+        />
+      )}
+
+      {/* Initial Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Items</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+              Delete Selected Items
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
               Are you sure you want to delete {selectedItems.size} item
-              {selectedItems.size !== 1 ? 's' : ''}? This action cannot be
-              undone.
+              {selectedItems.size !== 1 ? 's' : ''}? We'll check if any outfits
+              will be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingItems}>
-              Cancel
-            </AlertDialogCancel>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="px-6">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteSelectedItems(handleBulkDeleteSuccess)}
+              onClick={handleBulkDeleteItems}
+              className="bg-red-600 hover:bg-red-700 text-white px-6"
               disabled={deletingItems}
-              className="bg-destructive hover:bg-destructive/90"
             >
-              {deletingItems
-                ? 'Deleting...'
-                : `Delete ${selectedItems.size} item${
-                    selectedItems.size !== 1 ? 's' : ''
-                  }`}
+              {deletingItems ? 'Checking...' : 'Continue'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+
+      {/* Outfit Impact Warning Dialog */}
+      <AlertDialog open={showOutfitWarning} onOpenChange={setShowOutfitWarning}>
+        <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-semibold text-amber-700">
+              <AlertTriangle className="h-5 w-5" />
+              Outfits Will Be Affected
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Deleting these items will affect{' '}
+                  <strong>{affectedOutfits.length}</strong> outfit
+                  {affectedOutfits.length !== 1 ? 's' : ''}. The affected
+                  outfits will be marked as
+                  <strong> incomplete</strong> and you can fix them later.
+                </p>
+
+                {/* Show affected outfits */}
+                <div className="bg-amber-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+                  <h4 className="text-sm font-medium text-amber-800 mb-2 flex items-center gap-1">
+                    <Shirt className="h-4 w-4" />
+                    Affected Outfits:
+                  </h4>
+                  <div className="space-y-1">
+                    {affectedOutfits.map(outfit => (
+                      <div
+                        key={outfit.id}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm text-amber-700">
+                          {outfit.name}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {outfit.items?.length || 0} items
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>What happens next:</strong>
+                    <br />
+                    • Affected outfits will be marked as "incomplete"
+                    <br />
+                    • You'll see a notification to fix them
+                    <br />• You can add replacement items or delete incomplete
+                    outfits
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="px-6">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleConfirmedDelete(pendingDeleteIds)}
+              className="bg-red-600 hover:bg-red-700 text-white px-6"
+            >
+              Delete Items & Mark Outfits Incomplete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

@@ -28,7 +28,11 @@ import {
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
-import { parseArrayField } from '../lib/utils';
+import { capitalizeFirst, parseArrayField } from '../lib/utils';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { toast } from 'sonner';
+import { OptimizedImage } from './OptimizedImage';
+import { compressImage } from '@/utils/imageCache';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -43,6 +47,7 @@ interface ItemData {
   name: string;
   category: string;
   color: string;
+  brand: string;
   location: string;
   tags: string[];
   seasons: string[];
@@ -63,6 +68,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     name: '',
     category: '',
     color: '',
+    brand: '',
     location: '',
     tags: [],
     seasons: [],
@@ -79,242 +85,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   const [customOccasion, setCustomOccasion] = useState('');
   const [showAddOccasion, setShowAddOccasion] = useState(false);
 
-  useEffect(() => {
-    if (editingItem) {
-      const newItemData = {
-        image: null,
-        imagePreview: editingItem.image_url || null,
-        name: editingItem.name || '',
-        category: editingItem.category || '',
-        color: editingItem.color || '',
-        location: editingItem.location || '',
-        tags: parseArrayField(editingItem.tags),
-        seasons: parseArrayField(editingItem.seasons),
-        occasions: parseArrayField(editingItem.occasions),
-        notes: editingItem.notes || '',
-      };
-
-      setItemData(newItemData);
-      setActiveTab('details');
-    } else {
-      setItemData({
-        image: null,
-        imagePreview: null,
-        name: '',
-        category: '',
-        color: '',
-        location: '',
-        tags: [],
-        seasons: [],
-        occasions: [],
-        notes: '',
-      });
-      setActiveTab('upload');
-    }
-  }, [editingItem]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = event => {
-        if (event.target?.result) {
-          setItemData({
-            ...itemData,
-            image: file,
-            imagePreview: event.target.result as string,
-          });
-          setActiveTab('details');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAddTag = () => {
-    if (currentTag && !itemData.tags.includes(currentTag)) {
-      // setItemData({ ...itemData, tags: [...itemData.tags, currentTag] });
-      setItemData(prev => ({
-        ...prev,
-        tags: [...prev.tags, currentTag.trim()],
-      }));
-      setCurrentTag('');
-    }
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    // setItemData({ ...itemData, tags: itemData.tags.filter(t => t !== tag) });
-    setItemData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag),
-    }));
-  };
-
-  const handleSeasonToggle = (season: string) => {
-    if (itemData.seasons.includes(season)) {
-      setItemData({
-        ...itemData,
-        seasons: itemData.seasons.filter(s => s !== season),
-      });
-    } else {
-      setItemData({ ...itemData, seasons: [...itemData.seasons, season] });
-    }
-  };
-
-  const handleAddOccasion = () => {
-    if (currentOccasion && !itemData.occasions.includes(currentOccasion)) {
-      setItemData({
-        ...itemData,
-        occasions: [...itemData.occasions, currentOccasion],
-      });
-      setCurrentOccasion('');
-    }
-  };
-
-  const handleAddCustomOccasion = () => {
-    if (customOccasion && !occasionSuggestions.includes(customOccasion)) {
-      const newOccasions = [...occasionSuggestions, customOccasion];
-      setOccasionSuggestions(newOccasions);
-      setItemData({
-        ...itemData,
-        occasions: [...itemData.occasions, customOccasion],
-      });
-      setCustomOccasion('');
-      setShowAddOccasion(false);
-    }
-  };
-
-  const handleRemoveOccasion = (occasion: string) => {
-    setItemData({
-      ...itemData,
-      occasions: itemData.occasions.filter(o => o !== occasion),
-    });
-  };
-
-  const handleSave = async () => {
-    if (
-      (!itemData.image && !itemData.imagePreview) ||
-      !itemData.name ||
-      !itemData.category
-    ) {
-      alert('Please fill in all required fields: image, name, and category');
-      return;
-    }
-
-    if (currentTag.trim()) {
-      alert('Please press Enter or click Add to include the tag.');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const user = await getCurrentUser();
-      if (!user) {
-        console.error('No user found');
-        const shouldLogin = window.confirm(
-          'You need to be logged in to save items. Would you like to log in now?'
-        );
-        if (shouldLogin) {
-          onOpenChange(false);
-          window.dispatchEvent(new CustomEvent('showAuth'));
-        }
-        setSaving(false);
-        return;
-      }
-
-      let imageUrl = itemData.imagePreview;
-
-      // Only upload new image if one was selected
-      if (itemData.image) {
-        const { data: imageData, error: imageError } = await uploadImage(
-          itemData.image
-        );
-
-        if (imageError || !imageData) {
-          console.error('Error uploading image:', imageError);
-          let errorMessage = 'Failed to upload image. Please try again.';
-
-          if (imageError?.message) {
-            errorMessage = imageError.message;
-          }
-
-          alert(errorMessage);
-          setSaving(false);
-          return;
-        }
-        imageUrl = imageData.publicUrl;
-      }
-
-      // Create clothing item in database
-      const clothingItem = {
-        user_id: user.id,
-        name: itemData.name.trim(),
-        category: itemData.category.toLowerCase().trim(),
-        color: itemData.color ? itemData.color.toLowerCase().trim() : null,
-        image_url: imageUrl,
-        location: itemData.location ? itemData.location.trim() : null,
-        seasons:
-          itemData.seasons.length > 0
-            ? itemData.seasons.map(s => s.toLowerCase().trim())
-            : [],
-        occasions:
-          itemData.occasions.length > 0
-            ? itemData.occasions.map(o => o.toLowerCase().trim())
-            : [],
-        tags:
-          itemData.tags.length > 0
-            ? itemData.tags.map(t => t.toLowerCase().trim())
-            : [],
-        notes: itemData.notes ? itemData.notes.trim() : null,
-      };
-
-      if (editingItem) {
-        const { data, error } = await updateClothingItem(
-          editingItem.id,
-          clothingItem
-        );
-        if (error) {
-          console.error('Error updating clothing item:', error);
-          alert('Failed to update item. Please try again.');
-          setSaving(false);
-          return;
-        }
-        alert('Item updated successfully!');
-      } else {
-        const { data, error } = await createClothingItem(clothingItem);
-        if (error) {
-          console.error('Error creating clothing item:', error);
-          alert('Failed to save item. Please try again.');
-          setSaving(false);
-          return;
-        }
-        // Reset form
-        setItemData({
-          image: null,
-          imagePreview: null,
-          name: '',
-          category: '',
-          color: '',
-          location: '',
-          tags: [],
-          seasons: [],
-          occasions: [],
-          notes: '',
-        });
-        setActiveTab('upload');
-
-        alert('Item created successfully!');
-      }
-
-      onSave?.();
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error saving item:', error);
-      alert('An unexpected error occurred. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
+  // Get data from hook including brands
+  const {
+    categories: existingCategories,
+    colors: existingColors,
+    occasions: existingOccasions,
+    brands: existingBrands,
+  } = useWardrobeItems();
 
   const [categories, setCategories] = useState([
     'Tops',
@@ -340,6 +117,336 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     'Multicolor',
   ]);
 
+  const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+
+  const [occasions, setOccasions] = useState([
+    'Casual',
+    'Work',
+    'Formal',
+    'Party',
+    'Workout',
+    'Beach',
+    'Travel',
+  ]);
+
+  useEffect(() => {
+    if (editingItem) {
+      const newItemData = {
+        image: null,
+        imagePreview: editingItem.image_url || null,
+        name: editingItem.name || '',
+        category: editingItem.category || '',
+        color: editingItem.color || '',
+        brand: editingItem.brand || '',
+        location: editingItem.location || '',
+        tags: parseArrayField(editingItem.tags),
+        seasons: parseArrayField(editingItem.seasons),
+        occasions: parseArrayField(editingItem.occasions),
+        notes: editingItem.notes || '',
+      };
+
+      setItemData(newItemData);
+      setActiveTab('details');
+    } else {
+      setItemData({
+        image: null,
+        imagePreview: null,
+        name: '',
+        category: '',
+        color: '',
+        brand: '',
+        location: '',
+        tags: [],
+        seasons: [],
+        occasions: [],
+        notes: '',
+      });
+      setActiveTab('upload');
+    }
+  }, [editingItem]);
+
+  useEffect(() => {
+    const normalized = new Set<string>();
+    const uniqueOccasions: string[] = [];
+
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueOccasions.push(capitalizeFirst(lower));
+        }
+      });
+    };
+
+    addIfNotExists(occasions);
+    addIfNotExists(existingOccasions);
+    itemData.occasions.forEach(o => addIfNotExists([o]));
+
+    setOccasions(uniqueOccasions);
+  }, [existingOccasions, itemData.occasions]);
+
+  useEffect(() => {
+    const normalized = new Set<string>();
+    const uniqueColors: string[] = [];
+
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueColors.push(capitalizeFirst(lower));
+        }
+      });
+    };
+
+    addIfNotExists(colors);
+    addIfNotExists(existingColors);
+    addIfNotExists([itemData.color]);
+
+    setColors(uniqueColors);
+  }, [existingColors, itemData.color]);
+
+  useEffect(() => {
+    const normalized = new Set<string>();
+    const uniqueCategories: string[] = [];
+
+    // Helper to add only if not already present (case-insensitive)
+    const addIfNotExists = (arr: string[]) => {
+      arr.forEach(item => {
+        const lower = item.toLowerCase().trim();
+        if (!normalized.has(lower)) {
+          normalized.add(lower);
+          uniqueCategories.push(capitalizeFirst(lower)); // Store consistently capitalized
+        }
+      });
+    };
+
+    addIfNotExists(categories); // Add current hardcoded + user-added
+    addIfNotExists(existingCategories); // Add fetched ones
+    addIfNotExists([itemData.category]); // Include current editing value if missing
+
+    setCategories(uniqueCategories);
+  }, [existingCategories, itemData.category]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const originalFile = e.target.files[0];
+
+      try {
+        // Compress the image before processing
+        const compressedFile = await compressImage(originalFile, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.8,
+          format: 'jpeg',
+        });
+
+        console.log(`Original: ${(originalFile.size / 1024).toFixed(1)}KB`);
+        console.log(`Compressed: ${(compressedFile.size / 1024).toFixed(1)}KB`);
+
+        const reader = new FileReader();
+        reader.onload = event => {
+          if (event.target?.result) {
+            setItemData({
+              ...itemData,
+              image: compressedFile, // Use compressed file
+              imagePreview: event.target.result as string,
+            });
+            setActiveTab('details');
+          }
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        // Fallback to original file if compression fails
+        const reader = new FileReader();
+        reader.onload = event => {
+          if (event.target?.result) {
+            setItemData({
+              ...itemData,
+              image: originalFile,
+              imagePreview: event.target.result as string,
+            });
+            setActiveTab('details');
+          }
+        };
+        reader.readAsDataURL(originalFile);
+      }
+    }
+  };
+
+  const handleAddTag = () => {
+    if (currentTag && !itemData.tags.includes(currentTag)) {
+      setItemData(prev => ({
+        ...prev,
+        tags: [...prev.tags, currentTag.trim()],
+      }));
+      setCurrentTag('');
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setItemData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tag),
+    }));
+  };
+
+  const handleSeasonToggle = (season: string) => {
+    if (itemData.seasons.includes(season)) {
+      setItemData({
+        ...itemData,
+        seasons: itemData.seasons.filter(s => s !== season),
+      });
+    } else {
+      setItemData({ ...itemData, seasons: [...itemData.seasons, season] });
+    }
+  };
+
+  const handleRemoveOccasion = (occasion: string) => {
+    setItemData({
+      ...itemData,
+      occasions: itemData.occasions.filter(o => o !== occasion),
+    });
+  };
+
+  const handleSave = async () => {
+    if (!itemData.imagePreview) {
+      toast.error('Please upload an image for your item');
+      return;
+    }
+
+    if (!itemData.name) {
+      toast.error('Please give this item a name');
+      return;
+    }
+
+    if (!itemData.category) {
+      toast.error('Please select a category for your item');
+      return;
+    }
+
+    // if (!itemData.location) {
+    //   toast.warning(
+    //     'Pro tip: Add a location to easily find this item in your closet'
+    //   );
+    // }
+
+    if (currentTag.trim()) {
+      toast.warning('Please press Enter or click Add to include the tag.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        console.error('No user found');
+        const shouldLogin = window.confirm(
+          'You need to be logged in to save items. Would you like to log in now?'
+        );
+        if (shouldLogin) {
+          onOpenChange(false);
+          window.dispatchEvent(new CustomEvent('showAuth'));
+        }
+        setSaving(false);
+        return;
+      }
+
+      let imageUrl = itemData.imagePreview;
+
+      if (itemData.image) {
+        const { data: imageData, error: imageError } = await uploadImage(
+          itemData.image
+        );
+
+        if (imageError || !imageData) {
+          console.error('Error uploading image:', imageError);
+          let errorMessage = 'Failed to upload image. Please try again.';
+
+          if (imageError?.message) {
+            errorMessage = imageError.message;
+          }
+
+          toast.error(errorMessage);
+          setSaving(false);
+          return;
+        }
+        imageUrl = imageData.publicUrl;
+      }
+
+      const clothingItem = {
+        user_id: user.id,
+        name: itemData.name,
+        category: itemData.category.toLowerCase().trim(),
+        color: itemData.color ? itemData.color.toLowerCase().trim() : null,
+        brand: itemData.brand ? itemData.brand.trim() : null,
+        image_url: imageUrl,
+        location: itemData.location ? itemData.location.trim() : null,
+        seasons:
+          itemData.seasons.length > 0
+            ? itemData.seasons.map(s => s.toLowerCase().trim())
+            : [],
+        occasions:
+          itemData.occasions.length > 0
+            ? itemData.occasions.map(o => o.toLowerCase().trim())
+            : [],
+        tags:
+          itemData.tags.length > 0
+            ? itemData.tags.map(t => t.toLowerCase().trim())
+            : [],
+        notes: itemData.notes ? itemData.notes.trim() : null,
+      };
+
+      if (editingItem) {
+        const { data, error } = await updateClothingItem(
+          editingItem.id,
+          clothingItem
+        );
+        if (error) {
+          console.error('Error updating clothing item:', error);
+          toast.error('Failed to update item. Please try again.');
+          setSaving(false);
+          return;
+        }
+        toast.success('Item updated successfully!');
+      } else {
+        const { data, error } = await createClothingItem(clothingItem);
+        if (error) {
+          console.error('Error creating clothing item:', error);
+          toast.error('Failed to save item. Please try again.');
+          setSaving(false);
+          return;
+        }
+        setItemData({
+          image: null,
+          imagePreview: null,
+          name: '',
+          category: '',
+          color: '',
+          brand: '',
+          location: '',
+          tags: [],
+          seasons: [],
+          occasions: [],
+          notes: '',
+        });
+        setActiveTab('upload');
+
+        toast.success('Item created successfully!');
+      }
+
+      onSave?.();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error saving item:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAddCustomCategory = () => {
     if (customCategory && !categories.includes(customCategory)) {
       const newCategories = [...categories, customCategory];
@@ -360,30 +467,45 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   };
 
-  const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+  const handleAddOccasion = () => {
+    if (currentOccasion && !itemData.occasions.includes(currentOccasion)) {
+      setItemData({
+        ...itemData,
+        occasions: [...itemData.occasions, currentOccasion],
+      });
+      setCurrentOccasion('');
+    }
+  };
 
-  const [occasionSuggestions, setOccasionSuggestions] = useState([
-    'Casual',
-    'Work',
-    'Formal',
-    'Party',
-    'Workout',
-    'Beach',
-    'Travel',
-  ]);
+  const handleAddCustomOccasion = () => {
+    if (customOccasion && !occasions.includes(customOccasion)) {
+      const newOccasions = [...occasions, customOccasion];
+      setOccasions(newOccasions);
+      setItemData({
+        ...itemData,
+        occasions: [...itemData.occasions, customOccasion],
+      });
+      setCustomOccasion('');
+      setShowAddOccasion(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col mx-0">
-        {' '}
+      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            Add New Clothing Item
+          <DialogTitle className="text-xl font-bold ">
+            {editingItem ? 'Edit Clothing Item' : 'Add New Clothing Item'}
           </DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="upload">Upload Image</TabsTrigger>
+            <TabsTrigger value="upload">
+              Upload Image
+              {!itemData.imagePreview && (
+                <span className="ml-1 text-red-500 text-xs">*</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="details" disabled={!itemData.imagePreview}>
               Item Details
             </TabsTrigger>
@@ -393,7 +515,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50">
               {itemData.imagePreview ? (
                 <div className="relative w-full max-w-md">
-                  <img
+                  <OptimizedImage
                     src={itemData.imagePreview}
                     alt="Clothing item preview"
                     className="w-full h-auto rounded-md object-contain max-h-[300px]"
@@ -475,19 +597,25 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
           <TabsContent value="details" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Item Name</Label>
+                <Label htmlFor="name">
+                  Item Name
+                  <span className="ml-1 text-red-500 text-xs">*</span>
+                </Label>
                 <Input
                   id="name"
                   value={itemData.name}
                   onChange={e =>
                     setItemData({ ...itemData, name: e.target.value })
                   }
-                  placeholder="E.g., Blue Denim Jacket"
+                  placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">
+                  Category
+                  <span className="ml-1 text-red-500 text-xs">*</span>
+                </Label>
                 <div className="space-y-2">
                   <Select
                     value={itemData.category}
@@ -499,18 +627,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                      {/* Add the existing categroy */}
-                      {itemData.category &&
-                        !categories.includes(itemData.category) && (
-                          <SelectItem value={itemData.category}>
-                            {itemData.category}
+                      {categories
+                        .filter(category => category.trim() !== '') // Remove empty/whitespace
+                        .map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
                           </SelectItem>
-                        )}
+                        ))}
                     </SelectContent>
                   </Select>
 
@@ -579,18 +702,13 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       <SelectValue placeholder="Select color" />
                     </SelectTrigger>
                     <SelectContent>
-                      {colors.map(color => (
-                        <SelectItem key={color} value={color}>
-                          {color}
-                        </SelectItem>
-                      ))}
-                      {/* Add the existing color */}
-                      {itemData.color &&
-                        !categories.includes(itemData.color) && (
-                          <SelectItem value={itemData.color}>
-                            {itemData.color}
+                      {colors
+                        .filter(colorOption => colorOption.trim() !== '') // Avoid empty/whitespace
+                        .map(colorOption => (
+                          <SelectItem key={colorOption} value={colorOption}>
+                            {colorOption}
                           </SelectItem>
-                        )}
+                        ))}
                     </SelectContent>
                   </Select>
 
@@ -647,6 +765,18 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
               </div>
 
               <div>
+                <Label htmlFor="brand">Brand</Label>
+                <Input
+                  id="brand"
+                  value={itemData.brand}
+                  onChange={e =>
+                    setItemData({ ...itemData, location: e.target.value })
+                  }
+                  placeholder="E.g., Nike, Uniqlo"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="location">Storage Location</Label>
                 <Input
                   id="location"
@@ -656,6 +786,12 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   }
                   placeholder="E.g., Bedroom closet, Dresser drawer 2"
                 />
+                {!itemData.location && (
+                  <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                    💡 Tip: Adding a location helps you find this item quickly
+                    in your wardrobe
+                  </div>
+                )}
               </div>
 
               <div>
@@ -680,14 +816,17 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
 
               <div className="md:col-span-2">
                 <Label>Tags</Label>
-
-                {/* Add new tags */}
                 <div className="flex gap-2 mt-2">
                   <Input
                     value={currentTag}
                     onChange={e => setCurrentTag(e.target.value)}
                     placeholder="Add a tag (e.g., favorite, new)"
-                    onKeyDown={e => e.key === 'Enter' && handleAddTag()}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
                   />
                   <Button
                     type="button"
@@ -698,7 +837,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   </Button>
                 </div>
 
-                {/* Display existing tags */}
                 {itemData.tags && itemData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2 mb-2">
                     {itemData.tags.map((tag, index) => (
@@ -728,7 +866,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       value={currentOccasion}
                       onValueChange={value => {
                         setCurrentOccasion(value);
-
                         if (!itemData.occasions.includes(value)) {
                           setItemData(prev => ({
                             ...prev,
@@ -741,9 +878,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                         <SelectValue placeholder="Select or type occasion" />
                       </SelectTrigger>
                       <SelectContent>
-                        {occasionSuggestions.map(occasion => (
+                        {occasions.map(occasion => (
                           <SelectItem key={occasion} value={occasion}>
-                            {occasion}
+                            {capitalizeFirst(occasion)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -819,7 +956,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                         className="text-blue-600 hover:text-blue-800 ml-1"
                         onClick={() => handleRemoveOccasion(occasion)}
                       >
-                        x
+                        ×
                       </button>
                     </span>
                   ))}
@@ -841,24 +978,21 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             </div>
           </TabsContent>
         </Tabs>
-        <DialogFooter className="flex justify-between mt-4">
+        <DialogFooter className="flex flex-row justify-end gap-2 bg-white mt-4 sticky bottom-0 ">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
             type="button"
-            onClick={e => {
-              e.preventDefault();
-              handleSave();
-            }}
-            disabled={
-              !itemData.imagePreview ||
-              !itemData.name ||
-              !itemData.category ||
-              saving
-            }
+            onClick={handleSave}
+            // disabled={
+            //   !itemData.imagePreview ||
+            //   !itemData.category ||
+            //   !itemData.name ||
+            //   saving
+            // }
           >
-            {saving ? 'Saving...' : 'Save Item'}
+            {saving ? 'Saving...' : editingItem ? 'Update Item' : 'Save Item'}
           </Button>
         </DialogFooter>
       </DialogContent>

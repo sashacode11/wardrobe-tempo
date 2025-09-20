@@ -1,6 +1,6 @@
-// MyOutfits.tsx - Updated with reusable components
+// MyOutfits.tsx - Fixed outfit creation handling
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,39 +14,59 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Input } from './ui/input';
 import OutfitBuilder from './OutfitBuilder';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
-import { getCurrentUser, supabase } from '../lib/supabaseClient';
-import { Database } from '../types/supabase';
+import { supabase } from '../lib/supabaseClient';
 
-// Import our new reusable components
+// Import our reusable components
 import OutfitActions from './common/OutfitActions';
 import ViewModal from './common/ViewModal';
-// import EditModal from './common/EditModal';
 import DeleteModal from './common/DeleteModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
-import { ClothingItemType, OutfitType } from '@/types';
-import { OutfitWithItems } from '@/types';
+import { ClothingItemType, OutfitWithItems } from '@/types';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { useWardrobe } from '../contexts/WardrobeContext'; // Use global context
+import { OptimizedImage } from './OptimizedImage';
 
 interface MyOutfitsProps {
-  onCreateOutfit?: () => void;
+  searchQuery?: string; // Keep for backward compatibility but won't be used
+  // onCreateOutfit?: () => void;
   onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
 const MyOutfits: React.FC<MyOutfitsProps> = ({
-  onCreateOutfit,
+  searchQuery: externalSearchQuery, // Not used anymore since we use global search
+  // onCreateOutfit,
   onEditOutfit,
 }) => {
-  const [outfits, setOutfits] = useState<OutfitWithItems[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
-  const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null); // <- Specific to this component
+  // 🔹 Use global context instead of local state
+  const {
+    outfits,
+    outfitsLoading: loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    clearSearch,
+    outfitSearchResults,
+    hasSearchQuery,
+    refreshOutfits,
+    removeOutfit,
+  } = useWardrobe();
 
-  // Add multiselect functionality
+  // Local UI state
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+  const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
+  const [isCreatingNewOutfit, setIsCreatingNewOutfit] = useState(false);
+
+  // Note: Removed useEffect for refreshOutfits - relies on global context initialization
+
+  // Get the final list of outfits to display (search results or all outfits)
+  const displayedOutfits = hasSearchQuery ? outfitSearchResults : outfits;
+  const resultCount = displayedOutfits.length;
+
+  // Add multiselect functionality - now works with displayed outfits
   const {
     isSelectionMode,
     selectedItems,
@@ -62,7 +82,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     deleteSelectedItems,
   } = useMultiselect();
 
-  // Use our reusable entity actions hook (only for view and delete)
+  // Use our reusable entity actions hook
   const {
     selectedItem,
     showDeleteModal,
@@ -83,56 +103,26 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     },
   });
 
+  // ✅ FIXED: Handle creating new outfit
+  const handleCreateNewOutfit = () => {
+    setIsCreatingNewOutfit(true);
+    setMyOutfitsEditingOutfit(null); // Ensure we're not editing
+    setShowOutfitBuilder(true);
+
+    // Call the parent's onCreateOutfit if provided
+    if (onCreateOutfit) {
+      onCreateOutfit();
+    }
+  };
+
   // Keep your original edit function exactly as it was
   const handleEditOutfit = (outfit: OutfitWithItems) => {
-    // onEditOutfit(outfit);
+    setIsCreatingNewOutfit(false);
     setMyOutfitsEditingOutfit(outfit);
     setShowOutfitBuilder(true);
   };
 
-  useEffect(() => {
-    fetchOutfits();
-  }, []);
-
-  const fetchOutfits = async () => {
-    try {
-      setLoading(true);
-
-      const user = await getCurrentUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('outfits')
-        .select(
-          `
-          *,
-          outfit_items (
-            clothing_item_id,
-            wardrobe_items (*)
-          )
-        `
-        )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching outfits:', error);
-        setError('Failed to load outfits');
-        return;
-      }
-
-      setOutfits((data as OutfitWithItems[]) || []);
-    } catch (error) {
-      console.error('Error fetching outfits:', error);
-      setError('Failed to load outfits');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 🔹 Simplified delete function using global context
   const handleDeleteOutfit = async (outfitId: string) => {
     // First delete the outfit_items
     const { error: outfitItemsError } = await supabase
@@ -154,7 +144,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       throw new Error('Failed to delete outfit');
     }
 
-    setOutfits(prev => prev.filter(outfit => outfit.id !== outfitId));
+    // Update global state
+    removeOutfit(outfitId);
   };
 
   // Handle bulk delete function specifically for outfits
@@ -172,7 +163,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
       if (outfitItemsError) {
         console.error('Error deleting outfit items:', outfitItemsError);
-        setError('Failed to delete outfit items');
+        setMultiselectError('Failed to delete outfit items');
         return;
       }
 
@@ -184,14 +175,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
       if (outfitsError) {
         console.error('Error deleting outfits:', outfitsError);
-        setError('Failed to delete outfits');
+        setMultiselectError('Failed to delete outfits');
         return;
       }
 
-      // Update local state
-      setOutfits(prev =>
-        prev.filter(outfit => !idsToDelete.includes(outfit.id))
-      );
+      // Update global state - remove each outfit
+      idsToDelete.forEach(id => removeOutfit(id));
 
       // Reset multiselect state
       deselectAllItems();
@@ -199,28 +188,204 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       toggleSelectionMode(); // Exit selection mode
     } catch (error) {
       console.error('Error in bulk delete:', error);
-      setError('Failed to delete outfits');
+      setMultiselectError('Failed to delete outfits');
     }
   };
 
-  // Helper function to organize outfit items by category
-  const organizeOutfitItems = (outfit: OutfitWithItems) => {
-    const organized: { [key: string]: ClothingItemType } = {};
+  // ✅ FIXED: Handle outfit builder close with proper state cleanup
+  const handleOutfitBuilderClose = () => {
+    setShowOutfitBuilder(false);
+    setMyOutfitsEditingOutfit(null);
+    setIsCreatingNewOutfit(false);
+  };
 
+  // ✅ FIXED: Handle successful outfit save/update
+  const handleOutfitSaved = async () => {
+    console.log('Outfit saved successfully, refreshing outfits...');
+
+    // Refresh the outfits list to show the new/updated outfit
+    await refreshOutfits();
+
+    // Close the outfit builder
+    handleOutfitBuilderClose();
+  };
+
+  // ✅ FIXED: Handle successful outfit edit
+  const handleEditComplete = async () => {
+    console.log('Outfit edit completed, refreshing outfits...');
+
+    // Refresh the outfits list to show the updated outfit
+    await refreshOutfits();
+
+    // Close the outfit builder
+    handleOutfitBuilderClose();
+  };
+
+  // Helper function to organize outfit items by category
+  const organizeOutfitItems = (
+    outfit: OutfitWithItems,
+    allCategories: string[]
+  ) => {
+    if (!outfit?.outfit_items) {
+      console.log('No outfit_items found in outfit:', outfit);
+      return {};
+    }
+
+    const organized: Record<string, ClothingItemType | null> = {};
+
+    // Initialize all categories
+    allCategories.forEach(cat => {
+      organized[cat] = null;
+    });
+
+    // ✅ FIXED: Handle multiple items per category properly
+    // For display purposes, just show the first item in each category
     outfit.outfit_items?.forEach(item => {
       const clothingItem = item.wardrobe_items;
       if (clothingItem) {
-        organized[clothingItem.category] = clothingItem;
+        const itemCategory = clothingItem.category.toLowerCase();
+
+        const matchedCategory = allCategories.find(
+          cat => cat.toLowerCase() === itemCategory
+        );
+
+        if (matchedCategory) {
+          // Only set if not already set (first item in category)
+          if (!organized[matchedCategory]) {
+            organized[matchedCategory] = clothingItem;
+          }
+        } else {
+          console.warn(`🔴 No match for category: "${clothingItem.category}"`);
+        }
       }
     });
 
     return organized;
   };
 
+  // ViewModalContent component that properly uses categories
+  const ViewModalContent: React.FC<{ outfit: OutfitWithItems }> = ({
+    outfit,
+  }) => {
+    const { categories } = useWardrobeItems();
+
+    // ✅ FIXED: Group items by category for display
+    const itemsByCategory: Record<string, ClothingItemType[]> = {};
+
+    // Initialize categories
+    categories.forEach(cat => {
+      itemsByCategory[cat] = [];
+    });
+
+    // Group items by category
+    outfit.outfit_items?.forEach(item => {
+      const clothingItem = item.wardrobe_items;
+      if (clothingItem) {
+        const itemCategory = clothingItem.category.toLowerCase();
+        const matchedCategory = categories.find(
+          cat => cat.toLowerCase() === itemCategory
+        );
+
+        if (matchedCategory) {
+          itemsByCategory[matchedCategory].push(clothingItem);
+        }
+      }
+    });
+
+    // Filter out empty categories
+    const categoriesWithItems = Object.entries(itemsByCategory).filter(
+      ([category, items]) => items.length > 0
+    );
+
+    return (
+      <div className="space-y-6">
+        {/* Occasions */}
+        {outfit.occasions && outfit.occasions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {outfit.occasions.map((occasion, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium"
+              >
+                {occasion}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Outfit Items by Category */}
+        <div className="space-y-6">
+          {categoriesWithItems.map(([category, items]) => (
+            <div key={category} className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900 capitalize border-b border-gray-200 pb-2">
+                {category} ({items.length})
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {items.map(item => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg hover:shadow-sm transition-shadow"
+                  >
+                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                      <OptimizedImage
+                        src={item.image_url || ''}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm truncate">
+                        {item.name}
+                      </p>
+                      {item.color && (
+                        <p className="text-xs text-gray-600 capitalize mt-1">
+                          {item.color}
+                        </p>
+                      )}
+                      {item.location && (
+                        <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                          {item.location}
+                        </p>
+                      )}
+                      {Array.isArray(item.tags) && item.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {item.tags.slice(0, 2).map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs px-1 py-0.5"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
-    const items = organizeOutfitItems(outfit);
-    const categories = ['tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
+    const { categories } = useWardrobeItems();
     const isSelected = selectedItems.has(outfit.id);
+    const items = organizeOutfitItems(outfit, categories);
+
+    // Filter out empty categories - only show categories that have items
+    const itemsWithContent = Object.entries(items).filter(
+      ([category, item]) => item !== null
+    );
+
+    const totalItemCount = outfit.outfit_items?.length || 0;
+    const maxDisplayItems = 2;
+    const hasMoreItems = totalItemCount > maxDisplayItems;
 
     return (
       <div className="relative">
@@ -232,74 +397,138 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`hover:shadow-md transition-shadow ${
-            isSelectionMode && isSelected ? 'ring-2 ring-primary' : ''
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 h-[280px] flex flex-col overflow-hidden ${
+            isSelectionMode && isSelected
+              ? 'ring-2 ring-blue-500 ring-offset-2'
+              : ''
           }`}
         >
-          <CardHeader className="pb-3">
+          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
             <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-lg">{outfit.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Created {new Date(outfit.created_at).toLocaleDateString()}
-                </p>
-                {outfit.occasions && outfit.occasions.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {outfit.occasions.slice(0, 2).map((occasion, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {occasion}
-                      </Badge>
-                    ))}
-                    {outfit.occasions.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{outfit.occasions.length - 2} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-l font-semibold text-gray-900 mb-1 truncate">
+                  {outfit.name}
+                </CardTitle>
               </div>
-              {/* Only show action buttons when not in selection mode */}
+
+              {/* Action buttons with improved positioning */}
               {!isSelectionMode && (
-                <OutfitActions
-                  onView={() => handleView(outfit)}
-                  onEdit={() => handleEditOutfit(outfit)}
-                  onDelete={() => handleDelete(outfit)}
-                  viewTitle="View outfit details"
-                  editTitle="Edit outfit"
-                  deleteTitle="Delete outfit"
-                />
+                <div className="group-hover:opacity-100 transition-opacity duration-200 ml-3">
+                  <OutfitActions
+                    onView={() => handleView(outfit)}
+                    onEdit={() => handleEditOutfit(outfit)}
+                    onDelete={() => handleDelete(outfit)}
+                    viewTitle="View outfit details"
+                    editTitle="Edit outfit"
+                    deleteTitle="Delete outfit"
+                  />
+                </div>
               )}
             </div>
           </CardHeader>
 
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-5 gap-2">
-              {categories.map(category => {
-                const item = items[category];
-                return (
-                  <div key={category} className="text-center">
-                    <div className="w-12 h-12 bg-muted rounded-md mb-1 flex items-center justify-center overflow-hidden">
-                      {item ? (
-                        <img
-                          src={item.image_url || ''}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
+          <CardContent className="pt-0 pb-4 px-4 flex-1 flex flex-col overflow-hidden">
+            {/* Items display with fixed height */}
+            {itemsWithContent.length > 0 ? (
+              <div className="flex-1 flex flex-col">
+                {/* Item count indicator */}
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <span className="text-sm font-medium text-gray-700">
+                    {totalItemCount} item{totalItemCount !== 1 ? 's' : ''}
+                  </span>
+                  {hasMoreItems && (
+                    <div
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 cursor-pointer group/hint"
+                      onClick={() => handleView(outfit)}
+                    >
+                      <span className="text-xs font-medium">View all</span>
+                      <svg
+                        className="w-3 h-3 group-hover/hint:translate-x-0.5 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
                         />
-                      ) : (
-                        <div className="text-muted-foreground text-xs">-</div>
-                      )}
+                      </svg>
                     </div>
-                    <p className="text-xs text-muted-foreground capitalize truncate">
-                      {category}
-                    </p>
+                  )}
+                </div>
+
+                {/* Items grid with fixed height container */}
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <div className="grid grid-cols-3 gap-2 h-full max-h-full">
+                    {itemsWithContent
+                      .slice(0, maxDisplayItems)
+                      .map(([category, item], index) => (
+                        <div
+                          key={category}
+                          className="group/item relative flex flex-col"
+                        >
+                          {/* Image container with consistent aspect ratio */}
+                          <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-100 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
+                            <OptimizedImage
+                              src={item.image_url || ''}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
+                            />
+                            {/* Overlay on hover */}
+                            <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
+                          </div>
+
+                          {/* Category label with fixed height */}
+                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
+                            <p className="text-xs font-medium text-gray-700 capitalize tracking-wide leading-tight truncate">
+                              {category}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate leading-tight">
+                              {item.name}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+
+                    {/* Show "+X more" indicator if needed */}
+                    {hasMoreItems &&
+                      itemsWithContent.length > maxDisplayItems && (
+                        <div
+                          className="group/item relative cursor-pointer flex flex-col"
+                          onClick={() => handleView(outfit)}
+                        >
+                          <div className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 flex flex-col items-center justify-center hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-200 transition-all duration-200 flex-shrink-0">
+                            <span className="text-lg font-semibold text-blue-600">
+                              +{totalItemCount - maxDisplayItems}
+                            </span>
+                            <span className="text-xs text-blue-500 font-medium">
+                              more
+                            </span>
+                          </div>
+                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
+                            <p className="text-xs font-medium text-blue-600 truncate">
+                              View all
+                            </p>
+                          </div>
+                        </div>
+                      )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">👔</span>
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">
+                    No items in this outfit
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -308,230 +537,248 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your outfits...</p>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your outfits...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Error display */}
-      {(error || multiselectError || entityError) && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-          <p className="text-destructive text-sm">
-            {error || multiselectError || entityError}
-          </p>
-          <button
-            onClick={() => {
-              setError(null);
-              setMultiselectError(null);
-              setEntityError(null);
-            }}
-            className="text-destructive hover:underline text-sm mt-1"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">My Outfits</h2>
-          <p className="text-muted-foreground">
-            You have {outfits.length} saved outfit
-            {outfits.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Multiselect Controls */}
-          <SelectionControls
-            isSelectionMode={isSelectionMode}
-            selectedCount={selectedItems.size}
-            totalFilteredCount={outfits.length}
-            onToggleSelectionMode={toggleSelectionMode}
-            onSelectAll={() => selectAllItems(outfits)}
-            onDeselectAll={deselectAllItems}
-            onDeleteSelected={() => setShowDeleteDialog(true)}
-          />
-
-          {/* Create New Outfit Button */}
-          {onCreateOutfit && !isSelectionMode && (
-            <Button
-              onClick={onCreateOutfit}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create New Outfit
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Edit Modal */}
-
-      {showOutfitBuilder && (
-        <OutfitBuilder
-          isOpen={true}
-          editingOutfit={myOutfitsEditingOutfit} // ← Use editingOutfit instead of initialOutfit
-          onClose={() => {
-            setShowOutfitBuilder(false);
-            setMyOutfitsEditingOutfit(null);
-          }}
-          onEditComplete={() => {
-            // ← Use onEditComplete instead of onSave
-            fetchOutfits();
-            setShowOutfitBuilder(false);
-            setMyOutfitsEditingOutfit(null);
-          }}
-          onOutfitSaved={() => {
-            fetchOutfits();
-            setShowOutfitBuilder(false);
-            setMyOutfitsEditingOutfit(null);
-          }}
-        />
-      )}
-
-      {/* Outfits Grid */}
-      {outfits.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="text-6xl mb-4">👔</div>
-            <h3 className="text-xl font-semibold mb-2">No outfits yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first outfit to get started
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+        {/* Error display */}
+        {(error || multiselectError || entityError) && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+            <p className="text-red-800 text-sm font-medium">
+              {error || multiselectError || entityError}
             </p>
-            {onCreateOutfit && (
-              <Button onClick={onCreateOutfit} className="mt-4">
-                Create Your First Outfit
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {outfits.map(outfit => (
-            <OutfitCard key={outfit.id} outfit={outfit} />
-          ))}
-        </div>
-      )}
+            <button
+              onClick={() => {
+                setMultiselectError(null);
+                setEntityError(null);
+              }}
+              className="text-red-600 hover:text-red-800 hover:underline text-sm mt-2 font-medium transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
-      {/* Reusable View Modal */}
-      <ViewModal
-        isOpen={!!showViewModal}
-        onClose={closeModals}
-        title={selectedItem?.name || 'Outfit Details'}
-        subtitle={
-          selectedItem
-            ? `Created on ${new Date(
-                selectedItem.created_at
-              ).toLocaleDateString()}`
-            : ''
-        }
-        maxWidth="2xl"
-      >
-        {selectedItem && (
-          <div>
-            {/* Occasions */}
-            {selectedItem.occasions && selectedItem.occasions.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
-                {selectedItem.occasions.map((occasion, index) => (
-                  <Badge key={index} variant="secondary">
-                    {occasion}
-                  </Badge>
-                ))}
+        {!showOutfitBuilder && (
+          <div className="w-full">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  {/* Icon with gradient background */}
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                    <Shirt className="h-8 w-8 text-white" />
+                  </div>
+
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      My Outfits
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <p className="text-sm font-medium">
+                          You have {outfits.length} saved outfit
+                          {outfits.length !== 1 ? 's' : ''}
+                          {hasSearchQuery && (
+                            <span className="text-blue-600">
+                              {' '}
+                              ({resultCount} matching)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      {outfits.length > 0 && (
+                        <div className="flex items-center gap-1 text-amber-600">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Selection Controls */}
+                <SelectionControls
+                  isSelectionMode={isSelectionMode}
+                  selectedCount={selectedItems.size}
+                  totalFilteredCount={displayedOutfits.length}
+                  onToggleSelectionMode={toggleSelectionMode}
+                  onSelectAll={() => selectAllItems(displayedOutfits)}
+                  onDeselectAll={deselectAllItems}
+                  onDeleteSelected={() => setShowDeleteDialog(true)}
+                />
+
+                {/* Create button with gradient */}
+                {!isSelectionMode && (
+                  <Button
+                    onClick={handleCreateNewOutfit}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create New Outfit
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Search Results Info */}
+            {hasSearchQuery && (
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-blue-800">
+                    {resultCount > 0 ? (
+                      <>
+                        Found <strong>{resultCount}</strong> outfit
+                        {resultCount === 1 ? '' : 's'} matching "{searchQuery}"
+                      </>
+                    ) : (
+                      <>No outfits found for "{searchQuery}"</>
+                    )}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Clear
+                </Button>
               </div>
             )}
 
-            {/* Outfit Items */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(organizeOutfitItems(selectedItem)).map(
-                ([category, item]) => (
-                  <Card key={category}>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm capitalize">
-                        {category}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                          <img
-                            src={item.image_url || ''}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{item.name}</p>
-                          {item.color && (
-                            <p className="text-sm text-muted-foreground capitalize">
-                              Color: {item.color}
-                            </p>
-                          )}
-                          {Array.isArray(item.tags) && item.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {item.tags.slice(0, 2).map((tag, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              )}
-            </div>
+            {/* Outfits Grid */}
+            {displayedOutfits.length === 0 ? (
+              <div className="text-center py-16">
+                {hasSearchQuery ? (
+                  // No search results
+                  <div>
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Search className="h-12 w-12 text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                      No matching outfits
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                      Try adjusting your search terms or browse all your outfits
+                    </p>
+                    <Button
+                      onClick={clearSearch}
+                      variant="outline"
+                      className="px-8 py-4"
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
+                ) : (
+                  // No outfits at all
+                  <div>
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <span className="text-4xl">👔</span>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                      No outfits yet
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                      Create your first outfit by mixing and matching items from
+                      your wardrobe
+                    </p>
+                    <Button
+                      onClick={handleCreateNewOutfit}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                    >
+                      Create Your First Outfit
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
+                {displayedOutfits.map(outfit => (
+                  <OutfitCard key={outfit.id} outfit={outfit} />
+                ))}
+              </div>
+            )}
           </div>
         )}
-      </ViewModal>
 
-      {/* Reusable Edit Modal - we use OutfitBuilder instead */}
+        {/* ✅ FIXED: Outfit Builder with proper props */}
+        {showOutfitBuilder && (
+          <OutfitBuilder
+            onClose={handleOutfitBuilderClose}
+            editingOutfit={isCreatingNewOutfit ? null : myOutfitsEditingOutfit}
+            onEditComplete={handleEditComplete}
+            onOutfitSaved={handleOutfitSaved}
+          />
+        )}
 
-      {/* Reusable Delete Modal */}
-      <DeleteModal
-        isOpen={!!showDeleteModal}
-        onClose={closeModals}
-        onConfirm={confirmDelete}
-        title="Delete Outfit"
-        itemName={selectedItem?.name}
-        isLoading={isDeleting}
-      />
+        {/* Reusable View Modal */}
+        <ViewModal
+          isOpen={!!showViewModal}
+          onClose={closeModals}
+          title={
+            selectedItem?.name ? `Outfit: ${selectedItem.name}` : 'Your Outfit'
+          }
+          subtitle={
+            selectedItem
+              ? (() => {
+                  const count = selectedItem.outfit_items?.length || 0;
+                  return `${count} item${
+                    count !== 1 ? 's' : ''
+                  } in this outfit`;
+                })()
+              : ''
+          }
+          maxWidth="xl"
+        >
+          {selectedItem && <ViewModalContent outfit={selectedItem} />}
+        </ViewModal>
 
-      {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Outfits</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedItems.size} outfit
-              {selectedItems.size !== 1 ? 's' : ''}? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDeleteOutfits}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Delete {selectedItems.size} outfit
-              {selectedItems.size !== 1 ? 's' : ''}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Reusable Delete Modal */}
+        <DeleteModal
+          isOpen={!!showDeleteModal}
+          onClose={closeModals}
+          onConfirm={confirmDelete}
+          title="Delete Outfit"
+          itemName={selectedItem?.name}
+          isLoading={isDeleting}
+        />
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent className="sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+                Delete Selected Outfits
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-600">
+                Are you sure you want to delete {selectedItems.size} outfit
+                {selectedItems.size !== 1 ? 's' : ''}? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-3">
+              <AlertDialogCancel className="px-6">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleBulkDeleteOutfits}
+                className="bg-red-600 hover:bg-red-700 text-white px-6"
+              >
+                Delete {selectedItems.size} outfit
+                {selectedItems.size !== 1 ? 's' : ''}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 };

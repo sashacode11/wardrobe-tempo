@@ -14,8 +14,9 @@ import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { capitalizeFirst, parseArrayField } from '@/lib/utils';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
-import ItemOutfitsModal from './ItemOutfitsModal';
+import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
+import { OptimizedImage } from './OptimizedImage';
 
 const ClothingItem = ({
   id = 'unknown',
@@ -94,7 +95,11 @@ const ClothingItem = ({
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
-          <img src={image} alt={name} className="w-full h-full object-cover" />
+          <OptimizedImage
+            src={image}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
           <Badge className="absolute top-2 right-2 bg-white text-black">
             {category}
           </Badge>
@@ -110,12 +115,27 @@ const ClothingItem = ({
           <h3 className="font-medium text-sm truncate text-blue-400">
             {capitalizeFirst(name)}
           </h3>
-          <p className="text-xs text-muted-foreground">{color}</p>
+          {/* <p className="text-xs text-muted-foreground">{color}</p> */}
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-gray-500 capitalize">{location}</span>
+            {color && (
+              <div
+                className="w-4 h-4 rounded-full border border-gray-300"
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            )}
+          </div>
+          {/* {brand && (
+    <p className="text-xs text-gray-500 mt-1 truncate">
+      {brand}
+    </p>
+  )} */}
         </CardContent>
       </Card>
 
       {/* Item Outfits Modal */}
-      <ItemOutfitsModal
+      <ViewOutfitsModal
         isOpen={showOutfitsModal}
         onClose={() => setShowOutfitsModal(false)}
         // clothingItem={}
@@ -139,7 +159,7 @@ const ClothingItem = ({
           {/* Image Header with Title Overlay */}
           <div className="relative">
             <div className="relative w-full h-48 sm:h-64 overflow-hidden">
-              <img
+              <OptimizedImage
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"

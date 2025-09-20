@@ -1,4 +1,4 @@
-// components/ItemOutfitsModal.tsx - Updated with reusable components
+// components/ViewOutfitsModal.tsx - Updated with reusable components
 import React, { useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,10 @@ import OutfitActions from './common/OutfitActions';
 import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import OutfitBuilder from './OutfitBuilder';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { OptimizedImage } from './OptimizedImage';
 
-interface ItemOutfitsModalProps {
+interface ViewOutfitsModalProps {
   isOpen: boolean;
   onClose: () => void;
   clothingItem: ClothingItemType | null;
@@ -30,7 +32,7 @@ interface ItemOutfitsModalProps {
   onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
 
-const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
+const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   isOpen,
   onClose,
   clothingItem,
@@ -63,7 +65,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
         fetchItemOutfits(clothingItem.id);
       } else {
         console.error(
-          '❌ ItemOutfitsModal: fetchItemOutfits is not a function:',
+          '❌ ViewOutfitsModal: fetchItemOutfits is not a function:',
           typeof fetchItemOutfits
         );
       }
@@ -95,7 +97,8 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
 
   const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
     const items = organizeOutfitItems(outfit);
-    const categories = ['tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
+    // const categories = ['tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
+    const { categories } = useWardrobeItems();
 
     // Debug: Check if current item is in this outfit
     const currentItemInOutfit = outfit.outfit_items?.some(
@@ -108,7 +111,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
       if (onEditOutfit && typeof onEditOutfit === 'function') {
         onEditOutfit(outfit);
       } else {
-        console.warn('❌ ItemOutfitsModal: onEditOutfit is not a function!', {
+        console.warn('❌ ViewOutfitsModal: onEditOutfit is not a function!', {
           onEditOutfit,
         });
       }
@@ -196,7 +199,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
                     }`}
                   >
                     {item ? (
-                      <img
+                      <OptimizedImage
                         src={item.image_url || ''}
                         alt={item.name}
                         className="w-full h-full object-cover"
@@ -283,7 +286,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
             {clothingItem && (
               <div className="flex items-center gap-3 pt-2">
                 <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                  <img
+                  <OptimizedImage
                     src={clothingItem.image_url || ''}
                     alt={clothingItem.name}
                     className="w-full h-full object-cover"
@@ -348,7 +351,7 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
                     <CardContent className="pt-0">
                       <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                          <img
+                          <OptimizedImage
                             src={item.image_url || ''}
                             alt={item.name}
                             className="w-full h-full object-cover"
@@ -418,4 +421,4 @@ const ItemOutfitsModal: React.FC<ItemOutfitsModalProps> = ({
   );
 };
 
-export default ItemOutfitsModal;
+export default ViewOutfitsModal;
