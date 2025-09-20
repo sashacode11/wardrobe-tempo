@@ -22,6 +22,7 @@ import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import OutfitBuilder from './OutfitBuilder';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ViewOutfitsModalProps {
   isOpen: boolean;
@@ -198,7 +199,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
                     }`}
                   >
                     {item ? (
-                      <img
+                      <OptimizedImage
                         src={item.image_url || ''}
                         alt={item.name}
                         className="w-full h-full object-cover"
@@ -285,7 +286,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
             {clothingItem && (
               <div className="flex items-center gap-3 pt-2">
                 <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                  <img
+                  <OptimizedImage
                     src={clothingItem.image_url || ''}
                     alt={clothingItem.name}
                     className="w-full h-full object-cover"
@@ -350,7 +351,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
                     <CardContent className="pt-0">
                       <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                          <img
+                          <OptimizedImage
                             src={item.image_url || ''}
                             alt={item.name}
                             className="w-full h-full object-cover"

@@ -28,6 +28,7 @@ import { useOutfitActions } from '../hooks/useOutfitActions';
 import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useWardrobe } from '../contexts/WardrobeContext'; // Use global context
+import { OptimizedImage } from './OptimizedImage';
 
 interface MyOutfitsProps {
   searchQuery?: string; // Keep for backward compatibility but won't be used
@@ -327,7 +328,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                     className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg hover:shadow-sm transition-shadow"
                   >
                     <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={item.image_url || ''}
                         alt={item.name}
                         className="w-full h-full object-cover"
@@ -470,7 +471,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                         >
                           {/* Image container with consistent aspect ratio */}
                           <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-100 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
-                            <img
+                            <OptimizedImage
                               src={item.image_url || ''}
                               alt={item.name}
                               className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"

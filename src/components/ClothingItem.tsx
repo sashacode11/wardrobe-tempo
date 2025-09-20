@@ -16,6 +16,7 @@ import { capitalizeFirst, parseArrayField } from '@/lib/utils';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
 import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
+import { OptimizedImage } from './OptimizedImage';
 
 const ClothingItem = ({
   id = 'unknown',
@@ -94,7 +95,11 @@ const ClothingItem = ({
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
-          <img src={image} alt={name} className="w-full h-full object-cover" />
+          <OptimizedImage
+            src={image}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
           <Badge className="absolute top-2 right-2 bg-white text-black">
             {category}
           </Badge>
@@ -154,7 +159,7 @@ const ClothingItem = ({
           {/* Image Header with Title Overlay */}
           <div className="relative">
             <div className="relative w-full h-48 sm:h-64 overflow-hidden">
-              <img
+              <OptimizedImage
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"

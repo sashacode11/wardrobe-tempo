@@ -34,6 +34,7 @@ import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useFilters } from '@/hooks/useFilters';
 import FloatingOutfitPanel from './FloatingOutfitPanel';
 import { toast } from 'sonner';
+import { OptimizedImage } from './OptimizedImage';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -536,7 +537,7 @@ const OutfitBuilder = ({
                                 >
                                   <CardContent className="p-0">
                                     <div className="relative w-full h-40 overflow-hidden">
-                                      <img
+                                      <OptimizedImage
                                         src={item.image_url}
                                         alt={item.name}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

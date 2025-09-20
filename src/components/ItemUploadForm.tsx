@@ -31,6 +31,8 @@ import { ClothingItemType } from '../types';
 import { capitalizeFirst, parseArrayField } from '../lib/utils';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { toast } from 'sonner';
+import { OptimizedImage } from './OptimizedImage';
+import { compressImage } from '@/utils/imageCache';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -227,21 +229,50 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     setCategories(uniqueCategories);
   }, [existingCategories, itemData.category]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = event => {
-        if (event.target?.result) {
-          setItemData({
-            ...itemData,
-            image: file,
-            imagePreview: event.target.result as string,
-          });
-          setActiveTab('details');
-        }
-      };
-      reader.readAsDataURL(file);
+      const originalFile = e.target.files[0];
+
+      try {
+        // Compress the image before processing
+        const compressedFile = await compressImage(originalFile, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.8,
+          format: 'jpeg',
+        });
+
+        console.log(`Original: ${(originalFile.size / 1024).toFixed(1)}KB`);
+        console.log(`Compressed: ${(compressedFile.size / 1024).toFixed(1)}KB`);
+
+        const reader = new FileReader();
+        reader.onload = event => {
+          if (event.target?.result) {
+            setItemData({
+              ...itemData,
+              image: compressedFile, // Use compressed file
+              imagePreview: event.target.result as string,
+            });
+            setActiveTab('details');
+          }
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        // Fallback to original file if compression fails
+        const reader = new FileReader();
+        reader.onload = event => {
+          if (event.target?.result) {
+            setItemData({
+              ...itemData,
+              image: originalFile,
+              imagePreview: event.target.result as string,
+            });
+            setActiveTab('details');
+          }
+        };
+        reader.readAsDataURL(originalFile);
+      }
     }
   };
 
@@ -484,7 +515,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50">
               {itemData.imagePreview ? (
                 <div className="relative w-full max-w-md">
-                  <img
+                  <OptimizedImage
                     src={itemData.imagePreview}
                     alt="Clothing item preview"
                     className="w-full h-auto rounded-md object-contain max-h-[300px]"
