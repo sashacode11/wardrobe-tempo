@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { capitalizeFirst, parseArrayField } from '@/lib/utils';
+import { capitalizeFirst, parseArrayField } from '@/utils/helpers';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
 import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';

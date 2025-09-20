@@ -28,7 +28,7 @@ import {
 } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { ClothingItemType } from '../types';
-import { capitalizeFirst, parseArrayField } from '../lib/utils';
+import { capitalizeFirst, parseArrayField } from '../utils/helpers';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { toast } from 'sonner';
 import { OptimizedImage } from './OptimizedImage';

@@ -32,7 +32,7 @@ import { ClothingItemType } from '../types';
 import { FilterConfig, useFilters } from '@/hooks/useFilters';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import FilterPanel from './common/FilterPanel';
-import { capitalizeFirst } from '@/lib/utils';
+import { capitalizeFirst } from '@/utils/helpers';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import UnifiedSearchResults from './SearchResults';
 import OutfitRepairView from './OutfitRepairView';
