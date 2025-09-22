@@ -342,11 +342,12 @@ const Home = () => {
 
             <button
               onClick={handleAddItemClick}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors duration-200 flex items-center gap-2"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500 active:bg-blue-700 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm whitespace-nowrap"
               type="button"
             >
-              <Plus className="h-4 w-4" />
-              Add Item
+              <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
+              <span className="hidden xs:inline sm:inline">Add Item</span>
+              {/* <span className="xs:hidden">+</span> */}
             </button>
 
             {user ? (
