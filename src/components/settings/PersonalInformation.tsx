@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { useProfileUpdate } from '@/hooks/useProfileUpdate';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 
 // PersonalInformation.tsx - Personal Info Settings
 export const PersonalInformation: React.FC<{ onBack: () => void }> = ({
@@ -15,8 +16,8 @@ export const PersonalInformation: React.FC<{ onBack: () => void }> = ({
     displayName: '',
     email: '',
   });
-  // const { updateProfile, saving } = useProfileUpdate();
-  const [saving, setSaving] = useState(false);
+  const { updateProfile, saving } = useProfileUpdate();
+  // const [saving, setSaving] = useState(false);
 
   // Load user data on component mount
   useEffect(() => {
@@ -28,39 +29,49 @@ export const PersonalInformation: React.FC<{ onBack: () => void }> = ({
     }
   }, [user]);
 
+  // const handleSave = async () => {
+  //   if (!user) return;
+
+  //   setSaving(true);
+  //   try {
+  //     console.log('Direct call - attempting to update profile');
+  //     console.log('User ID:', user.id);
+  //     console.log('Display name:', formData.displayName);
+
+  //     const { data, error } = await supabase.auth.updateUser({
+  //       data: {
+  //         full_name: formData.displayName,
+  //       },
+  //     });
+
+  //     console.log('Direct call result:', { data, error });
+
+  //     if (error) {
+  //       console.error('Direct call error:', error);
+  //       alert(`Error: ${error.message}`);
+  //       return;
+  //     }
+
+  //     if (data.user) {
+  //       setUser(data.user);
+  //     }
+
+  //     alert('Profile updated successfully!');
+  //   } catch (error) {
+  //     console.error('Direct call catch:', error);
+  //     alert('Error saving profile. Please try again.');
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
   const handleSave = async () => {
-    if (!user) return;
+    const result = await updateProfile(formData.displayName);
 
-    setSaving(true);
-    try {
-      console.log('Direct call - attempting to update profile');
-      console.log('User ID:', user.id);
-      console.log('Display name:', formData.displayName);
-
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          full_name: formData.displayName,
-        },
-      });
-
-      console.log('Direct call result:', { data, error });
-
-      if (error) {
-        console.error('Direct call error:', error);
-        alert(`Error: ${error.message}`);
-        return;
-      }
-
-      if (data.user) {
-        setUser(data.user);
-      }
-
-      alert('Profile updated successfully!');
-    } catch (error) {
-      console.error('Direct call catch:', error);
-      alert('Error saving profile. Please try again.');
-    } finally {
-      setSaving(false);
+    if (result.success) {
+      toast.success('Profile updated successfully!');
+    } else {
+      toast.error(`Error: ${result.error}`);
     }
   };
 
@@ -106,7 +117,7 @@ export const PersonalInformation: React.FC<{ onBack: () => void }> = ({
               placeholder="Email cannot be changed"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Email address cannot be changed from this screen
+              Email address cannot be changed
             </p>
           </div>
         </div>
