@@ -20,6 +20,7 @@ import {
   Sun,
   Camera,
   Edit3,
+  Search,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -134,6 +135,7 @@ const Home = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   // Define filter configurations
   const filterConfigs: FilterConfig[] = [
@@ -271,7 +273,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 px-2 md:px-20 sm:pb-4 pt-4">
+      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 px-2 md:px-10 sm:pb-4 pt-4">
         <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
@@ -287,7 +289,7 @@ const Home = () => {
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}
-                    className={`relative mx-6 py-2.5  text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                    className={`relative mx-3 py-2.5  text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                       activeTab === key
                         ? 'border-b-2 border-blue-600 px-0'
                         : 'text-gray-600 hover:text-blue-600'
@@ -318,25 +320,64 @@ const Home = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user && (
               <div className="relative">
-                <SearchBar
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  onClear={clearSearch}
-                  placeholder="Search items and outfits..."
-                  className="w-64"
-                />
-                {/* Search results indicator */}
-                {hasSearchQuery && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-lg shadow-lg z-10 p-2 text-xs text-gray-600">
-                    <div>
-                      {searchResults.length > 0
-                        ? `Found ${searchResults.length} item${
-                            searchResults.length === 1 ? '' : 's'
-                          }`
-                        : 'No items found'}
+                {/* Full search bar for screens >= 1300px */}
+                <div className="hidden min-[1300px]:block">
+                  <SearchBar
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClear={clearSearch}
+                    placeholder="Search items and outfits..."
+                    className="w-64"
+                  />
+                  {/* Search results indicator */}
+                  {hasSearchQuery && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-lg shadow-lg z-10 p-2 text-xs text-gray-600">
+                      <div>
+                        {searchResults.length > 0
+                          ? `Found ${searchResults.length} item${
+                              searchResults.length === 1 ? '' : 's'
+                            }`
+                          : 'No items found'}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Search icon only for screens < 1300px */}
+                <div className="min-[1300px]:hidden">
+                  {!searchExpanded ? (
+                    <button
+                      onClick={() => setSearchExpanded(true)}
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                      type="button"
+                      aria-label="Open search"
+                    >
+                      <Search className="h-5 w-5" />
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <SearchBar
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onClear={clearSearch}
+                        placeholder="Search..."
+                        className="w-48"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          setSearchExpanded(false);
+                          setSearchQuery('');
+                        }}
+                        className="p-2 text-gray-600 hover:text-red-600 rounded-lg transition-colors duration-200"
+                        type="button"
+                        aria-label="Close search"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -381,9 +422,9 @@ const Home = () => {
               type="button"
             >
               {isDarkMode ? (
-                <Moon className="h-4 w-4" />
+                <Moon className="h-5 w-5" />
               ) : (
-                <Sun className="h-4 w-4" />
+                <Sun className="h-5 w-5" />
               )}
             </button>
 
@@ -393,7 +434,7 @@ const Home = () => {
               className="flex items-center gap-2 py-2 text-gray-600 hover:text-blue-800 hover:font-bold rounded-lg transition-colors duration-200"
               type="button"
             >
-              <Settings className="h-4 w-4" />
+              <Settings className="h-5 w-5" />
             </button>
           </div>
 
