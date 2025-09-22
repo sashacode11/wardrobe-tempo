@@ -26,6 +26,7 @@ import {
 import LanguageSelectionModal from '../LanguageSelectionModal';
 import { PersonalInformation } from './PersonalInformation';
 import { PrivacySettings } from './PrivacySettings';
+import SwitchAccountModal from './SwitchAccountModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [currentView, setCurrentView] = useState<
     'main' | 'profile-settings' | 'personal' | 'privacy' | 'data'
   >('main');
+  const [showSwitchAccountModal, setShowSwitchAccountModal] = useState(false);
 
   // Detect if we're on desktop
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
@@ -158,11 +160,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleSwitchAccount = (): void => {
-    // First sign out the current user, then trigger auth dialog
-    handleSignOut().then(() => {
-      // Trigger the auth dialog to show
-      window.dispatchEvent(new CustomEvent('showAuth'));
-    });
+    // // First sign out the current user, then trigger auth dialog
+    // handleSignOut().then(() => {
+    //   // Trigger the auth dialog to show
+    //   window.dispatchEvent(new CustomEvent('showAuth'));
+    // });
+
+    setShowSwitchAccountModal(true);
   };
 
   if (!isOpen) return null;
@@ -508,6 +512,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       <LanguageSelectionModal
         isOpen={showLanguageModal}
         onClose={() => setShowLanguageModal(false)}
+      />
+
+      <SwitchAccountModal
+        isOpen={showSwitchAccountModal}
+        onClose={() => setShowSwitchAccountModal(false)}
       />
     </>
   );
