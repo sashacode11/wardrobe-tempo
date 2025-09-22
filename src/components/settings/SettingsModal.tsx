@@ -1,9 +1,9 @@
 // components/SettingsModal.tsx
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { useLanguage } from '../hooks/useLanguage';
-import { useWardrobe } from '../contexts/WardrobeContext';
-import { signOut } from '../lib/supabaseClient';
+import { Button } from '../ui/button';
+import { useLanguage } from '../../hooks/useLanguage';
+import { useWardrobe } from '../../contexts/WardrobeContext';
+import { signOut } from '../../lib/supabaseClient';
 import {
   X,
   Check,
@@ -20,8 +20,12 @@ import {
   LogOut,
   UserPlus,
   Globe,
+  Edit3,
+  Camera,
 } from 'lucide-react';
-import LanguageSelectionModal from './LanguageSelectionModal';
+import LanguageSelectionModal from '../LanguageSelectionModal';
+import { PersonalInformation } from './PersonalInformation';
+import { PrivacySettings } from './PrivacySettings';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,6 +39,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<boolean>(true);
   const [autoBackup, setAutoBackup] = useState<boolean>(true);
+  const [currentView, setCurrentView] = useState<
+    'main' | 'profile-settings' | 'personal' | 'privacy' | 'data'
+  >('main');
 
   // Detect if we're on desktop
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
@@ -111,12 +118,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     console.log('Cache cleared');
   };
 
-  const handleAccountSettings = (): void => {
-    console.log('Navigate to account settings');
+  const handleBackToSettings = (): void => {
+    setCurrentView('profile-settings');
   };
 
+  // Reset view when modal closes - add this useEffect
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentView('main');
+    }
+  }, [isOpen]);
+
+  // Update these existing functions to use navigation
+  const handleAccountSettings = (): void => {
+    console.log('Profile Settings clicked!');
+    console.log('Current currentView before:', currentView);
+    setCurrentView('profile-settings');
+    console.log('Should have set currentView to profile-settings');
+  };
+  console.log('Current currentView is:', currentView);
+
   const handlePrivacySettings = (): void => {
-    console.log('Navigate to privacy settings');
+    setCurrentView('privacy');
   };
 
   const handleHelpSupport = (): void => {
@@ -143,6 +166,94 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   };
 
   if (!isOpen) return null;
+
+  // Show different views based on currentView
+  // if (currentView === 'profile-settings') {
+  //   return (
+  //     <>
+  //       <div
+  //         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+  //         onClick={onClose}
+  //       />
+  //       <div
+  //         className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+  //           isDesktop
+  //             ? `w-96 rounded-xl border translate-y-0 opacity-100`
+  //             : `w-full max-w-md translate-x-0`
+  //         }`}
+  //       >
+  //         <ProfileSettings
+  //           onBack={handleBackToMain}
+  //           onNavigateToSection={handleNavigateToSection}
+  //         />
+  //       </div>
+  //       <LanguageSelectionModal
+  //         isOpen={showLanguageModal}
+  //         onClose={() => setShowLanguageModal(false)}
+  //       />
+  //     </>
+  //   );
+  // }
+
+  if (currentView === 'personal') {
+    return (
+      <>
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+          onClick={onClose}
+        />
+        <div
+          className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+            isDesktop
+              ? `w-96 rounded-xl border translate-y-0 opacity-100`
+              : `w-full max-w-md translate-x-0`
+          }`}
+        >
+          <PersonalInformation onBack={handleBackToSettings} />
+        </div>
+      </>
+    );
+  }
+
+  if (currentView === 'privacy') {
+    return (
+      <>
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+          onClick={onClose}
+        />
+        <div
+          className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+            isDesktop
+              ? `w-96 rounded-xl border translate-y-0 opacity-100`
+              : `w-full max-w-md translate-x-0`
+          }`}
+        >
+          <PrivacySettings onBack={handleBackToSettings} />
+        </div>
+      </>
+    );
+  }
+
+  // if (currentView === 'data') {
+  //   return (
+  //     <>
+  //       <div
+  //         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+  //         onClick={onClose}
+  //       />
+  //       <div
+  //         className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+  //           isDesktop
+  //             ? `w-96 rounded-xl border translate-y-0 opacity-100`
+  //             : `w-full max-w-md translate-x-0`
+  //         }`}
+  //       >
+  //         <DataManagement onBack={handleBackToSettings} />
+  //       </div>
+  //     </>
+  //   );
+  // }
 
   return (
     <>
@@ -182,8 +293,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               {/* <h3 className="text-lg font-medium text-gray-900">Account</h3> */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-white" />
+                  <div className="relative">
+                    <img
+                      src={user.avatar}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full object-cover bg-gray-200"
+                    />
+                    <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-sm">
+                      <Camera className="h-3 w-3" />
+                    </button>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">
@@ -192,8 +310,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* <p className="text-sm text-gray-600 truncate">
                       {user.email}
                     </p> */}
+                    <button
+                      onClick={() => setCurrentView('personal')}
+                      className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1"
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      Edit Profile
+                    </button>
                   </div>
                 </div>
+                {/* <div className="bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-16 h-16 rounded-full object-cover bg-gray-200"
+                      />
+                      <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-sm">
+                        <Camera className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="font-semibold text-gray-900">
+                        {user.user_metadata?.full_name || 'User'}
+                      </h2>
+
+                      <button
+                        onClick={() => setCurrentView('personal')}
+                        className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                        Edit Profile
+                      </button>
+                    </div>
+                  </div>
+                </div> */}
 
                 {/* Account Actions */}
                 <div className="space-y-2">
@@ -300,7 +452,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Auto Backup Toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {/* <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <Database className="h-5 w-5 text-gray-600" />
                 <span className="font-medium text-gray-900">Auto Backup</span>
@@ -317,11 +469,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   }`}
                 />
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Actions Section */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <h3 className="text-lg font-medium text-gray-900">Data</h3>
 
             <div className="grid grid-cols-2 gap-2">
@@ -345,10 +497,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 </span>
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* More Settings Section */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <h3 className="text-lg font-medium text-gray-900">More</h3>
 
             <button
@@ -387,7 +539,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
-          </div>
+          </div> */}
 
           {/* App Info */}
           <div className="pb-16 sm:pb-0 pt-4 border-t border-gray-200">

@@ -18,6 +18,8 @@ import {
   Settings,
   Moon,
   Sun,
+  Camera,
+  Edit3,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -38,7 +40,8 @@ import UnifiedSearchResults from './SearchResults';
 import OutfitRepairView from './OutfitRepairView';
 import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 import LanguageSelector from './LanguageSelector';
-import SettingsModal from './SettingsModal';
+import SettingsModal from './settings/SettingsModal';
+import MobileMenu from './MobileMenu';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -53,7 +56,7 @@ const Home = () => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   /* Global languages */
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [setCurrentView, setShowLanguageMenu] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en'); // Default to English
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -405,180 +408,17 @@ const Home = () => {
         </div>
 
         {/* Mobile menu modal*/}
-        {showMobileMenu && (
-          <>
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-              onClick={() => setShowMobileMenu(false)}
-            />
-            <div
-              className={`
-                fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
-                transform transition-transform duration-300 ease-in-out
-                ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
-              `}
-            >
-              <div className="flex flex-col h-full">
-                <div className="py-4 px-2">
-                  <div className="flex items-center justify-between border-b">
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowMobileMenu(false)}
-                        className="p-2"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                      </Button>
-
-                      {user && (
-                        <div className="p-2">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                              <User className="h-5 w-5 text-primary-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {user.user_metadata.full_name}
-                              </p>
-                              {/* <p className="text-xs text-muted-foreground truncate">
-                              {user.email}
-                            </p> */}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Settings Icon */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowSettings(true)}
-                      className="p-2 ml-2"
-                    >
-                      <Settings className="h-6 w-6 text-muted-foreground hover:text-foreground" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 p-4">
-                  {user ? (
-                    <div className="space-y-6">
-                      <div>
-                        {/* <h3 className="text-lg font-semibold text-foreground mb-4">
-                          Shortcut
-                        </h3> */}
-                        <div className="grid grid-cols-4 gap-4">
-                          <button
-                            onClick={handleAddItemClick}
-                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Plus className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-700">
-                              Add Item
-                            </span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setActiveTab('outfit');
-                              setShowMobileMenu(false);
-                            }}
-                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Package className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-700">
-                              Create Outfit
-                            </span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setActiveTab('my-outfits');
-                              setShowMobileMenu(false);
-                            }}
-                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Shirt className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-700">
-                              My Outfits
-                            </span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowMobileMenu(false);
-                            }}
-                            className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                              <Headphones className="h-5 w-5" />{' '}
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-700">
-                              Customer Service
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-4">
-                          Recommend
-                        </h3>
-                        <div className="text-sm text-muted-foreground italic text-center py-8">
-                          Coming soon...
-                        </div>
-                      </div> */}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <Button
-                        className="w-full"
-                        onClick={() => {
-                          setShowAuthDialog(true);
-                          setShowMobileMenu(false);
-                        }}
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Login
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          setShowAuthDialog(true);
-                          setShowMobileMenu(false);
-                        }}
-                      >
-                        Sign Up
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {user && (
-                  <div className="p-4 border-t mt-auto">
-                    <Button
-                      variant="outline"
-                      onClick={handleSignOut}
-                      className="w-full"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+        <MobileMenu
+          showMobileMenu={showMobileMenu}
+          setShowMobileMenu={setShowMobileMenu}
+          user={user}
+          setShowSettings={setShowSettings}
+          setCurrentView={setCurrentView}
+          handleAddItemClick={handleAddItemClick}
+          setActiveTab={setActiveTab}
+          setShowAuthDialog={setShowAuthDialog}
+          handleSignOut={handleSignOut}
+        />
       </header>
 
       {/* Main content */}
