@@ -136,6 +136,7 @@ const Home = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Define filter configurations
   const filterConfigs: FilterConfig[] = [
@@ -317,7 +318,7 @@ const Home = () => {
           )}
 
           {/* Desktop right side bar */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3 sm:space-x-4">
             {user && (
               <div className="relative">
                 {/* Full search bar for screens >= 1300px */}
@@ -331,7 +332,7 @@ const Home = () => {
                   />
                   {/* Search results indicator */}
                   {hasSearchQuery && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-lg shadow-lg z-10 p-2 text-xs text-gray-600">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-lg shadow-md z-10 p-2 text-xs text-gray-600">
                       <div>
                         {searchResults.length > 0
                           ? `Found ${searchResults.length} item${
@@ -348,11 +349,11 @@ const Home = () => {
                   {!searchExpanded ? (
                     <button
                       onClick={() => setSearchExpanded(true)}
-                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
                       type="button"
                       aria-label="Open search"
                     >
-                      <Search className="h-5 w-5" />
+                      <Search className="h-4.5 w-4.5" />
                     </button>
                   ) : (
                     <div className="flex items-center gap-2">
@@ -369,7 +370,7 @@ const Home = () => {
                           setSearchExpanded(false);
                           setSearchQuery('');
                         }}
-                        className="p-2 text-gray-600 hover:text-red-600 rounded-lg transition-colors duration-200"
+                        className="p-1.5 text-gray-500 hover:text-red-500 rounded-md transition-colors duration-200"
                         type="button"
                         aria-label="Close search"
                       >
@@ -381,60 +382,128 @@ const Home = () => {
               </div>
             )}
 
+            {/* Add Item Button — Styled to be subtle and aligned */}
             <button
               onClick={handleAddItemClick}
-              className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500 active:bg-blue-700 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm whitespace-nowrap"
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap"
               type="button"
             >
-              <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
-              <span className="hidden xs:inline sm:inline">Add Item</span>
-              {/* <span className="xs:hidden">+</span> */}
+              <Plus className="h-3.5 w-3.5" />
+              <span>Add Item</span>
             </button>
 
+            {/* Sign Out / Login Buttons — Clean and compact */}
             {user ? (
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
+              <div className="flex items-center">
+                <Button
+                  variant="outline"
+                  onClick={handleSignOut}
+                  className="px-3 py-1.5 text-xs sm:text-sm h-auto flex items-center gap-1.5"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
                   Sign Out
                 </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button onClick={() => setShowAuthDialog(true)}>
-                  <User className="mr-2 h-4 w-4" />
+                <Button
+                  onClick={() => setShowAuthDialog(true)}
+                  className="px-3 py-1.5 text-xs sm:text-sm h-auto flex items-center gap-1.5"
+                >
+                  <User className="h-3.5 w-3.5" />
                   Login
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setShowAuthDialog(true)}
+                  className="px-3 py-1.5 text-xs sm:text-sm h-auto flex items-center gap-1.5"
                 >
                   Sign Up
                 </Button>
               </div>
             )}
 
-            <LanguageSelector />
+            {/* Language + Theme Toggle - Responsive */}
+            <div className="relative flex items-center">
+              {/* Show full controls on large screens (>= 1100px) */}
+              <div className="hidden min-[1100px]:flex items-center gap-2">
+                <LanguageSelector />
+                <button
+                  onClick={handleThemeChange}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
+                  type="button"
+                  aria-label={
+                    isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+                  }
+                >
+                  {isDarkMode ? (
+                    <Sun className="h-4.5 w-4.5" />
+                  ) : (
+                    <Moon className="h-4.5 w-4.5" />
+                  )}
+                </button>
+              </div>
 
-            {/* Theme Toggle - Sun/Moon */}
-            <button
-              onClick={handleThemeChange}
-              className="flex items-center gap-2 py-2 text-gray-600 hover:text-blue-800 hover:font-bold rounded-lg transition-colors duration-200"
-              type="button"
-            >
-              {isDarkMode ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </button>
+              {/* Show dropdown toggle on small screens (< 1100px) */}
+              <div className="min-[1100px]:hidden">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                  type="button"
+                  aria-label="Toggle settings menu"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
 
-            {/* Settings Icon for Desktop */}
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-2 z-20">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <LanguageSelector />
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleThemeChange();
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 text-sm flex items-center gap-2"
+                      type="button"
+                    >
+                      {isDarkMode ? (
+                        <>
+                          <Sun className="h-4 w-4" />
+                          <span>Light Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="h-4 w-4" />
+                          <span>Dark Mode</span>
+                        </>
+                      )}
+                    </button>
+                    {/* <button
+                      onClick={() => {
+                        setShowSettings(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 text-sm flex items-center gap-2"
+                      type="button"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </button> */}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Settings Icon for Desktop — Styled consistently */}
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center gap-2 py-2 text-gray-600 hover:text-blue-800 hover:font-bold rounded-lg transition-colors duration-200"
+              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
               type="button"
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4.5 w-4.5" />
             </button>
           </div>
 
