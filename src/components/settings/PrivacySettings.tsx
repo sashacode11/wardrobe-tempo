@@ -1,3 +1,6 @@
+import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+
 // PrivacySettings.tsx - Privacy & Security Settings
 export const PrivacySettings: React.FC<{ onBack: () => void }> = ({
   onBack,

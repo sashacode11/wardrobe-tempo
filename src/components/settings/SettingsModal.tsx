@@ -286,13 +286,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 h-full pb-20">
-          {/* User Info Section */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 h-full pb-20">
+          {/* User Profile Section */}
           {user && (
-            <div className="space-y-3">
-              {/* <h3 className="text-lg font-medium text-gray-900">Account</h3> */}
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3 mb-3">
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-xl p-2">
+                <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
                       src={user.avatar}
@@ -304,111 +303,74 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
+                    <p className="font-semibold text-gray-900 truncate text-lg">
                       {user.user_metadata?.full_name || 'User'}
                     </p>
-                    {/* <p className="text-sm text-gray-600 truncate">
-                      {user.email}
-                    </p> */}
                     <button
                       onClick={() => setCurrentView('personal')}
-                      className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1"
+                      className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1 hover:text-blue-700"
                     >
                       <Edit3 className="h-3 w-3" />
                       Edit Profile
                     </button>
                   </div>
                 </div>
-                {/* <div className="bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <img
-                        src={user.avatar}
-                        alt="Profile"
-                        className="w-16 h-16 rounded-full object-cover bg-gray-200"
-                      />
-                      <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-sm">
-                        <Camera className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="font-semibold text-gray-900">
-                        {user.user_metadata?.full_name || 'User'}
-                      </h2>
-
-                      <button
-                        onClick={() => setCurrentView('personal')}
-                        className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1"
-                      >
-                        <Edit3 className="h-3 w-3" />
-                        Edit Profile
-                      </button>
-                    </div>
-                  </div>
-                </div> */}
-
-                {/* Account Actions */}
-                <div className="space-y-2">
-                  <button
-                    onClick={handleSwitchAccount}
-                    className="w-full flex items-center gap-3 p-2 text-left rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-900">
-                      Switch Account
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 p-2 text-left rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
-                  >
-                    <LogOut className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-600">
-                      Sign Out
-                    </span>
-                  </button>
-                </div>
               </div>
+              {/* Account Actions */}
+              <button
+                onClick={handleSwitchAccount}
+                className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <UserPlus className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-900">
+                    Switch Account
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
             </div>
           )}
 
-          {/* Language Section - Now opens modal */}
-          <div className="block sm:hidden space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Language</h3>
-            <button
-              onClick={() => setShowLanguageModal(true)}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Globe className="h-5 w-5 text-gray-600" />
-                <div className="text-left">
-                  <p className="font-medium text-gray-900">Language</p>
-                  <p className="text-sm text-gray-600">
-                    {currentLanguageData.flag} {currentLanguageData.name}
-                  </p>
+          {/* General Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">General</h3>
+
+            {/* Language Section - Mobile only */}
+            <div className="block sm:hidden">
+              <button
+                onClick={() => setShowLanguageModal(true)}
+                className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-gray-600" />
+                  <div className="text-left">
+                    <p className="font-medium text-gray-900">Language</p>
+                    <p className="text-sm text-gray-500">
+                      {currentLanguageData.flag} {currentLanguageData.name}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </button>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
           </div>
 
           {/* Appearance Section */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Appearance</h3>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Appearance</h3>
+
+            <div className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-200 rounded-lg">
-                  {isDarkMode ? (
-                    <Moon className="h-5 w-5" />
-                  ) : (
-                    <Sun className="h-5 w-5" />
-                  )}
-                </div>
+                {isDarkMode ? (
+                  <Moon className="h-5 w-5 text-gray-600" />
+                ) : (
+                  <Sun className="h-5 w-5 text-gray-600" />
+                )}
                 <div>
                   <p className="font-medium text-gray-900">Dark Mode</p>
-                  <p className="text-sm text-gray-600">
-                    Switch between light and dark themes
+                  <p className="text-sm text-gray-500">
+                    {isDarkMode ? 'Dark' : 'Light'}
                   </p>
                 </div>
               </div>
@@ -428,14 +390,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Preferences Section */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Preferences</h3>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Preferences</h3>
 
             {/* Notifications Toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg">
               <div className="flex items-center gap-3">
                 <Bell className="h-5 w-5 text-gray-600" />
-                <span className="font-medium text-gray-900">Notifications</span>
+                <div>
+                  <p className="font-medium text-gray-900">Notifications</p>
+                  <p className="text-sm text-gray-500">
+                    {notifications ? 'Enabled' : 'Disabled'}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={handleNotificationsChange}
@@ -450,86 +417,48 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 />
               </button>
             </div>
-
-            {/* Auto Backup Toggle */}
-            {/* <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Database className="h-5 w-5 text-gray-600" />
-                <span className="font-medium text-gray-900">Auto Backup</span>
-              </div>
-              <button
-                onClick={handleAutoBackupChange}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  autoBackup ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    autoBackup ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div> */}
           </div>
 
-          {/* Quick Actions Section */}
-          {/* <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Data</h3>
+          {/* Data Section */}
+          {/* <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Data</h3>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleExportData}
-                className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Download className="h-5 w-5 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">
-                  Export
-                </span>
-              </button>
-
-              <button
-                onClick={handleClearCache}
-                className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
+            <button
+              onClick={handleClearCache}
+              className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
                 <Trash2 className="h-5 w-5 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">
-                  Clear Cache
-                </span>
-              </button>
-            </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Clear Cache</p>
+                  <p className="text-sm text-gray-500">Free up storage space</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </button>
+
+            <button
+              onClick={handleExportData}
+              className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Download className="h-5 w-5 text-gray-600" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Export Data</p>
+                  <p className="text-sm text-gray-500">Download your data</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </button>
           </div> */}
 
-          {/* More Settings Section */}
-          {/* <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">More</h3>
-
-            <button
-              onClick={handleAccountSettings}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="font-medium text-gray-900">
-                  Profile Settings
-                </span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </button>
-
-            <button
-              onClick={handlePrivacySettings}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-gray-600" />
-                <span className="font-medium text-gray-900">Privacy</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </button>
+          {/* Others Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Others</h3>
 
             <button
               onClick={handleHelpSupport}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <HelpCircle className="h-5 w-5 text-gray-600" />
@@ -539,12 +468,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
-          </div> */}
 
-          {/* App Info */}
-          <div className="pb-16 sm:pb-0 pt-4 border-t border-gray-200">
-            <div className="text-center text-sm text-gray-500">
-              <p>Vesti v1.2.0</p>
+            <button
+              onClick={handlePrivacySettings}
+              className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-gray-600" />
+                <span className="font-medium text-gray-900">
+                  Privacy Center
+                </span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Sign Out and App Info */}
+          <div className="space-y-4">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <LogOut className="h-4 w-4 text-red-600" />
+              <span className="font-medium text-red-600">Sign Out</span>
+            </button>
+
+            {/* App Info */}
+            <div className="text-center border-t pt-4 border-gray-100 pb-20">
+              <p className="text-sm text-gray-500">Vesti v1.2.0</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Your current version is up to date.
+              </p>
             </div>
           </div>
         </div>
