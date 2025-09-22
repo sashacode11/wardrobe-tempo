@@ -70,6 +70,7 @@ export const PersonalInformation: React.FC<{ onBack: () => void }> = ({
 
     if (result.success) {
       toast.success('Profile updated successfully!');
+      onBack();
     } else {
       toast.error(`Error: ${result.error}`);
     }
