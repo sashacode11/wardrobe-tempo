@@ -91,7 +91,7 @@ const ClothingItem = ({
   return (
     <>
       <Card
-        className="md:w-[250px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-card border border-border rounded-lg shadow-sm  duration-200"
+        className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-card border border-border rounded-lg shadow-sm duration-200"
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
@@ -111,7 +111,7 @@ const ClothingItem = ({
             View Outfits
           </button>
         </div>
-        <CardContent className="py-1 px-2 sm:p-3">
+        <CardContent className="py-1 px-2 h-[52px]">
           <h3 className="font-medium text-sm truncate text-blue-400 ">
             {capitalizeFirst(name)}
           </h3>

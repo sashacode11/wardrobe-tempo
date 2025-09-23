@@ -1,4 +1,4 @@
-// home.tsx - Updated to use global context
+// home.tsx - Updated with desktop filter panel layout
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
@@ -80,13 +80,6 @@ const Home = () => {
       localStorage.setItem('theme', 'light');
     }
   };
-
-  // const handleLanguageChange = language => {
-  //   setCurrentLanguage(language);
-  //   setShowLanguageMenu(false);
-  //   // Add your language change logic here
-  //   // e.g., i18n.changeLanguage(language);
-  // };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -274,7 +267,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-page-bg">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-1 px-2 md:px-10 sm:pb-4 pt-4">
+      <header className="sticky top-0 z-10 md:border-b bg-background pb-1 px-2 md:px-4 sm:pb-4 pt-4">
         <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
@@ -481,17 +474,6 @@ const Home = () => {
                         </>
                       )}
                     </button>
-                    {/* <button
-                      onClick={() => {
-                        setShowSettings(true);
-                        setIsDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 text-sm flex items-center gap-2"
-                      type="button"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </button> */}
                   </div>
                 )}
               </div>
@@ -533,392 +515,509 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto py-4 px-2 md:p-4 pb-20 md:pb-4">
-        {authLoading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading...</p>
-            </div>
-          </div>
-        ) : !user ? (
-          // Not logged in
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold">Welcome to My Wardrobe</h2>
-              <p className="text-muted-foreground max-w-md">
-                Organize your clothing collection, plan outfits, and keep track
-                of your wardrobe. Sign up or log in to get started!
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Button onClick={() => setShowAuthDialog(true)}>
-                  <User className="mr-2 h-4 w-4" />
-                  Login
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAuthDialog(true)}
-                >
-                  Sign Up
-                </Button>
+      <div className="px-2 md:px-4">
+        <div className="mx-auto py-4 sm:px-20 pb-20 md:pb-4">
+          {authLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading...</p>
               </div>
             </div>
-          </div>
-        ) : (
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsContent value="wardrobe" className="mt-0">
-              {hasSearchQuery ? (
-                // Show unified search results when searching
-                <UnifiedSearchResults
-                  onAddItem={handleAddItemClick}
-                  onEditItem={item => {
-                    setEditingItem(item);
-                    setShowUploadForm(true);
-                  }}
-                  onAddToOutfit={handleAddToOutfit}
-                  onEditOutfit={outfit => {
-                    const outfitWithItems = {
-                      ...outfit,
-                      items: Array.isArray(outfit.outfit_items)
-                        ? outfit.outfit_items
-                        : [],
-                    };
-                    setEditingOutfit(outfitWithItems);
-                    setActiveTab('outfit');
-                  }}
-                  onCreateOutfit={() => setActiveTab('outfit')}
-                />
-              ) : (
-                // Show normal wardrobe content when not searching
-                <div className="space-y-4">
-                  {/* Filter Button */}
-                  {/* <button
-                    onClick={() => setShowFilterModal(true)}
-                    className={`hidden md:flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
-                      hasActiveFilters
-                        ? 'text-blue-600'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
+          ) : !user ? (
+            // Not logged in
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center space-y-4">
+                <h2 className="text-2xl font-bold">Welcome to My Wardrobe</h2>
+                <p className="text-muted-foreground max-w-md">
+                  Organize your clothing collection, plan outfits, and keep
+                  track of your wardrobe. Sign up or log in to get started!
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <Button onClick={() => setShowAuthDialog(true)}>
+                    <User className="mr-2 h-4 w-4" />
+                    Login
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAuthDialog(true)}
                   >
-                    <div className="relative">
-                      <Filter className="h-5 w-5 mb-1" />
-                      {activeFilterCount > 0 && (
-                        <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs font-medium">Filter</span>
-                  </button> */}
-
-                  {/* Category Tabs */}
-                  <Tabs
-                    defaultValue="all"
-                    value={activeCategory}
-                    onValueChange={setActiveCategory}
-                  >
-                    <TabsList className="bg-transparent w-full overflow-x-auto flex-nowrap justify-start h-auto">
-                      <TabsTrigger key="all" value="all" className="capitalize">
-                        All
-                      </TabsTrigger>
-
-                      {categories.map(category => (
-                        <TabsTrigger
-                          key={category}
-                          value={category}
-                          className="capitalize"
-                        >
-                          {category}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-
-                  {/* Wardrobe Grid */}
-                  <WardrobeGrid
-                    key={wardrobeKey}
-                    items={finalItems}
-                    loading={loadingItems}
-                    onAddItem={handleAddItemClick}
-                    onAddToOutfit={handleAddToOutfit}
-                    onEditItem={item => {
-                      setEditingItem(item);
-                      setShowUploadForm(true);
-                    }}
-                    activeFilters={activeFilters}
-                    activeCategory={activeCategory}
-                    onClearFilters={() => {
-                      clearAllFilters();
-                      setActiveCategory('all');
-                    }}
-                    onShowFilterModal={() => setShowFilterModal(true)}
-                  />
+                    Sign Up
+                  </Button>
                 </div>
-              )}
-            </TabsContent>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-4">
+              {/* Desktop Filter Panel - Left Side */}
+              <div className="hidden md:block w-80 flex-shrink-0">
+                <div className="sticky top-24 bg-background rounded-lg h-full">
+                  {/* Filter Header */}
+                  <div className="flex items-center justify-between border-b p-2">
+                    <h3 className="text-lg font-semibold">Filters</h3>
+                    {(hasActiveFilters ||
+                      activeCategory !== 'all' ||
+                      hasSearchQuery) && (
+                      <button
+                        onClick={() => {
+                          clearAllFilters();
+                          setActiveCategory('all');
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
 
-            <TabsContent value="my-outfits" className="mt-0">
-              {hasSearchQuery ? (
-                // Show unified search results when searching
-                <UnifiedSearchResults
-                  onAddItem={handleAddItemClick}
-                  onEditItem={item => {
-                    setEditingItem(item);
-                    setShowUploadForm(true);
-                  }}
-                  onAddToOutfit={handleAddToOutfit}
-                  onEditOutfit={outfit => {
-                    const outfitWithItems = {
-                      ...outfit,
-                      items: Array.isArray(outfit.outfit_items)
-                        ? outfit.outfit_items
-                        : [],
-                    };
-                    setEditingOutfit(outfitWithItems);
-                    setActiveTab('outfit');
-                  }}
-                  onCreateOutfit={() => setActiveTab('outfit')}
-                />
-              ) : (
-                // Show normal MyOutfits component when not searching
-                <MyOutfits
-                  onCreateOutfit={() => setActiveTab('outfit')}
-                  onEditOutfit={outfit => {
-                    const outfitWithItems = {
-                      ...outfit,
-                      items: Array.isArray(outfit.outfit_items)
-                        ? outfit.outfit_items
-                        : [],
-                    };
-                    setEditingOutfit(outfitWithItems);
-                    setActiveTab('outfit');
-                  }}
-                />
-              )}
-            </TabsContent>
+                  {/* Active Filter Badges */}
+                  {(hasActiveFilters || activeCategory !== 'all') && (
+                    <div className="mb-4 pb-4 border-b border-gray-100">
+                      <div className="flex flex-wrap gap-2">
+                        {(activeCategory !== 'all'
+                          ? [
+                              {
+                                key: 'category',
+                                label: 'Category',
+                                value: activeCategory,
+                              },
+                            ]
+                          : []
+                        )
+                          .concat(activeFilterEntries)
+                          .map(entry => (
+                            <div
+                              key={entry.key}
+                              className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                            >
+                              <span className="text-xs">
+                                {capitalizeFirst(entry.value)}
+                              </span>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (entry.key === 'category') {
+                                    setActiveCategory('all');
+                                  } else {
+                                    clearFilter(entry.key);
+                                  }
+                                }}
+                                className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg rounded-full"
+                                aria-label={`Remove ${entry.label} filter`}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
 
-            <TabsContent value="outfit" className="mt-0">
-              <OutfitBuilder
-                selectedItem={selectedItemForOutfit}
-                onItemAdded={() => setSelectedItemForOutfit(null)}
-                onOutfitSaved={() => setActiveTab('my-outfits')}
-                editingOutfit={editingOutfit}
-                onEditComplete={() => setEditingOutfit(null)}
-                onClose={() => {
-                  setEditingOutfit(null);
-                }}
+                  <div className="p-2">
+                    {/* Category Filter */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium mb-3">Category</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setActiveCategory('all')}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors
+                          ${
+                            activeCategory === 'all'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
+                          }
+                        `}
+                        >
+                          All
+                        </button>
+                        {categories.map(category => (
+                          <button
+                            key={category}
+                            onClick={() => setActiveCategory(category)}
+                            className={`px-3 py-1.5 text-xs rounded-full border transition-colors
+                            ${
+                              activeCategory === category
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
+                            }
+                          `}
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Dynamic Filters */}
+                    <FilterPanel
+                      filters={filterConfigs}
+                      activeFilters={activeFilters}
+                      onUpdateFilter={updateFilter}
+                      onClearFilter={clearFilter}
+                      onClearAllFilters={() => {
+                        clearAllFilters();
+                        setActiveCategory('all');
+                      }}
+                      activeFilterEntries={[
+                        ...(hasSearchQuery
+                          ? [
+                              {
+                                key: 'search',
+                                label: 'Search',
+                                value: searchQuery,
+                              },
+                            ]
+                          : []),
+                        ...(activeCategory !== 'all'
+                          ? [
+                              {
+                                key: 'category',
+                                label: 'Category',
+                                value: activeCategory,
+                              },
+                            ]
+                          : []),
+                        ...activeFilterEntries,
+                      ]}
+                      hasActiveFilters={
+                        hasActiveFilters ||
+                        activeCategory !== 'all' ||
+                        hasSearchQuery
+                      }
+                      showFilters={true}
+                      onToggleFilters={() => {}}
+                      inline={true}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content Area - Right Side */}
+              <div className="flex-1 min-w-0">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
+                  <TabsContent value="wardrobe" className="mt-0">
+                    {hasSearchQuery ? (
+                      // Show unified search results when searching
+                      <UnifiedSearchResults
+                        onAddItem={handleAddItemClick}
+                        onEditItem={item => {
+                          setEditingItem(item);
+                          setShowUploadForm(true);
+                        }}
+                        onAddToOutfit={handleAddToOutfit}
+                        onEditOutfit={outfit => {
+                          const outfitWithItems = {
+                            ...outfit,
+                            items: Array.isArray(outfit.outfit_items)
+                              ? outfit.outfit_items
+                              : [],
+                          };
+                          setEditingOutfit(outfitWithItems);
+                          setActiveTab('outfit');
+                        }}
+                        onCreateOutfit={() => setActiveTab('outfit')}
+                      />
+                    ) : (
+                      // Show normal wardrobe content when not searching
+                      <div className="space-y-4">
+                        {/* Mobile Category Tabs*/}
+                        <div>
+                          <Tabs
+                            defaultValue="all"
+                            value={activeCategory}
+                            onValueChange={setActiveCategory}
+                          >
+                            <TabsList className="bg-transparent w-full overflow-x-auto flex-nowrap justify-start h-auto">
+                              <TabsTrigger
+                                key="all"
+                                value="all"
+                                className="capitalize"
+                              >
+                                All
+                              </TabsTrigger>
+                              {categories.map(category => (
+                                <TabsTrigger
+                                  key={category}
+                                  value={category}
+                                  className="capitalize"
+                                >
+                                  {category}
+                                </TabsTrigger>
+                              ))}
+                            </TabsList>
+                          </Tabs>
+                        </div>
+
+                        {/* Wardrobe Grid */}
+                        <WardrobeGrid
+                          key={wardrobeKey}
+                          items={finalItems}
+                          loading={loadingItems}
+                          onAddItem={handleAddItemClick}
+                          onAddToOutfit={handleAddToOutfit}
+                          onEditItem={item => {
+                            setEditingItem(item);
+                            setShowUploadForm(true);
+                          }}
+                          activeFilters={activeFilters}
+                          activeCategory={activeCategory}
+                          onClearFilters={() => {
+                            clearAllFilters();
+                            setActiveCategory('all');
+                          }}
+                          onShowFilterModal={() => setShowFilterModal(true)}
+                        />
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="my-outfits" className="mt-0">
+                    {hasSearchQuery ? (
+                      // Show unified search results when searching
+                      <UnifiedSearchResults
+                        onAddItem={handleAddItemClick}
+                        onEditItem={item => {
+                          setEditingItem(item);
+                          setShowUploadForm(true);
+                        }}
+                        onAddToOutfit={handleAddToOutfit}
+                        onEditOutfit={outfit => {
+                          const outfitWithItems = {
+                            ...outfit,
+                            items: Array.isArray(outfit.outfit_items)
+                              ? outfit.outfit_items
+                              : [],
+                          };
+                          setEditingOutfit(outfitWithItems);
+                          setActiveTab('outfit');
+                        }}
+                        onCreateOutfit={() => setActiveTab('outfit')}
+                      />
+                    ) : (
+                      // Show normal MyOutfits component when not searching
+                      <MyOutfits
+                        onCreateOutfit={() => setActiveTab('outfit')}
+                        onEditOutfit={outfit => {
+                          const outfitWithItems = {
+                            ...outfit,
+                            items: Array.isArray(outfit.outfit_items)
+                              ? outfit.outfit_items
+                              : [],
+                          };
+                          setEditingOutfit(outfitWithItems);
+                          setActiveTab('outfit');
+                        }}
+                      />
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="outfit" className="mt-0">
+                    <OutfitBuilder
+                      selectedItem={selectedItemForOutfit}
+                      onItemAdded={() => setSelectedItemForOutfit(null)}
+                      onOutfitSaved={() => setActiveTab('my-outfits')}
+                      editingOutfit={editingOutfit}
+                      onEditComplete={() => setEditingOutfit(null)}
+                      onClose={() => {
+                        setEditingOutfit(null);
+                      }}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Modal */}
+          <SettingsModal
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+          />
+
+          {/* Mobile Filter Modal - Keep existing for mobile */}
+          {showFilterModal && (
+            <>
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                onClick={() => setShowFilterModal(false)}
               />
-            </TabsContent>
-          </Tabs>
-        )}
+              <div
+                className={`
+                  fixed top-0 left-0 min-h-full w-80 max-w-[85vw] bg-background border-r z-50
+                  transform transition-transform duration-300 ease-in-out md:hidden
+                  ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
+                `}
+              >
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="p-2 pt-4 border-b flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Filters</h3>
+                    <div className="flex items-center gap-5 cursor-pointer">
+                      {hasActiveFilters ||
+                      activeCategory !== 'all' ||
+                      hasSearchQuery ? (
+                        <div
+                          className="text-sm text-blue-600"
+                          onClick={() => {
+                            clearAllFilters();
+                            setActiveCategory('all');
+                          }}
+                        >
+                          Clear All
+                        </div>
+                      ) : null}
 
-        {/* Settings Modal */}
-        <SettingsModal
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-        />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFilterModal(false)}
+                      >
+                        <X className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  </div>
 
-        {/* Show repair view if active */}
-        {/* {showRepairView ? (
-          <OutfitRepairView onClose={() => setShowRepairView(false)} />
-        ) : (
-          <>
-            <IncompleteOutfitsNotification
-              onFixOutfits={() => setShowRepairView(true)}
-            />
+                  {/* Active Filter Badges */}
+                  {(hasActiveFilters || activeCategory !== 'all') && (
+                    <div className="px-4 p-2 border-b">
+                      <div className="flex flex-wrap gap-2">
+                        {/* Category and Filter Badges */}
+                        {(activeCategory !== 'all'
+                          ? [
+                              {
+                                key: 'category',
+                                label: 'Category',
+                                value: activeCategory,
+                              },
+                            ]
+                          : []
+                        )
+                          .concat(activeFilterEntries)
+                          .map(entry => (
+                            <div
+                              key={entry.key}
+                              className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1"
+                            >
+                              <span className="text-xs">
+                                {capitalizeFirst(entry.value)}
+                              </span>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (entry.key === 'category') {
+                                    setActiveCategory('all');
+                                  } else {
+                                    clearFilter(entry.key);
+                                  }
+                                }}
+                                className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg"
+                                aria-label={`Remove ${entry.label} filter`}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
 
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-            </Tabs>
-          </>
-        )} */}
+                  {/* Scrollable Content */}
+                  <div className="flex-1 overflow-y-auto p-4">
+                    {/* Category Filter */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium mb-3">Category</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {categories.map(category => (
+                          <button
+                            key={category}
+                            onClick={() => setActiveCategory(category)}
+                            className={`px-3 py-1.5 text-xs rounded-full border transition-colors
+                              ${
+                                activeCategory === category
+                                  ? 'bg-blue-600 text-white border-blue-600'
+                                  : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
+                              }
+                            `}
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-        {/* Filter Modal - Same as before */}
-        {showFilterModal && (
-          <>
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
-              onClick={() => setShowFilterModal(false)}
-            />
-            <div
-              className={`
-    fixed top-0 left-0 h-[85vh]  md:h-full w-80 max-w-[85vw] bg-background border-r z-50
-    transform transition-transform duration-300 ease-in-out
-    ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
-  `}
-            >
-              <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="p-2 pt-4 border-b flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Filters</h3>
-                  <div className="flex items-center gap-5 cursor-pointer">
-                    {hasActiveFilters ||
-                    activeCategory !== 'all' ||
-                    hasSearchQuery ? (
-                      <div
-                        className="hidden text-sm md:inline text-blue-600"
+                    {/* Dynamic Filters */}
+                    <FilterPanel
+                      filters={filterConfigs}
+                      activeFilters={activeFilters}
+                      onUpdateFilter={updateFilter}
+                      onClearFilter={clearFilter}
+                      onClearAllFilters={() => {
+                        clearAllFilters();
+                        setActiveCategory('all');
+                      }}
+                      activeFilterEntries={[
+                        ...(hasSearchQuery
+                          ? [
+                              {
+                                key: 'search',
+                                label: 'Search',
+                                value: searchQuery,
+                              },
+                            ]
+                          : []),
+                        ...(activeCategory !== 'all'
+                          ? [
+                              {
+                                key: 'category',
+                                label: 'Category',
+                                value: activeCategory,
+                              },
+                            ]
+                          : []),
+                        ...activeFilterEntries,
+                      ]}
+                      hasActiveFilters={
+                        hasActiveFilters ||
+                        activeCategory !== 'all' ||
+                        hasSearchQuery
+                      }
+                      showFilters={true}
+                      onToggleFilters={() => {}}
+                      inline={true}
+                    />
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-2 border-t flex flex-row justify-end gap-3">
+                    {hasActiveFilters || activeCategory !== 'all' ? (
+                      <Button
+                        variant="outline"
+                        className="w-auto"
                         onClick={() => {
                           clearAllFilters();
                           setActiveCategory('all');
                         }}
                       >
                         Clear All
-                      </div>
+                      </Button>
                     ) : null}
-
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      className="w-auto"
                       onClick={() => setShowFilterModal(false)}
                     >
-                      <X className="h-6 w-6" />
+                      Done
                     </Button>
                   </div>
-                </div>
-
-                {/* Active Filter Badges */}
-                {(hasActiveFilters || activeCategory !== 'all') && (
-                  <div className="px-4 p-2 border-b">
-                    <div className="flex flex-wrap gap-2">
-                      {/* Category and Filter Badges */}
-                      {(activeCategory !== 'all'
-                        ? [
-                            {
-                              key: 'category',
-                              label: 'Category',
-                              value: activeCategory,
-                            },
-                          ]
-                        : []
-                      )
-                        .concat(activeFilterEntries)
-                        .map(entry => (
-                          <div
-                            key={entry.key}
-                            className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1"
-                          >
-                            <span className="text-xs">
-                              {capitalizeFirst(entry.value)}
-                            </span>
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                if (entry.key === 'category') {
-                                  setActiveCategory('all');
-                                } else {
-                                  clearFilter(entry.key);
-                                }
-                              }}
-                              className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg"
-                              aria-label={`Remove ${entry.label} filter`}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-4">
-                  {/* Category Filter */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-medium mb-3">Category</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {categories.map(category => (
-                        <button
-                          key={category}
-                          onClick={() => setActiveCategory(category)}
-                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors
-                    ${
-                      activeCategory === category
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
-                    }
-                  `}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Dynamic Filters */}
-                  <FilterPanel
-                    filters={filterConfigs}
-                    activeFilters={activeFilters}
-                    onUpdateFilter={updateFilter}
-                    onClearFilter={clearFilter}
-                    onClearAllFilters={() => {
-                      clearAllFilters();
-                      setActiveCategory('all');
-                    }}
-                    activeFilterEntries={[
-                      ...(hasSearchQuery
-                        ? [
-                            {
-                              key: 'search',
-                              label: 'Search',
-                              value: searchQuery,
-                            },
-                          ]
-                        : []),
-                      ...(activeCategory !== 'all'
-                        ? [
-                            {
-                              key: 'category',
-                              label: 'Category',
-                              value: activeCategory,
-                            },
-                          ]
-                        : []),
-                      ...activeFilterEntries,
-                    ]}
-                    hasActiveFilters={
-                      hasActiveFilters ||
-                      activeCategory !== 'all' ||
-                      hasSearchQuery
-                    }
-                    showFilters={true}
-                    onToggleFilters={() => {}}
-                    inline={true}
-                  />
-                </div>
-
-                {/* Footer */}
-                <div className="p-2 border-t flex md:hidden flex-row justify-end gap-3">
-                  {hasActiveFilters || activeCategory !== 'all' ? (
-                    <Button
-                      variant="outline"
-                      className="w-auto"
-                      onClick={() => {
-                        clearAllFilters();
-                        setActiveCategory('all');
-                      }}
-                    >
-                      Clear All
-                    </Button>
-                  ) : null}
-                  <Button
-                    className="w-auto"
-                    onClick={() => setShowFilterModal(false)}
-                  >
-                    Done
-                  </Button>
                 </div>
               </div>
-            </div>
-          </>
-        )}
-      </main>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-50 shadow-lg">
@@ -940,7 +1039,7 @@ const Home = () => {
             <span className="text-[10px] font-medium leading-tight">Home</span>
           </button>
 
-          {/* Filter Button */}
+          {/* Filter Button - Only show on mobile */}
           <button
             onClick={() => {
               if (activeTab === 'wardrobe') {

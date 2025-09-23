@@ -309,7 +309,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       </div>
 
       {/* Clothing Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-grow px-2 w-full !mt-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 overflow-y-auto flex-grow px-0 w-full !mt-2">
         {items.length > 0 ? (
           items.map(item => (
             <div key={item.id} className="relative">
