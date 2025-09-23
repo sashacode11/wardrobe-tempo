@@ -1,6 +1,13 @@
 // WardrobeGrid.tsx - Fixed filter button implementation
 import React, { useState } from 'react';
-import { Plus, AlertTriangle, Shirt, Filter } from 'lucide-react';
+import {
+  Plus,
+  AlertTriangle,
+  Shirt,
+  Filter,
+  Trash2,
+  Square,
+} from 'lucide-react';
 import { ClothingItemType } from '../types';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
@@ -259,56 +266,46 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       )}
 
       {/* count items and multiselect */}
-      <div className="flex justify-between items-center mb-4 px-2 !mt-2">
-        {/* Left side: Filter button and item count */}
-        {/* <div className="flex items-center gap-8"> */}
-        {/* Filter button */}
+      <div className="flex justify-between items-center mb-4 px-2 gap-4">
+        {/* Left: Filter Button */}
         <button
           onClick={() => {
-            console.log('Filter button clicked', {
-              onShowFilterModal: typeof onShowFilterModal,
-            });
             if (onShowFilterModal) {
               onShowFilterModal();
             } else {
               console.error('onShowFilterModal is not defined');
             }
           }}
-          className={`hidden md:flex flex-row gap-1 items-center py-2 px-3 rounded-lg transition-colors ${
+          className={`flex flex-row gap-1 items-center py-1.5 px-3 rounded-lg transition-colors text-sm ${
             hasActiveFilters
               ? 'text-blue-600'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
           }`}
         >
-          <div className="relative">
-            <Filter className="h-5 w-5 mb-1" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-4 bg-blue-600 text-white text-xs font-medium w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background z-10">
-                {activeFilterCount}
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-medium">Filter</span>
+          <Filter className="h-4 w-4" />
+          <span>Filter</span>
+          {activeFilterCount > 0 && (
+            <span className="ml-1 bg-blue-600 text-white text-xs font-medium rounded-full px-1.5">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
-        {/* </div> */}
-        {/* </div> */}
-        <div className="text-sm bg-gray-50 sm:bg-transparent p-1 text-gray-600">
-          {/* {items.length} item{items.length !== 1 ? 's' : ''} */}
-          You have {items.length} items totals
+
+        {/* Center: Item Count */}
+        <div className="text-sm text-muted-foreground text-center">
+          You have {items.length} item{items.length !== 1 ? 's' : ''} total
         </div>
 
-        {/* <div className="flex items-center gap-2"> */}
-        {/* Right side: Selection controls */}
-        <SelectionControls
-          isSelectionMode={isSelectionMode}
-          selectedCount={selectedItems.size}
-          totalFilteredCount={items.length}
-          onToggleSelectionMode={toggleSelectionMode}
-          onSelectAll={() => selectAllItems(items)}
-          onDeselectAll={deselectAllItems}
-          onDeleteSelected={() => setShowDeleteDialog(true)}
-        />
-        {/* </div> */}
+        {/* Right: Bulk Delete Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-sm"
+          onClick={toggleSelectionMode}
+        >
+          <Square className="mr-2 h-4 w-4" />
+          Bulk Delete
+        </Button>
       </div>
 
       {/* Clothing Grid */}

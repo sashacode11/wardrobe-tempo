@@ -30,7 +30,7 @@ const SelectionControls: React.FC<SelectionControlsProps> = ({
   selectAllText = 'Select All',
   deselectAllText = 'Deselect All',
   cancelText = 'Cancel',
-  selectItemsText = 'Select Items',
+  selectItemsText = 'Bulk Delete',
   className = '',
 }) => {
   const isAllSelected =
@@ -80,7 +80,10 @@ const SelectionControls: React.FC<SelectionControlsProps> = ({
             {cancelText}
           </>
         ) : (
-          selectItemsText
+          <>
+            <Trash2 className="mr-2 h-4 w-4" />
+            {selectItemsText}
+          </>
         )}
       </Button>
     </div>

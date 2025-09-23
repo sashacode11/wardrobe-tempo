@@ -272,16 +272,16 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-bg">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-0 px-2 md:px-10 sm:pb-4 pt-4">
+      <header className="sticky top-0 z-10 md:border-b bg-background pb-1 px-2 md:px-10 sm:pb-4 pt-4">
         <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
 
             {/* Desktop tabs */}
             {user && (
-              <nav className="hidden md:flex bg-white/60 backdrop-blur-sm rounded-full p-1 border border-white/20">
+              <nav className="hidden md:flex backdrop-blur-sm rounded-full p-1">
                 {[
                   { key: 'wardrobe', label: 'Wardrobe', icon: HomeIcon },
                   { key: 'outfit', label: 'Create Outfit', icon: Package },
@@ -437,9 +437,9 @@ const Home = () => {
                   }
                 >
                   {isDarkMode ? (
-                    <Sun className="h-4.5 w-4.5" />
-                  ) : (
                     <Moon className="h-4.5 w-4.5" />
+                  ) : (
+                    <Sun className="h-4.5 w-4.5" />
                   )}
                 </button>
               </div>

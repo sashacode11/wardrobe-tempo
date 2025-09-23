@@ -91,7 +91,7 @@ const ClothingItem = ({
   return (
     <>
       <Card
-        className="md:w-[250px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-white"
+        className="md:w-[250px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow bg-card border border-border rounded-lg shadow-sm  duration-200"
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
@@ -100,11 +100,11 @@ const ClothingItem = ({
             alt={name}
             className="w-full h-full object-cover"
           />
-          <Badge className="absolute top-2 right-2 bg-white text-black">
+          <Badge className="absolute top-2 right-2 bg-white text-black px-1.5 py-0.5 text-xs font-medium rounded">
             {category}
           </Badge>
           <button
-            className="absolute bottom-2 left-2 bg-gray-700  text-white text-xs p-2 rounded-md shadow-lg"
+            className="absolute bottom-2 left-2 text-xs p-2 rounded-md shadow-lg px-3 py-1 bg-gray-700 text-white font-medium  hover:text-blue-300 transition-colors duration-200"
             onClick={handleViewOutfit}
             type="button"
           >
@@ -112,12 +112,14 @@ const ClothingItem = ({
           </button>
         </div>
         <CardContent className="py-1 px-2 sm:p-3">
-          <h3 className="font-medium text-sm truncate text-blue-400">
+          <h3 className="font-medium text-sm truncate text-blue-400 ">
             {capitalizeFirst(name)}
           </h3>
           {/* <p className="text-xs text-muted-foreground">{color}</p> */}
           <div className="flex items-center justify-between mt-1">
-            <span className="text-xs text-gray-500 capitalize">{location}</span>
+            <span className="text-sm text-foreground capitalize ">
+              {location}
+            </span>
             {color && (
               <div
                 className="w-4 h-4 rounded-full border border-gray-300"
