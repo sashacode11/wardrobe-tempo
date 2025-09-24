@@ -550,7 +550,7 @@ const Home = () => {
           ) : (
             <div className="flex gap-4">
               {/* Desktop Filter Panel - Left Side */}
-              <div className="hidden md:block w-80 flex-shrink-0">
+              <div className="hidden md:block w-60 flex-shrink-0">
                 <div className="sticky top-24 bg-background rounded-lg h-full">
                   {/* Filter Header */}
                   <div className="flex items-center justify-between border-b p-2">
