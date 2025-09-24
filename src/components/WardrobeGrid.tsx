@@ -271,7 +271,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       )}
 
       {/* count items and multiselect */}
-      <div className="flex justify-between items-center mb-4 px-2 gap-4">
+      <div className="flex items-center mb-4 px-2 gap-4">
         {/* Left: Filter Button */}
         {/* <button
           onClick={() => {
@@ -296,12 +296,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
           )}
         </button> */}
 
-        {/* Center: Item Count */}
-        <div className="text-sm text-muted-foreground text-center">
-          You have {items.length} item{items.length !== 1 ? 's' : ''} total
-        </div>
-
-        {/* Right: Bulk Delete Button */}
+        {/*Bulk Delete Button */}
         <Button
           variant="outline"
           size="sm"
@@ -311,6 +306,11 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
           <Square className="mr-2 h-4 w-4" />
           Bulk Delete
         </Button>
+
+        {/* Center: Item Count */}
+        <div className="text-sm text-muted-foreground text-center">
+          You have {items.length} item{items.length !== 1 ? 's' : ''} total
+        </div>
       </div>
 
       {/* Clothing Grid */}

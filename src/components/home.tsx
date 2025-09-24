@@ -43,6 +43,7 @@ import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
 import LanguageSelector from './LanguageSelector';
 import SettingsModal from './settings/SettingsModal';
 import MobileMenu from './MobileMenu';
+import { CategoryTabs } from './CategoryTabs';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -732,34 +733,14 @@ const Home = () => {
                       />
                     ) : (
                       // Show normal wardrobe content when not searching
+
                       <div className="space-y-4">
-                        {/* Mobile Category Tabs*/}
-                        <div>
-                          <Tabs
-                            defaultValue="all"
-                            value={activeCategory}
-                            onValueChange={setActiveCategory}
-                          >
-                            <TabsList className="bg-transparent w-full overflow-x-auto flex-nowrap justify-start h-auto">
-                              <TabsTrigger
-                                key="all"
-                                value="all"
-                                className="capitalize"
-                              >
-                                All
-                              </TabsTrigger>
-                              {categories.map(category => (
-                                <TabsTrigger
-                                  key={category}
-                                  value={category}
-                                  className="capitalize"
-                                >
-                                  {category}
-                                </TabsTrigger>
-                              ))}
-                            </TabsList>
-                          </Tabs>
-                        </div>
+                        {/* Category Tabs*/}
+                        <CategoryTabs
+                          categories={categories}
+                          activeCategory={activeCategory}
+                          setActiveCategory={setActiveCategory}
+                        />
 
                         {/* Wardrobe Grid */}
                         <WardrobeGrid
