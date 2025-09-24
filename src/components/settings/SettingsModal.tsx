@@ -27,6 +27,7 @@ import LanguageSelectionModal from '../LanguageSelectionModal';
 import { PersonalInformation } from './PersonalInformation';
 import { PrivacySettings } from './PrivacySettings';
 import SwitchAccountModal from './SwitchAccountModal';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -37,7 +38,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
   const { currentLanguage, currentLanguageData } = useLanguage();
   const { user, setUser } = useWardrobe();
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  // const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+
   const [notifications, setNotifications] = useState<boolean>(true);
   const [autoBackup, setAutoBackup] = useState<boolean>(true);
   const [currentView, setCurrentView] = useState<
@@ -59,10 +62,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }, []);
 
   // Check current theme on mount
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
+  // useEffect(() => {
+  //   const isDark = document.documentElement.classList.contains('dark');
+  //   setIsDarkMode(isDark);
+  // }, []);
 
   // Load settings from localStorage
   useEffect(() => {
@@ -79,18 +82,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }, []);
 
-  const handleThemeChange = (): void => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
+  // const handleThemeChange = (): void => {
+  //   const newDarkMode = !isDarkMode;
+  //   setIsDarkMode(newDarkMode);
 
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
+  //   if (newDarkMode) {
+  //     document.documentElement.classList.add('dark');
+  //     localStorage.setItem('theme', 'dark');
+  //   } else {
+  //     document.documentElement.classList.remove('dark');
+  //     localStorage.setItem('theme', 'light');
+  //   }
+  // };
 
   const handleNotificationsChange = (): void => {
     const newNotifications = !notifications;
@@ -263,13 +266,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+        className="fixed inset-0 bg-muted/50 backdrop-blur-sm z-50 transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Settings Panel - Responsive positioning */}
       <div
-        className={`fixed top-0 right-0 h-full z-50 bg-white shadow-2xl transform transition-all duration-300 ease-out ${
+        className={`fixed top-0 right-0 h-full z-50 bg-muted shadow-2xl transform transition-all duration-300 ease-out text-muted-foreground ${
           isDesktop
             ? `w-96  rounded-xl border ${
                 isOpen
@@ -282,7 +285,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
           <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
             <X className="h-5 w-5" />
@@ -294,20 +297,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           {/* User Profile Section */}
           {user && (
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-xl p-2">
+              <div className=" rounded-xl p-2">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
                       src={user.avatar}
                       alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover bg-gray-200"
+                      className="w-16 h-16 rounded-full object-cover"
                     />
-                    <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-sm">
+                    <button className="absolute -bottom-1 -right-1 bg-blue-600  p-1.5 rounded-full shadow-sm">
                       <Camera className="h-3 w-3" />
                     </button>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate text-lg">
+                    <p className="font-semibold  truncate text-lg">
                       {user.user_metadata?.full_name || 'User'}
                     </p>
                     <button
@@ -323,22 +326,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               {/* Account Actions */}
               <button
                 onClick={handleSwitchAccount}
-                className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-4  border border-border rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <UserPlus className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-900">
-                    Switch Account
-                  </span>
+                  <span className="text-sm font-medium ">Switch Account</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 " />
               </button>
             </div>
           )}
 
           {/* General Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">General</h3>
+            <h3 className="text-lg font-semibold ">General</h3>
 
             {/* Language Section - Mobile only */}
             <div className="block sm:hidden">
@@ -362,33 +363,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
           {/* Appearance Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Appearance</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              Appearance
+            </h3>
 
-            <div className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg">
+            <div className="flex items-center justify-between text-foreground">
               <div className="flex items-center gap-3">
                 {isDarkMode ? (
-                  <Moon className="h-5 w-5 text-gray-600" />
+                  <Moon className="h-5 w-5 " />
                 ) : (
-                  <Sun className="h-5 w-5 text-gray-600" />
+                  <Sun className="h-5 w-5" />
                 )}
                 <div>
-                  <p className="font-medium text-gray-900">Dark Mode</p>
-                  <p className="text-sm text-gray-500">
-                    {isDarkMode ? 'Dark' : 'Light'}
-                  </p>
+                  <p className="font-medium">Dark Mode</p>
+                  <p className="text-sm ">{isDarkMode ? 'Dark' : 'Light'}</p>
                 </div>
               </div>
               <button
-                onClick={handleThemeChange}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isDarkMode ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
+                onClick={toggleDarkMode}
+                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
+                type="button"
+                aria-label={
+                  isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+                }
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                {isDarkMode ? (
+                  <Sun className="h-4.5 w-4.5" />
+                ) : (
+                  <Moon className="h-4.5 w-4.5" />
+                )}
               </button>
             </div>
           </div>

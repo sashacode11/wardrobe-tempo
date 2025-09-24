@@ -47,6 +47,7 @@ import MobileMenu from './MobileMenu';
 import { CategoryTabs } from './CategoryTabs';
 import { useMultiselect } from '@/hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
+import { DarkModeProvider, useDarkMode } from '@/contexts/DarkModeContext';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -63,27 +64,28 @@ const Home = () => {
   /* Global languages */
   const [setCurrentView, setShowLanguageMenu] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en'); // Default to English
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   // Add this effect to check current theme
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
+  // useEffect(() => {
+  //   const isDark = document.documentElement.classList.contains('dark');
+  //   setIsDarkMode(isDark);
+  // }, []);
 
   // Add this handler function
-  const handleThemeChange = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
+  // const handleThemeChange = () => {
+  //   const newDarkMode = !isDarkMode;
+  //   setIsDarkMode(newDarkMode);
 
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
+  //   if (newDarkMode) {
+  //     document.documentElement.classList.add('dark');
+  //     localStorage.setItem('theme', 'dark');
+  //   } else {
+  //     document.documentElement.classList.remove('dark');
+  //     localStorage.setItem('theme', 'light');
+  //   }
+  // };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -434,7 +436,22 @@ const Home = () => {
               {/* Show full controls on large screens (>= 1100px) */}
               <div className="hidden min-[1100px]:flex items-center gap-2">
                 <LanguageSelector />
+                {/* dark mode */}
                 <button
+                  onClick={toggleDarkMode}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
+                  type="button"
+                  aria-label={
+                    isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+                  }
+                >
+                  {isDarkMode ? (
+                    <Sun className="h-4.5 w-4.5" />
+                  ) : (
+                    <Moon className="h-4.5 w-4.5" />
+                  )}
+                </button>
+                {/* <button
                   onClick={handleThemeChange}
                   className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
                   type="button"
@@ -447,8 +464,8 @@ const Home = () => {
                   ) : (
                     <Sun className="h-4.5 w-4.5" />
                   )}
-                </button>
-
+                </button> */}
+                {/* <DarkModeProvider /> */}
                 {/* Settings Icon for Desktop */}
                 <button
                   onClick={() => setShowSettings(true)}

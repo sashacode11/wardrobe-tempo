@@ -8,6 +8,7 @@ import { WardrobeProvider } from './contexts/WardrobeContext';
 import { Toaster } from 'sonner';
 import { supabase } from './lib/supabaseClient'; // 👈 Import your supabase client
 import AuthDialog from './components/AuthDialog'; // 👈 Import your AuthDialog
+import { DarkModeProvider } from './contexts/DarkModeContext';
 
 function App() {
   // 👇 Add state to track user and loading
@@ -50,51 +51,53 @@ function App() {
   }
 
   return (
-    <WardrobeProvider>
-      <Suspense fallback={<p>Loading...</p>}>
-        <>
-          <Routes>
-            {/* If user is logged in, show Home. Otherwise, show AuthDialog */}
-            <Route
-              path="/"
-              element={
-                user ? (
-                  <Home />
-                ) : (
-                  <AuthDialog
-                    open={true}
-                    onOpenChange={() => {}} // No-op since we control visibility via `user`
-                    onAuthSuccess={() => {
-                      // Optional: Force refresh user if needed (usually not necessary)
-                      // supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-                    }}
-                    defaultTab="login"
-                  />
-                )
-              }
+    <DarkModeProvider>
+      <WardrobeProvider>
+        <Suspense fallback={<p>Loading...</p>}>
+          <>
+            <Routes>
+              {/* If user is logged in, show Home. Otherwise, show AuthDialog */}
+              <Route
+                path="/"
+                element={
+                  user ? (
+                    <Home />
+                  ) : (
+                    <AuthDialog
+                      open={true}
+                      onOpenChange={() => {}} // No-op since we control visibility via `user`
+                      onAuthSuccess={() => {
+                        // Optional: Force refresh user if needed (usually not necessary)
+                        // supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+                      }}
+                      defaultTab="login"
+                    />
+                  )
+                }
+              />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+            </Routes>
+
+            {/* 🔔 Toast notifications */}
+            <Toaster
+              position="top-center"
+              richColors
+              duration={3000}
+              closeButton
+              expand={false}
+              visibleToasts={3}
             />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-          </Routes>
 
-          {/* 🔔 Toast notifications */}
-          <Toaster
-            position="top-center"
-            richColors
-            duration={3000}
-            closeButton
-            expand={false}
-            visibleToasts={3}
-          />
-
-          {import.meta.env.VITE_TEMPO === 'true' && (
-            // ⚠️ If you're using `useRoutes`, make sure it's inside a <Routes> context
-            // But since you're already using <Routes>, you might not need this unless tempo-routes is critical
-            // Consider removing or wrapping properly if needed
-            <div>Tempo Routes Placeholder</div>
-          )}
-        </>
-      </Suspense>
-    </WardrobeProvider>
+            {import.meta.env.VITE_TEMPO === 'true' && (
+              // ⚠️ If you're using `useRoutes`, make sure it's inside a <Routes> context
+              // But since you're already using <Routes>, you might not need this unless tempo-routes is critical
+              // Consider removing or wrapping properly if needed
+              <div>Tempo Routes Placeholder</div>
+            )}
+          </>
+        </Suspense>
+      </WardrobeProvider>
+    </DarkModeProvider>
   );
 }
 
