@@ -270,49 +270,6 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
         </div>
       )}
 
-      {/* count items and multiselect */}
-      <div className="flex items-center mb-4 px-2 gap-4">
-        {/* Left: Filter Button */}
-        {/* <button
-          onClick={() => {
-            if (onShowFilterModal) {
-              onShowFilterModal();
-            } else {
-              console.error('onShowFilterModal is not defined');
-            }
-          }}
-          className={`flex flex-row gap-1 items-center py-1.5 px-3 rounded-lg transition-colors text-sm ${
-            hasActiveFilters
-              ? 'text-blue-600'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-          }`}
-        >
-          <Filter className="h-4 w-4" />
-          <span>Filter</span>
-          {activeFilterCount > 0 && (
-            <span className="ml-1 bg-blue-600 text-white text-xs font-medium rounded-full px-1.5">
-              {activeFilterCount}
-            </span>
-          )}
-        </button> */}
-
-        {/*Bulk Delete Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-sm"
-          onClick={toggleSelectionMode}
-        >
-          <Square className="mr-2 h-4 w-4" />
-          Bulk Delete
-        </Button>
-
-        {/* Center: Item Count */}
-        <div className="text-sm text-muted-foreground text-center">
-          You have {items.length} item{items.length !== 1 ? 's' : ''} total
-        </div>
-      </div>
-
       {/* Clothing Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 overflow-y-auto flex-grow px-0 w-full !mt-2">
         {items.length > 0 ? (

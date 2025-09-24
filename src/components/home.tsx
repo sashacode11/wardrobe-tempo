@@ -21,6 +21,7 @@ import {
   Camera,
   Edit3,
   Search,
+  Square,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -44,6 +45,8 @@ import LanguageSelector from './LanguageSelector';
 import SettingsModal from './settings/SettingsModal';
 import MobileMenu from './MobileMenu';
 import { CategoryTabs } from './CategoryTabs';
+import { useMultiselect } from '@/hooks/useMultiSelect';
+import SelectionControls from './common/SelectionControls';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -131,6 +134,15 @@ const Home = () => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const {
+    toggleSelectionMode,
+    selectAllItems,
+    deselectAllItems,
+    setShowDeleteDialog,
+    isSelectionMode,
+    selectedItems,
+  } = useMultiselect();
 
   // Define filter configurations
   const filterConfigs: FilterConfig[] = [
@@ -526,7 +538,7 @@ const Home = () => {
 
       {/* Main content */}
       <div className="px-2 md:px-4">
-        <div className="mx-auto py-4 sm:px-20 pb-20 md:pb-4">
+        <div className="mx-auto py-0 sm:px-20 pb-20 md:pb-4">
           {authLoading ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
@@ -735,12 +747,35 @@ const Home = () => {
                       // Show normal wardrobe content when not searching
 
                       <div className="space-y-4">
-                        {/* Category Tabs*/}
-                        <CategoryTabs
-                          categories={categories}
-                          activeCategory={activeCategory}
-                          setActiveCategory={setActiveCategory}
-                        />
+                        <div className="flex flex-col sm:w-fit">
+                          {/* Category Tabs*/}
+                          <CategoryTabs
+                            categories={categories}
+                            activeCategory={activeCategory}
+                            setActiveCategory={setActiveCategory}
+                          />
+
+                          {/* count items and multiselect */}
+                          <div className="flex items-center px-2 gap-4 test-xs sm:test-sm justify-between bg-card sm:justify-normal">
+                            {/* Item Count */}
+                            <div className="text-sm sm:block text-muted-foreground text-center">
+                              {items.length} item
+                              {items.length !== 1 ? 's' : ''}
+                            </div>
+
+                            {/*Bulk Delete Button */}
+                            <SelectionControls
+                              isSelectionMode={isSelectionMode}
+                              selectedCount={selectedItems.size}
+                              totalFilteredCount={items.length}
+                              onToggleSelectionMode={toggleSelectionMode}
+                              onSelectAll={() => selectAllItems(items)}
+                              onDeselectAll={deselectAllItems}
+                              onDeleteSelected={() => setShowDeleteDialog(true)}
+                              selectItemsText="Bulk Delete"
+                            />
+                          </div>
+                        </div>
 
                         {/* Wardrobe Grid */}
                         <WardrobeGrid

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Square } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface SelectionControlsProps {
@@ -70,7 +70,7 @@ const SelectionControls: React.FC<SelectionControlsProps> = ({
       )}
 
       <Button
-        variant={isSelectionMode ? 'default' : 'outline'}
+        variant={isSelectionMode ? 'default' : 'ghost'}
         size="sm"
         onClick={onToggleSelectionMode}
       >
@@ -81,7 +81,7 @@ const SelectionControls: React.FC<SelectionControlsProps> = ({
           </>
         ) : (
           <>
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Square className="mr-1 h-3 w-3" />
             {selectItemsText}
           </>
         )}
