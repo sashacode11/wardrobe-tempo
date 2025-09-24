@@ -30,6 +30,8 @@ import { useWardrobe } from '../contexts/WardrobeContext';
 import OutfitRepairView from './OutfitRepairView';
 import { Tabs } from '@radix-ui/react-tabs';
 import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import EmptyWardrobeState from './EmptyWardrobeState';
 
 interface WardrobeGridProps {
   items: ClothingItemType[];
@@ -56,9 +58,21 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
   searchQuery = '',
   onShowFilterModal, // Add this prop
 }) => {
+  const { isOnline, isSupabaseConnected, lastSyncTime, isConnected } =
+    useConnectionStatus();
+
   // Get global context
-  const { removeItem, markOutfitsAsIncomplete, getAffectedOutfits } =
-    useWardrobe();
+  const {
+    removeItem,
+    markOutfitsAsIncomplete,
+    getAffectedOutfits,
+    refreshItems,
+  } = useWardrobe();
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    await refreshItems();
+  };
 
   // State for outfit impact warning
   const [showOutfitWarning, setShowOutfitWarning] = useState(false);
@@ -207,51 +221,42 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       Object.values(activeFilters).some(Boolean) || activeCategory !== 'all';
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-        <div className="text-center space-y-4 max-w-md">
-          {hasActiveFilters ? (
-            <>
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold">No items found</h3>
-              <p className="text-muted-foreground">
-                No items match your current filters. Try adjusting your search
-                criteria.
-              </p>
-              <button
-                onClick={onClearFilters}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold">Your wardrobe is empty</h3>
-              <p className="text-muted-foreground">
-                Start building your digital wardrobe by adding your first
-                clothing item.
-              </p>
-              <button
-                onClick={onAddItem}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
-              >
-                <Plus className="h-4 w-4" />
-                Add Your First Item
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+      <EmptyWardrobeState
+        hasActiveFilters={hasActiveFilters}
+        isConnected={isConnected}
+        isOnline={isOnline}
+        lastSyncTime={lastSyncTime}
+        itemCount={items.length}
+        onAddItem={onAddItem}
+        onClearFilters={onClearFilters}
+        onRefresh={handleRefresh}
+        loading={loading}
+      />
     );
   }
 
   return (
     <>
+      {/* Connection status banner  */}
+      {!isConnected && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-between">
+            <p className="text-orange-800 text-sm">
+              {!isOnline
+                ? "You're offline. Some features may not work."
+                : 'Connection issue detected. Data may not be current.'}
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="text-orange-600 hover:text-orange-800 text-sm font-medium underline"
+              disabled={loading}
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error display */}
       {multiselectError && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm mb-4">

@@ -6,6 +6,7 @@ import React, {
   useState,
   ReactNode,
   useMemo,
+  useCallback,
 } from 'react';
 import {
   getClothingItems,
@@ -46,7 +47,7 @@ interface WardrobeContextType {
   incompleteOutfits: OutfitWithItems[];
   incompleteCount: number;
 
-  // Methods
+  // Refresh states
   refreshItems: () => Promise<void>;
   refreshOutfits: () => Promise<void>;
   refreshAll: () => Promise<void>;
@@ -98,12 +99,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Rest of your implementation stays the same...
-  // (All the existing logic from your context)
-
-  // Add these missing implementations to your WardrobeContext.tsx
-
-  // Simple text-based search (you can enhance this later with FlexSearch)
+  // Simple text-based search
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return wardrobeItems;
 
@@ -183,7 +179,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   };
 
   // Fetch wardrobe items
-  const refreshItems = async () => {
+  const refreshItems = useCallback(async () => {
     if (!user) {
       setWardrobeItems([]);
       setItemsLoading(false);
@@ -204,10 +200,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     } finally {
       setItemsLoading(false);
     }
-  };
+  }, [user]);
 
   // Enhanced refresh outfits to include completion status
-  const refreshOutfits = async () => {
+  const refreshOutfits = useCallback(async () => {
     if (!user) {
       setOutfits([]);
       setOutfitsLoading(false);
@@ -222,19 +218,18 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         .from('outfits')
         .select(
           `
-        *,
-        outfit_items (
           *,
-          wardrobe_items (*)
-        )
-      `
+          outfit_items (
+            *,
+            wardrobe_items (*)
+          )
+        `
         )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      // Transform the data and calculate completion status
       const transformedOutfits: OutfitWithItems[] = (data || []).map(outfit => {
         const validItems =
           outfit.outfit_items?.filter(oi => oi.wardrobe_items) || [];
@@ -256,12 +251,12 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     } finally {
       setOutfitsLoading(false);
     }
-  };
+  }, [user]);
 
   // Refresh all data
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await Promise.all([refreshItems(), refreshOutfits()]);
-  };
+  }, [refreshItems, refreshOutfits]);
 
   // Item management methods
   const addItem = (item: ClothingItemType) => {
@@ -480,7 +475,34 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
       setItemsLoading(false);
       setOutfitsLoading(false);
     }
-  }, [user]);
+  }, [user, refreshAll]);
+
+  // Auto-refresh magic!
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        // Page became visible and user is logged in - refresh data silently
+        console.log('User returned to tab - refreshing data');
+        refreshAll();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user) {
+        // Window got focus and user is logged in - refresh data silently
+        console.log('Window got focus - refreshing data');
+        refreshAll();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, refreshAll]);
 
   const value: WardrobeContextType = {
     // Data
