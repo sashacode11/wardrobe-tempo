@@ -273,7 +273,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
       {/* count items and multiselect */}
       <div className="flex justify-between items-center mb-4 px-2 gap-4">
         {/* Left: Filter Button */}
-        <button
+        {/* <button
           onClick={() => {
             if (onShowFilterModal) {
               onShowFilterModal();
@@ -294,7 +294,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
               {activeFilterCount}
             </span>
           )}
-        </button>
+        </button> */}
 
         {/* Center: Item Count */}
         <div className="text-sm text-muted-foreground text-center">

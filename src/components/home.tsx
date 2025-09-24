@@ -423,7 +423,7 @@ const Home = () => {
                 <LanguageSelector />
                 <button
                   onClick={handleThemeChange}
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
                   type="button"
                   aria-label={
                     isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
@@ -435,13 +435,22 @@ const Home = () => {
                     <Sun className="h-4.5 w-4.5" />
                   )}
                 </button>
+
+                {/* Settings Icon for Desktop */}
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
+                  type="button"
+                >
+                  <Settings className="h-4.5 w-4.5" />
+                </button>
               </div>
 
               {/* Show dropdown toggle on small screens (< 1100px) */}
               <div className="min-[1100px]:hidden">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200"
                   type="button"
                   aria-label="Toggle settings menu"
                 >
@@ -450,8 +459,8 @@ const Home = () => {
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-2 z-20">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="absolute right-0 mt-2 w-48 bg-muted border border-border rounded-md shadow-lg py-2 z-20">
+                    <div className="px-4 py-1 border-b border-border hover:bg-background/40">
                       <LanguageSelector />
                     </div>
                     <button
@@ -459,7 +468,7 @@ const Home = () => {
                         handleThemeChange();
                         setIsDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 text-sm flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-muted-foreground hover:text-blue-600  hover:bg-background/40 text-sm flex items-center gap-2"
                       type="button"
                     >
                       {isDarkMode ? (
@@ -474,19 +483,19 @@ const Home = () => {
                         </>
                       )}
                     </button>
+                    {/* Settings Icon for Desktop — Styled consistently */}
+                    <button
+                      onClick={() => setShowSettings(true)}
+                      className="w-full px-4 py-2 text-left text-muted-foreground hover:text-blue-600 text-sm flex items-center gap-2 hover:bg-background/40"
+                      type="button"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Settings Icon for Desktop — Styled consistently */}
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
-              type="button"
-            >
-              <Settings className="h-4.5 w-4.5" />
-            </button>
           </div>
 
           {/* Hamburger menu in mobile */}

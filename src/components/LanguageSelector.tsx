@@ -18,7 +18,7 @@ const LanguageSelector = ({ className = '' }) => {
     <div className={`relative ${className}`} data-language-selector>
       <button
         onClick={toggleLanguageMenu}
-        className="flex items-center gap-2 py-2 text-gray-600 hover:text-blue-800 hover:font-bold rounded-lg transition-colors duration-200"
+        className="flex items-center gap-2 py-2 text-muted-foreground hover:text-blue-800 hover:font-bold rounded-lg transition-colors duration-200"
         type="button"
       >
         <Globe className="h-4 w-4" />
@@ -33,16 +33,16 @@ const LanguageSelector = ({ className = '' }) => {
       </button>
 
       {showLanguageMenu && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[140px]">
+        <div className="absolute top-full right-0 mt-1 bg-muted border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
           <div className="py-1">
             {supportedLanguages.map(language => (
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                className={`w-full text-left px-3 py-2 text-sm  flex items-center gap-2 ${
                   isLanguageActive(language.code)
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-700'
+                    ? 'text-blue-600'
+                    : 'text-muted-foreground hover:bg-background/40'
                 }`}
               >
                 <span className="text-base">{language.flag}</span>
