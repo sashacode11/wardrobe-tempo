@@ -592,21 +592,23 @@ const Home = () => {
             <div className="flex gap-4">
               {/* Desktop Filter Panel - Left Side keep existing */}
               <div className="hidden md:block w-60 flex-shrink-0">
-                <FilterModal
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  setActiveCategory={setActiveCategory}
-                  activeFilters={activeFilters}
-                  activeFilterEntries={activeFilterEntries}
-                  hasActiveFilters={hasActiveFilters}
-                  hasSearchQuery={hasSearchQuery}
-                  searchQuery={searchQuery}
-                  clearAllFilters={clearAllFilters}
-                  clearFilter={clearFilter}
-                  updateFilter={updateFilter}
-                  filterConfigs={filterConfigs}
-                  isMobile={false}
-                />
+                {(activeTab === 'wardrobe' || activeTab === 'my-outfits') && (
+                  <FilterModal
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    setActiveCategory={setActiveCategory}
+                    activeFilters={activeFilters}
+                    activeFilterEntries={activeFilterEntries}
+                    hasActiveFilters={hasActiveFilters}
+                    hasSearchQuery={hasSearchQuery}
+                    searchQuery={searchQuery}
+                    clearAllFilters={clearAllFilters}
+                    clearFilter={clearFilter}
+                    updateFilter={updateFilter}
+                    filterConfigs={filterConfigs}
+                    isMobile={false}
+                  />
+                )}
               </div>
 
               {/* Main Content Area - Right Side */}
