@@ -1,6 +1,7 @@
 // types.ts - Consolidated type definitions
 import { FilterOptions } from '@/hooks/useFilters';
 import { Database } from './supabase';
+import { LucideIcon } from 'lucide-react';
 
 // Base types from Supabase
 export type ClothingItemType =
@@ -93,4 +94,25 @@ export interface WardrobeGridProps {
   activeFilters?: FilterOptions;
   activeCategory?: string;
   filteredItems?: ClothingItemType[];
+}
+
+export interface SettingItem {
+  id: string;
+  title: string;
+  description?: string;
+  icon: LucideIcon;
+  value?: string | React.ReactNode;
+  onClick: () => void;
+  showOn: ('mobile' | 'desktop' | 'all')[];
+  hasToggle?: boolean;
+  toggleValue?: boolean;
+  disabled?: boolean;
+  badge?: string;
+}
+
+export interface SettingSection {
+  id: string;
+  title: string;
+  items: SettingItem[];
+  order: number;
 }
