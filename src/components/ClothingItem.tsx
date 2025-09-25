@@ -88,6 +88,118 @@ const ClothingItem = ({
     }, 300); // match Dialog close animation duration
   };
 
+  // Modal data configuration
+  const detailFields = [
+    {
+      id: 'category',
+      label: 'Category',
+      value: category,
+      type: 'text',
+    },
+    {
+      id: 'color',
+      label: 'Color',
+      value: color,
+      type: 'color',
+    },
+    {
+      id: 'location',
+      label: 'Location',
+      value: location,
+      type: 'text',
+    },
+    {
+      id: 'season',
+      label: 'Season',
+      value: parseArrayField(seasons).join(', '),
+      isEmpty: parseArrayField(seasons).length === 0,
+      type: 'text',
+    },
+  ];
+
+  const metaFields = [
+    {
+      id: 'occasions',
+      label: 'Occasions',
+      value: parseArrayField(occasions),
+      isEmpty: parseArrayField(occasions).length === 0,
+      type: 'badges',
+      badgeStyle:
+        'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+    },
+    {
+      id: 'tags',
+      label: 'Tags',
+      value: parseArrayField(tags),
+      isEmpty: parseArrayField(tags).length === 0,
+      type: 'badges',
+      badgeStyle: 'bg-muted text-muted-foreground',
+      prefix: '#',
+    },
+  ];
+
+  // Reusable field component
+  const DetailField = ({ field }) => (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        {field.label}
+      </p>
+
+      {field.type === 'color' ? (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full border border-border"
+            style={{
+              backgroundColor:
+                field.value === 'white' ? '#ffffff' : field.value,
+            }}
+          />
+          <p
+            className={`text-sm font-normal capitalize ${
+              field.isEmpty ? 'text-muted-foreground' : 'text-foreground'
+            }`}
+          >
+            {field.value || 'Not specified'}
+          </p>
+        </div>
+      ) : (
+        <p
+          className={`text-sm font-normal capitalize ${
+            field.isEmpty ? 'text-muted-foreground' : 'text-foreground'
+          }`}
+        >
+          {field.value || 'Not specified'}
+        </p>
+      )}
+    </div>
+  );
+
+  const MetaField = ({ field }) => (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        {field.label}
+      </p>
+
+      {field.isEmpty ? (
+        <span className="text-sm text-muted-foreground font-normal">
+          {field.id === 'tags' ? 'No tags' : 'Not specified'}
+        </span>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {field.value.map((item, index) => (
+            <span
+              key={index}
+              className={`px-2.5 py-1 text-xs font-medium rounded-md ${field.badgeStyle}`}
+            >
+              {field.prefix || ''}
+              {item.trim()}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <Card
@@ -184,102 +296,18 @@ const ClothingItem = ({
           </div>
 
           <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
-            {/* Details Grid */}
+            {/* Details Grid - Now data-driven */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Category
-                </p>
-                <p className="text-sm font-medium capitalize">{category}</p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Color
-                </p>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full border border-border"
-                    style={{
-                      backgroundColor: color === 'white' ? '#ffffff' : color,
-                    }}
-                  ></div>
-                  <p className="text-sm font-medium capitalize">{color}</p>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Location
-                </p>
-                <p className="text-sm font-medium">
-                  {location || 'Not specified'}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Season
-                </p>
-                <p
-                  className={`text-sm font-medium capitalize ${
-                    parseArrayField(seasons).length > 0
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  {parseArrayField(seasons).length > 0
-                    ? parseArrayField(seasons).join(', ')
-                    : 'Not specified'}
-                </p>
-              </div>
+              {detailFields.map(field => (
+                <DetailField key={field.id} field={field} />
+              ))}
             </div>
 
-            {/* Tags and Occasions */}
+            {/* Meta Fields - Now data-driven */}
             <div className="space-y-4 mb-6">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Occasions
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {parseArrayField(occasions).length > 0 ? (
-                    parseArrayField(occasions).map((occasion, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs rounded-full"
-                      >
-                        {occasion.trim()}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">
-                      Not specified
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {parseArrayField(tags).length > 0 ? (
-                    parseArrayField(tags).map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full"
-                      >
-                        #{tag.trim()}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">
-                      No tags
-                    </span>
-                  )}
-                </div>
-              </div>
+              {metaFields.map(field => (
+                <MetaField key={field.id} field={field} />
+              ))}
             </div>
 
             {/* Action Buttons */}
