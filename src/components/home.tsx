@@ -48,6 +48,7 @@ import { CategoryTabs } from './CategoryTabs';
 import { useMultiselect } from '@/hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import { DarkModeProvider, useDarkMode } from '@/contexts/DarkModeContext';
+import FilterModal from './FilterModal';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('wardrobe');
@@ -588,147 +589,23 @@ const Home = () => {
             </div>
           ) : (
             <div className="flex gap-4">
-              {/* Desktop Filter Panel - Left Side */}
+              {/* Desktop Filter Panel - Left Side keep existing */}
               <div className="hidden md:block w-60 flex-shrink-0">
-                <div className="sticky top-24 bg-background rounded-lg h-full">
-                  {/* Filter Header */}
-                  <div className="flex items-center justify-between border-b p-2">
-                    <h3 className="text-lg font-semibold">Filters</h3>
-                    {(hasActiveFilters ||
-                      activeCategory !== 'all' ||
-                      hasSearchQuery) && (
-                      <button
-                        onClick={() => {
-                          clearAllFilters();
-                          setActiveCategory('all');
-                        }}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Active Filter Badges */}
-                  {(hasActiveFilters || activeCategory !== 'all') && (
-                    <div className="mb-4 pb-4 border-b border-gray-100">
-                      <div className="flex flex-wrap gap-2">
-                        {(activeCategory !== 'all'
-                          ? [
-                              {
-                                key: 'category',
-                                label: 'Category',
-                                value: activeCategory,
-                              },
-                            ]
-                          : []
-                        )
-                          .concat(activeFilterEntries)
-                          .map(entry => (
-                            <div
-                              key={entry.key}
-                              className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-                            >
-                              <span className="text-xs">
-                                {capitalizeFirst(entry.value)}
-                              </span>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  if (entry.key === 'category') {
-                                    setActiveCategory('all');
-                                  } else {
-                                    clearFilter(entry.key);
-                                  }
-                                }}
-                                className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg rounded-full"
-                                aria-label={`Remove ${entry.label} filter`}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="p-2">
-                    {/* Category Filter */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium mb-3">Category</h4>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setActiveCategory('all')}
-                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors
-                          ${
-                            activeCategory === 'all'
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
-                          }
-                        `}
-                        >
-                          All
-                        </button>
-                        {categories.map(category => (
-                          <button
-                            key={category}
-                            onClick={() => setActiveCategory(category)}
-                            className={`px-3 py-1.5 text-xs rounded-full border transition-colors
-                            ${
-                              activeCategory === category
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
-                            }
-                          `}
-                          >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Dynamic Filters */}
-                    <FilterPanel
-                      filters={filterConfigs}
-                      activeFilters={activeFilters}
-                      onUpdateFilter={updateFilter}
-                      onClearFilter={clearFilter}
-                      onClearAllFilters={() => {
-                        clearAllFilters();
-                        setActiveCategory('all');
-                      }}
-                      activeFilterEntries={[
-                        ...(hasSearchQuery
-                          ? [
-                              {
-                                key: 'search',
-                                label: 'Search',
-                                value: searchQuery,
-                              },
-                            ]
-                          : []),
-                        ...(activeCategory !== 'all'
-                          ? [
-                              {
-                                key: 'category',
-                                label: 'Category',
-                                value: activeCategory,
-                              },
-                            ]
-                          : []),
-                        ...activeFilterEntries,
-                      ]}
-                      hasActiveFilters={
-                        hasActiveFilters ||
-                        activeCategory !== 'all' ||
-                        hasSearchQuery
-                      }
-                      showFilters={true}
-                      onToggleFilters={() => {}}
-                      inline={true}
-                    />
-                  </div>
-                </div>
+                <FilterModal
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  activeFilters={activeFilters}
+                  activeFilterEntries={activeFilterEntries}
+                  hasActiveFilters={hasActiveFilters}
+                  hasSearchQuery={hasSearchQuery}
+                  searchQuery={searchQuery}
+                  clearAllFilters={clearAllFilters}
+                  clearFilter={clearFilter}
+                  updateFilter={updateFilter}
+                  filterConfigs={filterConfigs}
+                  isMobile={false}
+                />
               </div>
 
               {/* Main Content Area - Right Side */}
@@ -880,7 +757,7 @@ const Home = () => {
             onClose={() => setShowSettings(false)}
           />
 
-          {/* Mobile Filter Modal - Keep existing for mobile */}
+          {/* Mobile Filter Modal */}
           {showFilterModal && (
             <>
               <div
@@ -889,172 +766,27 @@ const Home = () => {
               />
               <div
                 className={`
-                  fixed top-0 left-0 min-h-full w-80 max-w-[85vw] bg-background border-r z-50
-                  transform transition-transform duration-300 ease-in-out md:hidden
-                  ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
-                `}
+        fixed top-0 left-0 min-h-full w-80 max-w-[85vw] bg-background border-r z-50
+        transform transition-transform duration-300 ease-in-out md:hidden
+        ${showFilterModal ? 'translate-x-0' : '-translate-x-full'}
+      `}
               >
-                <div className="flex flex-col h-full">
-                  {/* Header */}
-                  <div className="p-2 pt-4 border-b flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Filters</h3>
-                    <div className="flex items-center gap-5 cursor-pointer">
-                      {hasActiveFilters ||
-                      activeCategory !== 'all' ||
-                      hasSearchQuery ? (
-                        <div
-                          className="text-sm text-blue-600"
-                          onClick={() => {
-                            clearAllFilters();
-                            setActiveCategory('all');
-                          }}
-                        >
-                          Clear All
-                        </div>
-                      ) : null}
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowFilterModal(false)}
-                      >
-                        <X className="h-6 w-6" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Active Filter Badges */}
-                  {(hasActiveFilters || activeCategory !== 'all') && (
-                    <div className="px-4 p-2 border-b">
-                      <div className="flex flex-wrap gap-2">
-                        {/* Category and Filter Badges */}
-                        {(activeCategory !== 'all'
-                          ? [
-                              {
-                                key: 'category',
-                                label: 'Category',
-                                value: activeCategory,
-                              },
-                            ]
-                          : []
-                        )
-                          .concat(activeFilterEntries)
-                          .map(entry => (
-                            <div
-                              key={entry.key}
-                              className="flex items-center justify-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1"
-                            >
-                              <span className="text-xs">
-                                {capitalizeFirst(entry.value)}
-                              </span>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  if (entry.key === 'category') {
-                                    setActiveCategory('all');
-                                  } else {
-                                    clearFilter(entry.key);
-                                  }
-                                }}
-                                className="ml-1 w-4 h-4 flex items-center justify-center hover:bg-blue-200 text-lg"
-                                aria-label={`Remove ${entry.label} filter`}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Scrollable Content */}
-                  <div className="flex-1 overflow-y-auto p-4">
-                    {/* Category Filter */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium mb-3">Category</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {categories.map(category => (
-                          <button
-                            key={category}
-                            onClick={() => setActiveCategory(category)}
-                            className={`px-3 py-1.5 text-xs rounded-full border transition-colors
-                              ${
-                                activeCategory === category
-                                  ? 'bg-blue-600 text-white border-blue-600'
-                                  : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/80'
-                              }
-                            `}
-                          >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Dynamic Filters */}
-                    <FilterPanel
-                      filters={filterConfigs}
-                      activeFilters={activeFilters}
-                      onUpdateFilter={updateFilter}
-                      onClearFilter={clearFilter}
-                      onClearAllFilters={() => {
-                        clearAllFilters();
-                        setActiveCategory('all');
-                      }}
-                      activeFilterEntries={[
-                        ...(hasSearchQuery
-                          ? [
-                              {
-                                key: 'search',
-                                label: 'Search',
-                                value: searchQuery,
-                              },
-                            ]
-                          : []),
-                        ...(activeCategory !== 'all'
-                          ? [
-                              {
-                                key: 'category',
-                                label: 'Category',
-                                value: activeCategory,
-                              },
-                            ]
-                          : []),
-                        ...activeFilterEntries,
-                      ]}
-                      hasActiveFilters={
-                        hasActiveFilters ||
-                        activeCategory !== 'all' ||
-                        hasSearchQuery
-                      }
-                      showFilters={true}
-                      onToggleFilters={() => {}}
-                      inline={true}
-                    />
-                  </div>
-
-                  {/* Footer */}
-                  <div className="p-2 border-t flex flex-row justify-end gap-3">
-                    {hasActiveFilters || activeCategory !== 'all' ? (
-                      <Button
-                        variant="outline"
-                        className="w-auto"
-                        onClick={() => {
-                          clearAllFilters();
-                          setActiveCategory('all');
-                        }}
-                      >
-                        Clear All
-                      </Button>
-                    ) : null}
-                    <Button
-                      className="w-auto"
-                      onClick={() => setShowFilterModal(false)}
-                    >
-                      Done
-                    </Button>
-                  </div>
-                </div>
+                <FilterModal
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  activeFilters={activeFilters}
+                  activeFilterEntries={activeFilterEntries}
+                  hasActiveFilters={hasActiveFilters}
+                  hasSearchQuery={hasSearchQuery}
+                  searchQuery={searchQuery}
+                  clearAllFilters={clearAllFilters}
+                  clearFilter={clearFilter}
+                  updateFilter={updateFilter}
+                  filterConfigs={filterConfigs}
+                  isMobile={true}
+                  onClose={() => setShowFilterModal(false)}
+                />
               </div>
             </>
           )}
