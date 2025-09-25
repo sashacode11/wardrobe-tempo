@@ -43,14 +43,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
         onClick={() => setShowMobileMenu(false)}
       />
 
       {/* Mobile Menu */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l z-50 md:hidden
+          fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l border-border z-50 md:hidden
           transform transition-transform duration-300 ease-in-out
           ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -58,7 +58,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="py-4 px-2">
-            <div className="flex items-center justify-between border-b">
+            <div className="flex items-center justify-between border-b border-border">
               <div className="flex items-center">
                 <Button
                   variant="ghost"
@@ -71,22 +71,15 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
                 {user && (
                   <div className="p-2">
-                    <div className="bg-gray-50 rounded-lg">
+                    <div className="bg-muted/50 dark:bg-card rounded-lg p-3">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center">
                           <User className="h-5 w-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h2 className="font-semibold text-gray-900">
+                          <h2 className="font-semibold text-foreground">
                             {user.user_metadata?.full_name || 'User'}
                           </h2>
-                          {/* <button
-                            onClick={() => setCurrentView('personal')}
-                            className="text-blue-600 text-sm font-medium mt-1 flex items-center gap-1"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                            Edit Profile
-                          </button> */}
                         </div>
                       </div>
                     </div>
@@ -116,10 +109,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                       onClick={handleAddItemClick}
                       className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                        <Plus className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card dark:bg-muted rounded-xl shadow-sm border border-border flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                        <Plus className="h-5 w-5 text-foreground" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      <span className="text-xs sm:text-sm font-medium text-foreground">
                         Add Item
                       </span>
                     </button>
@@ -131,10 +124,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                       }}
                       className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                        <Package className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card dark:bg-muted rounded-xl shadow-sm border border-border flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                        <Package className="h-5 w-5 text-foreground" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      <span className="text-xs sm:text-sm font-medium text-foreground">
                         Create Outfit
                       </span>
                     </button>
@@ -146,10 +139,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                       }}
                       className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                        <Shirt className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card dark:bg-muted rounded-xl shadow-sm border border-border flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                        <Shirt className="h-5 w-5 text-foreground" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      <span className="text-xs sm:text-sm font-medium text-foreground">
                         My Outfits
                       </span>
                     </button>
@@ -160,10 +153,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                       }}
                       className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                        <Headphones className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card dark:bg-muted rounded-xl shadow-sm border border-border flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
+                        <Headphones className="h-5 w-5 text-foreground" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      <span className="text-xs sm:text-sm font-medium text-foreground">
                         Customer Service
                       </span>
                     </button>
@@ -198,7 +191,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
           {/* Footer */}
           {user && (
-            <div className="p-4 border-t mt-auto">
+            <div className="p-4 border-t border-border mt-auto">
               <Button
                 variant="outline"
                 onClick={handleSignOut}

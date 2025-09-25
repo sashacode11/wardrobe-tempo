@@ -100,11 +100,11 @@ const ClothingItem = ({
             alt={name}
             className="w-full h-full object-cover"
           />
-          <Badge className="absolute top-2 right-2 bg-white text-black px-1.5 py-0.5 text-xs font-medium rounded">
+          <Badge className="absolute top-2 right-2 bg-white dark:bg-gray-900 text-black dark:text-white px-1.5 py-0.5 text-xs font-medium rounded border border-gray-200 dark:border-gray-700">
             {category}
           </Badge>
           <button
-            className="absolute bottom-2 left-2 text-xs p-2 rounded-md shadow-lg px-3 py-1 bg-gray-700 text-white font-medium  hover:text-blue-300 transition-colors duration-200"
+            className="absolute bottom-2 left-2 text-xs p-2 rounded-md shadow-lg px-3 py-1 bg-black/70 dark:bg-gray-800 text-white font-medium hover:bg-black/80 dark:hover:bg-gray-700 transition-colors duration-200"
             onClick={handleViewOutfit}
             type="button"
           >
@@ -112,7 +112,7 @@ const ClothingItem = ({
           </button>
         </div>
         <CardContent className="py-1 px-2 h-[52px]">
-          <h3 className="font-medium text-sm truncate text-blue-400 ">
+          <h3 className="font-medium text-sm truncate text-foreground">
             {capitalizeFirst(name)}
           </h3>
           {/* <p className="text-xs text-muted-foreground">{color}</p> */}
@@ -122,7 +122,7 @@ const ClothingItem = ({
             </span>
             {color && (
               <div
-                className="w-4 h-4 rounded-full border border-gray-300"
+                className="w-4 h-4 rounded-full border border-border"
                 style={{ backgroundColor: color }}
                 title={color}
               />
@@ -177,7 +177,7 @@ const ClothingItem = ({
               </div>
 
               {/* Close button */}
-              <DialogPrimitive.Close className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-black hover:bg-white/30 transition-colors">
+              <DialogPrimitive.Close className="absolute top-4 right-4 w-8 h-8 bg-black/20 dark:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white dark:text-black hover:bg-black/30 dark:hover:bg-white/30 transition-colors">
                 <X className="h-4 w-4" />
               </DialogPrimitive.Close>
             </div>
@@ -199,7 +199,7 @@ const ClothingItem = ({
                 </p>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 rounded-full border border-gray-300"
+                    className="w-3 h-3 rounded-full border border-border"
                     style={{
                       backgroundColor: color === 'white' ? '#ffffff' : color,
                     }}
@@ -221,7 +221,13 @@ const ClothingItem = ({
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Season
                 </p>
-                <p className="text-sm font-medium capitalize">
+                <p
+                  className={`text-sm font-medium capitalize ${
+                    parseArrayField(seasons).length > 0
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                  }`}
+                >
                   {parseArrayField(seasons).length > 0
                     ? parseArrayField(seasons).join(', ')
                     : 'Not specified'}
@@ -240,7 +246,7 @@ const ClothingItem = ({
                     parseArrayField(occasions).map((occasion, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs rounded-full"
                       >
                         {occasion.trim()}
                       </span>
@@ -262,7 +268,7 @@ const ClothingItem = ({
                     parseArrayField(tags).map((tag, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                        className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full"
                       >
                         #{tag.trim()}
                       </span>
@@ -290,7 +296,7 @@ const ClothingItem = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmDelete(true)}
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-700"
               >
                 <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>

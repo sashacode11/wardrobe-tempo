@@ -298,10 +298,10 @@ const Home = () => {
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}
-                    className={`relative mx-3 py-2.5  text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                    className={`relative mx-3 py-2.5 text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                       activeTab === key
                         ? 'border-b-2 border-blue-600 px-0'
-                        : 'text-gray-600 hover:text-blue-600'
+                        : 'text-muted-foreground hover:text-blue-600'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -357,7 +357,7 @@ const Home = () => {
                   {!searchExpanded ? (
                     <button
                       onClick={() => setSearchExpanded(true)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                      className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-muted/50 rounded-md transition-colors duration-200"
                       type="button"
                       aria-label="Open search"
                     >
@@ -393,7 +393,7 @@ const Home = () => {
             {/* Add Item Button — Styled to be subtle and aligned */}
             <button
               onClick={handleAddItemClick}
-              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap"
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap"
               type="button"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -439,7 +439,7 @@ const Home = () => {
                 {/* dark mode */}
                 <button
                   onClick={toggleDarkMode}
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-background rounded-md transition-colors duration-200 flex items-center"
+                  className="p-1.5 text-muted-foreground hover:text-blue-600 hover:bg-muted/50 rounded-md transition-colors duration-200 flex items-center"
                   type="button"
                   aria-label={
                     isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
@@ -489,16 +489,16 @@ const Home = () => {
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-muted border border-border rounded-md shadow-lg py-2 z-20">
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg py-2 z-20">
                     <div className="px-4 py-1 border-b border-border hover:bg-background/40">
                       <LanguageSelector />
                     </div>
                     <button
                       onClick={() => {
-                        handleThemeChange();
+                        // handleThemeChange();
                         setIsDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-muted-foreground hover:text-blue-600  hover:bg-background/40 text-sm flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-muted-foreground hover:text-blue-600 hover:bg-muted/50 text-sm flex items-center gap-2"
                       type="button"
                     >
                       {isDarkMode ? (
@@ -1062,15 +1062,15 @@ const Home = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-50 shadow-lg">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 shadow-lg">
         <div className="flex items-center justify-around px-1 py-1 pb-safe">
           {/* Home button */}
           <button
             onClick={() => setActiveTab('wardrobe')}
             className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'wardrobe'
-                ? 'text-blue-600 bg-blue-50 scale-105'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
+                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 scale-105'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95'
             }`}
           >
             <HomeIcon
@@ -1093,8 +1093,8 @@ const Home = () => {
             }}
             className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] relative ${
               activeFilterCount > 0
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
+                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95'
             }`}
           >
             <div className="relative">
@@ -1104,7 +1104,7 @@ const Home = () => {
                 }`}
               />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                <span className="absolute -top-1 -right-2 bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm">
                   {activeFilterCount}
                 </span>
               )}
@@ -1117,7 +1117,7 @@ const Home = () => {
           {/* Add item button - Make it stand out */}
           <button
             onClick={handleAddItemClick}
-            className="flex flex-col items-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[60px] text-white bg-gradient-to-t from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 active:scale-95 shadow-lg"
+            className="flex flex-col items-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[60px] text-white bg-gradient-to-t from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 dark:from-blue-600 dark:to-blue-500 dark:hover:from-blue-700 dark:hover:to-blue-600 active:scale-95 shadow-lg"
             type="button"
           >
             <div className="bg-white/20 rounded-full p-1 mb-1">
@@ -1131,8 +1131,8 @@ const Home = () => {
             onClick={() => setActiveTab('outfit')}
             className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'outfit'
-                ? 'text-blue-600 bg-blue-50 scale-105'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
+                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 scale-105'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95'
             }`}
           >
             <Package
@@ -1150,8 +1150,8 @@ const Home = () => {
             onClick={() => setActiveTab('my-outfits')}
             className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-w-[60px] ${
               activeTab === 'my-outfits'
-                ? 'text-blue-600 bg-blue-50 scale-105'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:scale-95'
+                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 scale-105'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95'
             }`}
           >
             <Shirt
