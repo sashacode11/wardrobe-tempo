@@ -497,6 +497,7 @@ const Home = () => {
                     <button
                       onClick={() => {
                         // handleThemeChange();
+                        toggleDarkMode();
                         setIsDropdownOpen(false);
                       }}
                       className="w-full px-4 py-2 text-left text-muted-foreground hover:text-blue-600 hover:bg-muted/50 text-sm flex items-center gap-2"
