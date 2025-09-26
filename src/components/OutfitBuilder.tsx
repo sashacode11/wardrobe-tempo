@@ -35,6 +35,8 @@ import { useFilters } from '@/hooks/useFilters';
 import FloatingOutfitPanel from './FloatingOutfitPanel';
 import { toast } from 'sonner';
 import { OptimizedImage } from './OptimizedImage';
+import { CategoryTabs } from './CategoryTabs';
+import { CategoryContent } from './CategoryContent';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -60,7 +62,7 @@ const OutfitBuilder = ({
     return initialOutfit;
   });
 
-  const [activeCategory, setActiveCategory] = useState('tops');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [outfitName, setOutfitName] = useState('');
   const [occasions, setOccasions] = useState<string[]>([]);
   const [occasionInput, setOccasionInput] = useState('');
@@ -387,6 +389,20 @@ const OutfitBuilder = ({
     }
   };
 
+  // Get the correct items based on active category
+  const getCurrentItems = () => {
+    if (activeCategory === 'all') {
+      return wardrobeItems; // Show all items
+    }
+    return wardrobeItems.filter(
+      item => item.category?.toLowerCase() === activeCategory.toLowerCase()
+    );
+  };
+
+  console.log('WardrobeItems:', wardrobeItems);
+  console.log('Active Category:', activeCategory);
+  console.log('Filtered Items:', filteredItems);
+
   return (
     <div className="min-h-screen">
       {/* Animated Background Pattern - Dark mode compatible */}
@@ -477,130 +493,21 @@ const OutfitBuilder = ({
               </div>
 
               <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-                <div className="md:mb-6 -mx-6 px-6">
-                  <div className="overflow-x-auto scrollbar-hide">
-                    <TabsList className="flex w-max min-w-full bg-slate-100/80 dark:bg-gray-800/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
-                      {categories.map(category => {
-                        const categoryItemCount =
-                          currentOutfit[category]?.length || 0;
-                        return (
-                          <TabsTrigger
-                            key={category}
-                            value={category}
-                            className="capitalize text-sm px-6 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-2 min-w-max"
-                          >
-                            <span>
-                              {category.charAt(0).toUpperCase() +
-                                category.slice(1)}
-                            </span>
-                            {categoryItemCount > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="ml-1 bg-blue-500 text-white text-xs h-5 w-5 rounded-full flex items-center justify-center p-0"
-                              >
-                                {categoryItemCount}
-                              </Badge>
-                            )}
-                          </TabsTrigger>
-                        );
-                      })}
-                    </TabsList>
-                  </div>
-                </div>
+                {/* Category Tabs*/}
+                <CategoryTabs
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                />
 
-                {categories.map(category => (
-                  <TabsContent key={category} value={category}>
-                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50 dark:bg-gray-800/50 pb-16">
-                      {loading ? (
-                        <div className="flex items-center justify-center h-40">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                            <p className="text-muted-foreground">
-                              Loading wardrobe...
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                          {filteredItems.length > 0 ? (
-                            filteredItems.map(item => {
-                              const isSelected = isItemSelected(item);
-                              return (
-                                <Card
-                                  key={item.id}
-                                  className={`cursor-pointer hover:-translate-y-2 transition-all duration-300 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden ${
-                                    isSelected
-                                      ? 'bg-blue-100/80 dark:bg-blue-900/80 ring-2 ring-blue-500'
-                                      : 'bg-white/80 dark:bg-gray-800/80'
-                                  }`}
-                                  onClick={() => handleAddItem(item)}
-                                >
-                                  <CardContent className="p-0">
-                                    <div className="relative w-full h-40 overflow-hidden">
-                                      <OptimizedImage
-                                        src={item.image_url}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                      />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                      <div className="absolute top-2 right-2 transition-all duration-300">
-                                        <div
-                                          className={`p-1.5 backdrop-blur-sm rounded-full shadow-lg ${
-                                            isSelected
-                                              ? 'bg-blue-500 opacity-100'
-                                              : 'bg-white/90 dark:bg-gray-800/90 opacity-0 group-hover:opacity-100'
-                                          }`}
-                                        >
-                                          {isSelected ? (
-                                            <Check className="h-3 w-3 text-white" />
-                                          ) : (
-                                            <Plus className="h-3 w-3 text-foreground" />
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="px-3 py-1 sm:p-3">
-                                      <h4 className="font-medium truncate text-sm text-foreground mb-1">
-                                        {item.name}
-                                      </h4>
-                                      <div className="flex flex-wrap gap-1">
-                                        {item.location && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs bg-white/80 dark:bg-gray-700/80"
-                                          >
-                                            {item.location}
-                                          </Badge>
-                                        )}
-                                        {Array.isArray(item.tags) &&
-                                          item.tags.slice(0, 1).map(tag => (
-                                            <Badge
-                                              key={tag}
-                                              variant="secondary"
-                                              className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                                            >
-                                              {tag}
-                                            </Badge>
-                                          ))}
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              );
-                            })
-                          ) : (
-                            <div className="col-span-2 text-center text-muted-foreground py-12">
-                              <p className="text-sm">
-                                No {category.toLowerCase()} in your wardrobe
-                                yet.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </TabsContent>
-                ))}
+                <TabsContent value={activeCategory} className="mt-0">
+                  <CategoryContent
+                    items={getCurrentItems()}
+                    loading={loading}
+                    onAddItem={handleAddItem}
+                    isItemSelected={isItemSelected}
+                  />
+                </TabsContent>
               </Tabs>
             </div>
           </div>

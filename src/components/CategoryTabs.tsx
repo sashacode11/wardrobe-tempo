@@ -28,12 +28,12 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
       >
         <TabsList
           ref={tabsRef}
-          className="bg-transparent w-full overflow-x-auto flex-nowrap justify-start h-auto min-h-[44px] relative scrollbar-hide p-0 m-0 border-0"
+          className="bg-transparent w-full overflow-x-auto flex-nowrap gap-6 justify-start h-auto min-h-[44px] relative scrollbar-hide p-0 m-0 border-0"
         >
           <TabsTrigger
             key="all"
             value="all"
-            className="capitalize whitespace-nowrap px-2 py-0 bg-transparent border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:rounded-none hover:text-foreground transition-colors"
+            className="capitalize whitespace-nowrap p-0 bg-transparent border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:rounded-none hover:text-foreground transition-colors"
           >
             All
           </TabsTrigger>
@@ -41,7 +41,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
             <TabsTrigger
               key={category}
               value={category}
-              className="capitalize whitespace-nowrap px-2 py-0 bg-transparent border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary hover:text-foreground data-[state=active]:shadow-none data-[state=active]:rounded-none transition-colors"
+              className="capitalize whitespace-nowrap p-0 bg-transparent border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary hover:text-foreground data-[state=active]:shadow-none data-[state=active]:rounded-none transition-colors"
             >
               {category}
             </TabsTrigger>
