@@ -423,7 +423,7 @@ const OutfitBuilder = ({
         <div className="flex justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <div className="flex items-center gap-3">
+              <div className="pb-2 flex items-center gap-3">
                 <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>

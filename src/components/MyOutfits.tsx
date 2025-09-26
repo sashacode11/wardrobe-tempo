@@ -1,4 +1,4 @@
-// MyOutfits.tsx - Fixed outfit creation handling
+// MyOutfits.tsx - Fixed outfit creation handling with dark mode support
 import React, { useState, useEffect } from 'react';
 import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -306,7 +306,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               <Badge
                 key={index}
                 variant="secondary"
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium"
+                className="px-3 py-1 bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium"
               >
                 {occasion}
               </Badge>
@@ -318,16 +318,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         <div className="space-y-6">
           {categoriesWithItems.map(([category, items]) => (
             <div key={category} className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900 capitalize border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold text-foreground capitalize border-b border-border pb-2">
                 {category} ({items.length})
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {items.map(item => (
                   <div
                     key={item.id}
-                    className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg hover:shadow-sm transition-shadow"
+                    className="flex flex-col gap-2 p-3 bg-muted rounded-lg hover:shadow-sm transition-shadow"
                   >
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
                       <OptimizedImage
                         src={item.image_url || ''}
                         alt={item.name}
@@ -335,16 +335,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm truncate">
+                      <p className="font-medium text-foreground text-sm truncate">
                         {item.name}
                       </p>
                       {item.color && (
-                        <p className="text-xs text-gray-600 capitalize mt-1">
+                        <p className="text-xs text-muted-foreground capitalize mt-1">
                           {item.color}
                         </p>
                       )}
                       {item.location && (
-                        <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                           <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
                           {item.location}
                         </p>
@@ -397,16 +397,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 h-[280px] flex flex-col overflow-hidden ${
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[280px] flex flex-col overflow-hidden ${
             isSelectionMode && isSelected
-              ? 'ring-2 ring-blue-500 ring-offset-2'
+              ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
               : ''
           }`}
         >
           <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-l font-semibold text-gray-900 mb-1 truncate">
+                <CardTitle className="text-l font-semibold text-foreground mb-1 truncate">
                   {outfit.name}
                 </CardTitle>
               </div>
@@ -433,12 +433,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               <div className="flex-1 flex flex-col">
                 {/* Item count indicator */}
                 <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-muted-foreground">
                     {totalItemCount} item{totalItemCount !== 1 ? 's' : ''}
                   </span>
                   {hasMoreItems && (
                     <div
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 cursor-pointer group/hint"
+                      className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer group/hint"
                       onClick={() => handleView(outfit)}
                     >
                       <span className="text-xs font-medium">View all</span>
@@ -470,7 +470,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                           className="group/item relative flex flex-col"
                         >
                           {/* Image container with consistent aspect ratio */}
-                          <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-100 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
+                          <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
                             <OptimizedImage
                               src={item.image_url || ''}
                               alt={item.name}
@@ -482,10 +482,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
                           {/* Category label with fixed height */}
                           <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
-                            <p className="text-xs font-medium text-gray-700 capitalize tracking-wide leading-tight truncate">
+                            <p className="text-xs font-medium text-foreground capitalize tracking-wide leading-tight truncate">
                               {category}
                             </p>
-                            <p className="text-xs text-gray-500 truncate leading-tight">
+                            <p className="text-xs text-muted-foreground truncate leading-tight">
                               {item.name}
                             </p>
                           </div>
@@ -499,16 +499,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                           className="group/item relative cursor-pointer flex flex-col"
                           onClick={() => handleView(outfit)}
                         >
-                          <div className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 flex flex-col items-center justify-center hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-200 transition-all duration-200 flex-shrink-0">
-                            <span className="text-lg font-semibold text-blue-600">
+                          <div className="aspect-square bg-gradient-to-br from-blue-50 dark:from-blue-950 to-blue-100 dark:to-blue-900 rounded-xl border border-blue-200 dark:border-blue-700 flex flex-col items-center justify-center hover:bg-gradient-to-br hover:from-blue-100 dark:hover:from-blue-900 hover:to-blue-200 dark:hover:to-blue-800 transition-all duration-200 flex-shrink-0">
+                            <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                               +{totalItemCount - maxDisplayItems}
                             </span>
-                            <span className="text-xs text-blue-500 font-medium">
+                            <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">
                               more
                             </span>
                           </div>
                           <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
-                            <p className="text-xs font-medium text-blue-600 truncate">
+                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate">
                               View all
                             </p>
                           </div>
@@ -520,10 +520,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-2xl">👔</span>
                   </div>
-                  <p className="text-gray-500 text-sm font-medium">
+                  <p className="text-muted-foreground text-sm font-medium">
                     No items in this outfit
                   </p>
                 </div>
@@ -539,8 +539,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your outfits...</p>
+          <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground font-medium">
+            Loading your outfits...
+          </p>
         </div>
       </div>
     );
@@ -551,8 +553,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Error display */}
         {(error || multiselectError || entityError) && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
-            <p className="text-red-800 text-sm font-medium">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 shadow-sm">
+            <p className="text-red-800 dark:text-red-200 text-sm font-medium">
               {error || multiselectError || entityError}
             </p>
             <button
@@ -560,7 +562,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 setMultiselectError(null);
                 setEntityError(null);
               }}
-              className="text-red-600 hover:text-red-800 hover:underline text-sm mt-2 font-medium transition-colors"
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 hover:underline text-sm mt-2 font-medium transition-colors"
             >
               Dismiss
             </button>
@@ -579,16 +581,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                   </div>
 
                   <div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                       My Outfits
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-1 text-gray-600">
+                      <div className="flex items-center gap-1 text-muted-foreground">
                         <p className="text-sm font-medium">
                           You have {outfits.length} saved outfit
                           {outfits.length !== 1 ? 's' : ''}
                           {hasSearchQuery && (
-                            <span className="text-blue-600">
+                            <span className="text-blue-600 dark:text-blue-400">
                               {' '}
                               ({resultCount} matching)
                             </span>
@@ -596,7 +598,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                         </p>
                       </div>
                       {outfits.length > 0 && (
-                        <div className="flex items-center gap-1 text-amber-600">
+                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                           <Sparkles className="h-4 w-4" />
                         </div>
                       )}
@@ -632,9 +634,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
             {/* Search Results Info */}
             {hasSearchQuery && (
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-blue-800">
+                  <span className="text-sm text-blue-800 dark:text-blue-200">
                     {resultCount > 0 ? (
                       <>
                         Found <strong>{resultCount}</strong> outfit
@@ -649,7 +651,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={clearSearch}
-                  className="text-blue-600 hover:text-blue-700"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Clear
                 </Button>
@@ -662,13 +664,13 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 {hasSearchQuery ? (
                   // No search results
                   <div>
-                    <div className="w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Search className="h-12 w-12 text-gray-400" />
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-50 dark:from-gray-800 to-gray-100 dark:to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Search className="h-12 w-12 text-muted-foreground" />
                     </div>
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                    <h3 className="text-2xl font-semibold text-foreground mb-3">
                       No matching outfits
                     </h3>
-                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
                       Try adjusting your search terms or browse all your outfits
                     </p>
                     <Button
@@ -682,13 +684,13 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 ) : (
                   // No outfits at all
                   <div>
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-50 dark:from-blue-950 to-indigo-100 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
                       <span className="text-4xl">👔</span>
                     </div>
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                    <h3 className="text-2xl font-semibold text-foreground mb-3">
                       No outfits yet
                     </h3>
-                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
                       Create your first outfit by mixing and matching items from
                       your wardrobe
                     </p>
@@ -757,10 +759,10 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+              <AlertDialogTitle className="text-xl font-semibold text-foreground">
                 Delete Selected Outfits
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-gray-600">
+              <AlertDialogDescription className="text-muted-foreground">
                 Are you sure you want to delete {selectedItems.size} outfit
                 {selectedItems.size !== 1 ? 's' : ''}? This action cannot be
                 undone.
