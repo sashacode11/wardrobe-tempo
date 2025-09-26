@@ -612,7 +612,13 @@ const Home = () => {
               </div>
 
               {/* Main Content Area - Right Side */}
-              <div className="flex-1 min-w-0">
+              <div
+                className={`min-w-0 ${
+                  activeTab === 'wardrobe' || activeTab === 'my-outfits'
+                    ? 'flex-1' // Take remaining space when filter is shown
+                    : 'w-full max-w-6xl' // Full width with max constraint when centered
+                }`}
+              >
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}

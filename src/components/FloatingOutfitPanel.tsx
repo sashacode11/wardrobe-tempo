@@ -41,17 +41,20 @@ const FloatingOutfitPanel = ({
   return (
     <>
       {/* Desktop Version - Full Panel */}
-      <div className="hidden lg:block bg-gray-100 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 order-2 xl:order-1">
+      <div className="hidden lg:block bg-gray-100 dark:bg-gray-800 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 dark:border-gray-700/20 order-2 xl:order-1">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-800">
+            <h2 className="text-xl font-semibold text-foreground">
               Your Outfit
             </h2>
           </div>
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+          >
             {selectedItemsCount} {selectedItemsCount === 1 ? 'item' : 'items'}
           </Badge>
         </div>
@@ -62,11 +65,11 @@ const FloatingOutfitPanel = ({
               <div key={category} className="space-y-2">
                 {/* Category Header */}
                 <div
-                  className="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-white/40 transition-colors"
+                  className="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors"
                   onClick={() => toggleCategory(category)}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                       {category}
                     </span>
                     <Badge variant="outline" className="text-xs">
@@ -81,15 +84,15 @@ const FloatingOutfitPanel = ({
                         e.stopPropagation();
                         setActiveCategory(category);
                       }}
-                      className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-6"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950 px-2 py-1 h-6"
                     >
                       <Plus className="h-3 w-3 mr-1" />
                       Add
                     </Button>
                     {expandedCategories[category] ? (
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     )}
                   </div>
                 </div>
@@ -100,7 +103,7 @@ const FloatingOutfitPanel = ({
                     {items.map(item => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-200/40 hover:bg-white/80 transition-all duration-300 group"
+                        className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-700/60 rounded-xl border border-slate-200/40 dark:border-gray-600/40 hover:bg-white/80 dark:hover:bg-gray-700/80 transition-all duration-300 group"
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <OptimizedImage
@@ -110,14 +113,14 @@ const FloatingOutfitPanel = ({
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-slate-800 truncate text-sm">
+                          <h3 className="font-medium text-foreground truncate text-sm">
                             {item.name}
                           </h3>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {item.color && (
                               <Badge
                                 variant="outline"
-                                className="text-xs bg-white/80"
+                                className="text-xs bg-white/80 dark:bg-gray-800/80"
                               >
                                 {item.color}
                               </Badge>
@@ -127,7 +130,7 @@ const FloatingOutfitPanel = ({
                                 <Badge
                                   key={tag}
                                   variant="secondary"
-                                  className="text-xs bg-blue-100 text-blue-700"
+                                  className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                                 >
                                   {tag}
                                 </Badge>
@@ -137,7 +140,7 @@ const FloatingOutfitPanel = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="flex-shrink-0 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                          className="flex-shrink-0 h-8 w-8 text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 opacity-0 group-hover:opacity-100 transition-all duration-300"
                           onClick={() => handleRemoveItem(category, item.id)}
                         >
                           <X className="h-4 w-4" />
@@ -153,7 +156,7 @@ const FloatingOutfitPanel = ({
                     {items.slice(0, 3).map((item, index) => (
                       <div
                         key={item.id}
-                        className="relative w-10 h-10 rounded-lg overflow-hidden border-2 border-white shadow-sm"
+                        className="relative w-10 h-10 rounded-lg overflow-hidden border-2 border-white dark:border-gray-700 shadow-sm"
                         style={{ zIndex: 10 - index }}
                       >
                         <OptimizedImage
@@ -164,8 +167,8 @@ const FloatingOutfitPanel = ({
                       </div>
                     ))}
                     {items.length > 3 && (
-                      <div className="relative w-10 h-10 rounded-lg bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center">
-                        <span className="text-xs font-medium text-slate-600">
+                      <div className="relative w-10 h-10 rounded-lg bg-muted border-2 border-white dark:border-gray-700 shadow-sm flex items-center justify-center">
+                        <span className="text-xs font-medium text-muted-foreground">
                           +{items.length - 3}
                         </span>
                       </div>
@@ -177,24 +180,24 @@ const FloatingOutfitPanel = ({
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="p-4 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <Sparkles className="h-8 w-8 text-slate-400" />
+            <div className="p-4 bg-gradient-to-br from-slate-100 dark:from-gray-700 to-slate-200 dark:to-gray-600 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <Sparkles className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-slate-600 mb-2">
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
               Start Building Your Outfit
             </h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Select items from your wardrobe to create the perfect look
             </p>
           </div>
         )}
 
         {selectedItemsCount > 0 && (
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 dark:from-blue-950 to-purple-50 dark:to-purple-950 rounded-xl border border-blue-100 dark:border-blue-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">
+                <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
                   Outfit Ready!
                 </span>
               </div>
@@ -207,7 +210,7 @@ const FloatingOutfitPanel = ({
                 Save
               </Button>
             </div>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
               Your outfit looks great! Save it to your collection.
             </p>
           </div>
@@ -219,24 +222,24 @@ const FloatingOutfitPanel = ({
         {/* Floating Badge/Button */}
         {!isExpanded && (
           <div
-            className="bg-gray-100 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/20 cursor-pointer transform transition-all duration-300 hover:scale-105"
+            className="bg-gray-100 dark:bg-gray-800 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/20 dark:border-gray-700/20 cursor-pointer transform transition-all duration-300 hover:scale-105"
             onClick={() => setIsExpanded(true)}
           >
             {/* Header Row */}
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center gap-1">
-                <h3 className="text-slate-800 font-semibold text-sm">
+                <h3 className="text-foreground font-semibold text-sm">
                   Your Outfit
                 </h3>
                 {selectedItemsCount > 0 && (
-                  <span className="text-slate-600 text-xs flex items-center">
+                  <span className="text-muted-foreground text-xs flex items-center">
                     ({selectedItemsCount}{' '}
                     {selectedItemsCount === 1 ? 'item' : 'items'} )
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2 px-4">
-                <ChevronUp className="h-4 w-4 text-slate-500" />
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
 
@@ -251,7 +254,7 @@ const FloatingOutfitPanel = ({
                       .map((item, index) => (
                         <div
                           key={item.id}
-                          className="relative w-9 h-9 rounded-lg overflow-hidden border-2 border-white shadow-sm"
+                          className="relative w-9 h-9 rounded-lg overflow-hidden border-2 border-white dark:border-gray-700 shadow-sm"
                           style={{ zIndex: 10 - index }}
                         >
                           <OptimizedImage
@@ -264,10 +267,10 @@ const FloatingOutfitPanel = ({
                     {/* Show "more items" indicator if there are more than 4 */}
                     {selectedItemsCount > 4 && (
                       <div
-                        className="relative w-9 h-9 rounded-lg bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center"
+                        className="relative w-9 h-9 rounded-lg bg-muted border-2 border-white dark:border-gray-700 shadow-sm flex items-center justify-center"
                         style={{ zIndex: 5 }}
                       >
-                        <span className="text-xs font-medium text-slate-600">
+                        <span className="text-xs font-medium text-muted-foreground">
                           +{selectedItemsCount - 4}
                         </span>
                       </div>
@@ -295,7 +298,7 @@ const FloatingOutfitPanel = ({
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-slate-600 text-xs">
+                  <p className="text-muted-foreground text-xs">
                     Select items from your wardrobe to build your outfit
                   </p>
                 </div>
@@ -306,21 +309,21 @@ const FloatingOutfitPanel = ({
 
         {/* Expanded Panel for Mobile */}
         {isExpanded && (
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 max-h-[70vh] flex flex-col">
+          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/20 max-h-[70vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200/40">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200/40 dark:border-gray-700/40">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-800">
+                <h2 className="text-lg font-semibold text-foreground">
                   Your Outfit
                 </h2>
               </div>
               <div className="flex items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className="bg-blue-100 text-blue-700"
+                  className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                 >
                   {selectedItemsCount}{' '}
                   {selectedItemsCount === 1 ? 'item' : 'items'}
@@ -345,7 +348,7 @@ const FloatingOutfitPanel = ({
                       {/* Category Header */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                          <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                             {category}
                           </span>
                           <Badge variant="outline" className="text-xs">
@@ -356,7 +359,7 @@ const FloatingOutfitPanel = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => setActiveCategory(category)}
-                          className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-6"
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950 px-2 py-1 h-6"
                         >
                           <Plus className="h-3 w-3 mr-1" />
                           Add
@@ -368,7 +371,7 @@ const FloatingOutfitPanel = ({
                         {items.map(item => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-200/40"
+                            className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-700/60 rounded-xl border border-slate-200/40 dark:border-gray-600/40"
                           >
                             <div className="relative w-10 h-10 flex-shrink-0">
                               <OptimizedImage
@@ -378,14 +381,14 @@ const FloatingOutfitPanel = ({
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-slate-800 truncate text-sm">
+                              <h3 className="font-medium text-foreground truncate text-sm">
                                 {item.name}
                               </h3>
                             </div>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-slate-400 hover:text-red-500"
+                              className="h-8 w-8 text-muted-foreground hover:text-red-500 dark:hover:text-red-400"
                               onClick={() =>
                                 handleRemoveItem(category, item.id)
                               }
@@ -400,13 +403,13 @@ const FloatingOutfitPanel = ({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="p-3 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
-                    <Sparkles className="h-6 w-6 text-slate-400" />
+                  <div className="p-3 bg-gradient-to-br from-slate-100 dark:from-gray-700 to-slate-200 dark:to-gray-600 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                    <Sparkles className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <h3 className="text-base font-medium text-slate-600 mb-2">
+                  <h3 className="text-base font-medium text-muted-foreground mb-2">
                     Start Building Your Outfit
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     Select items from your wardrobe to create the perfect look
                   </p>
                 </div>
@@ -415,7 +418,7 @@ const FloatingOutfitPanel = ({
 
             {/* Save Button */}
             {selectedItemsCount > 0 && (
-              <div className="p-4 border-t border-slate-200/40">
+              <div className="p-4 border-t border-slate-200/40 dark:border-gray-700/40">
                 <Button
                   onClick={() => setSaveDialogOpen(true)}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
@@ -432,13 +435,13 @@ const FloatingOutfitPanel = ({
   );
 };
 
-// Badge component (assuming you're using a UI library like shadcn/ui)
+// Badge component with dark mode support
 const Badge = ({ children, variant, className }) => {
   const baseClasses =
     'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium';
   const variantClasses = {
-    secondary: 'bg-slate-100 text-slate-800',
-    outline: 'border border-slate-300 bg-transparent text-slate-700',
+    secondary: 'bg-muted text-muted-foreground',
+    outline: 'border border-border bg-transparent text-foreground',
   };
 
   return (
@@ -448,7 +451,7 @@ const Badge = ({ children, variant, className }) => {
   );
 };
 
-// Button component (basic implementation)
+// Button component with dark mode support
 const Button = ({
   children,
   variant = 'default',
@@ -461,9 +464,10 @@ const Button = ({
     'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
 
   const variantClasses = {
-    default: 'bg-slate-900 text-slate-50 hover:bg-slate-800',
-    ghost: 'hover:bg-slate-100',
-    outline: 'border border-slate-300 bg-transparent hover:bg-slate-50',
+    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    ghost: 'hover:bg-muted hover:text-muted-foreground',
+    outline:
+      'border border-border bg-transparent hover:bg-muted hover:text-muted-foreground',
   };
 
   const sizeClasses = {

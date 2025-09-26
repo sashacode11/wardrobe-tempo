@@ -388,12 +388,12 @@ const OutfitBuilder = ({
   };
 
   return (
-    <div className="min-h-screen ">
-      {/* Animated Background Pattern */}
+    <div className="min-h-screen">
+      {/* Animated Background Pattern - Dark mode compatible */}
       <div className="fixed inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]"></div>
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200 dark:bg-purple-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 dark:bg-blue-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
       </div>
 
       <div
@@ -416,7 +416,7 @@ const OutfitBuilder = ({
                     {isEditing ? 'Edit Outfit' : 'Create Outfit'}
                   </h1>
                   {!isEditing && (
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Mix and match your wardrobe items
                     </p>
                   )}
@@ -426,7 +426,7 @@ const OutfitBuilder = ({
                 <div className="mt-3">
                   <Badge
                     variant="secondary"
-                    className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
                   >
                     Editing: {editingOutfit.name}
                   </Badge>
@@ -441,7 +441,7 @@ const OutfitBuilder = ({
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="flex gap-2 hover:bg-red-50 text-red-600 transition-colors  border-gray-200"
+              className="flex gap-2 hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors border-gray-200 dark:border-gray-700"
             >
               <X className="h-6 w-6" />
             </Button>
@@ -461,15 +461,15 @@ const OutfitBuilder = ({
 
           {/* Enhanced Item Selection */}
           <div className="flex flex-col order-1 xl:order-2">
-            <div className="bg-white/70 sm:bg-gray-100 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-2">
+            <div className="bg-white/70 dark:bg-gray-900/70 sm:bg-gray-100 dark:sm:bg-gray-800 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 p-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-2 mb-2 md:mb-6">
-                <h2 className="text-xl font-semibold text-slate-800">
+                <h2 className="text-xl font-semibold text-foreground">
                   Browse Your Wardrobe
                 </h2>
                 <div className="w-full sm:w-auto flex justify-end">
-                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 px-3 py-1">
+                  <div className="flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/20 px-3 py-1">
                     <Palette className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs font-medium text-slate-700">
+                    <span className="text-xs font-medium text-muted-foreground">
                       {selectedItemsCount} items selected
                     </span>
                   </div>
@@ -479,7 +479,7 @@ const OutfitBuilder = ({
               <Tabs value={activeCategory} onValueChange={setActiveCategory}>
                 <div className="md:mb-6 -mx-6 px-6">
                   <div className="overflow-x-auto scrollbar-hide">
-                    <TabsList className="flex w-max min-w-full bg-slate-100/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
+                    <TabsList className="flex w-max min-w-full bg-slate-100/80 dark:bg-gray-800/80 backdrop-blur-sm p-1 rounded-xl overflow-y-hidden">
                       {categories.map(category => {
                         const categoryItemCount =
                           currentOutfit[category]?.length || 0;
@@ -487,7 +487,7 @@ const OutfitBuilder = ({
                           <TabsTrigger
                             key={category}
                             value={category}
-                            className="capitalize text-sm px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-2 min-w-max"
+                            className="capitalize text-sm px-6 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-2 min-w-max"
                           >
                             <span>
                               {category.charAt(0).toUpperCase() +
@@ -510,12 +510,12 @@ const OutfitBuilder = ({
 
                 {categories.map(category => (
                   <TabsContent key={category} value={category}>
-                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50 pb-16">
+                    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-slate-50/50 dark:bg-gray-800/50 pb-16">
                       {loading ? (
                         <div className="flex items-center justify-center h-40">
                           <div className="text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                            <p className="text-slate-600">
+                            <p className="text-muted-foreground">
                               Loading wardrobe...
                             </p>
                           </div>
@@ -530,8 +530,8 @@ const OutfitBuilder = ({
                                   key={item.id}
                                   className={`cursor-pointer hover:-translate-y-2 transition-all duration-300 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden ${
                                     isSelected
-                                      ? 'bg-blue-100/80 ring-2 ring-blue-500'
-                                      : 'bg-white/80'
+                                      ? 'bg-blue-100/80 dark:bg-blue-900/80 ring-2 ring-blue-500'
+                                      : 'bg-white/80 dark:bg-gray-800/80'
                                   }`}
                                   onClick={() => handleAddItem(item)}
                                 >
@@ -548,26 +548,26 @@ const OutfitBuilder = ({
                                           className={`p-1.5 backdrop-blur-sm rounded-full shadow-lg ${
                                             isSelected
                                               ? 'bg-blue-500 opacity-100'
-                                              : 'bg-white/90 opacity-0 group-hover:opacity-100'
+                                              : 'bg-white/90 dark:bg-gray-800/90 opacity-0 group-hover:opacity-100'
                                           }`}
                                         >
                                           {isSelected ? (
                                             <Check className="h-3 w-3 text-white" />
                                           ) : (
-                                            <Plus className="h-3 w-3 text-slate-700" />
+                                            <Plus className="h-3 w-3 text-foreground" />
                                           )}
                                         </div>
                                       </div>
                                     </div>
                                     <div className="px-3 py-1 sm:p-3">
-                                      <h4 className="font-medium truncate text-sm text-slate-800 mb-1">
+                                      <h4 className="font-medium truncate text-sm text-foreground mb-1">
                                         {item.name}
                                       </h4>
                                       <div className="flex flex-wrap gap-1">
                                         {item.location && (
                                           <Badge
                                             variant="outline"
-                                            className="text-xs bg-white/80"
+                                            className="text-xs bg-white/80 dark:bg-gray-700/80"
                                           >
                                             {item.location}
                                           </Badge>
@@ -577,7 +577,7 @@ const OutfitBuilder = ({
                                             <Badge
                                               key={tag}
                                               variant="secondary"
-                                              className="text-xs bg-blue-100 text-blue-700"
+                                              className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                                             >
                                               {tag}
                                             </Badge>
@@ -589,7 +589,7 @@ const OutfitBuilder = ({
                               );
                             })
                           ) : (
-                            <div className="col-span-2 text-center text-slate-500 py-12">
+                            <div className="col-span-2 text-center text-muted-foreground py-12">
                               <p className="text-sm">
                                 No {category.toLowerCase()} in your wardrobe
                                 yet.
@@ -608,12 +608,12 @@ const OutfitBuilder = ({
 
         {/* Enhanced Save Dialog */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogContent className="bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+          <DialogContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-0 shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {isEditing ? 'Update Outfit' : 'Save Your Outfit'}
               </DialogTitle>
-              <p className="text-slate-600 mt-2">
+              <p className="text-muted-foreground mt-2">
                 Give your outfit a name and add occasions where you'd wear it.
               </p>
             </DialogHeader>
@@ -621,7 +621,7 @@ const OutfitBuilder = ({
               <div className="space-y-2">
                 <Label
                   htmlFor="outfit-name"
-                  className="text-sm font-medium text-slate-700"
+                  className="text-sm font-medium text-foreground"
                 >
                   Outfit Name
                 </Label>
@@ -630,13 +630,13 @@ const OutfitBuilder = ({
                   value={outfitName}
                   onChange={e => setOutfitName(e.target.value)}
                   placeholder="My Amazing Outfit"
-                  className="border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                  className="border-border focus:border-blue-400 focus:ring-blue-400/20"
                 />
               </div>
               <div className="space-y-3">
                 <Label
                   htmlFor="occasions"
-                  className="text-sm font-medium text-slate-700"
+                  className="text-sm font-medium text-foreground"
                 >
                   Occasions
                 </Label>
@@ -652,7 +652,7 @@ const OutfitBuilder = ({
                       }
                     }}
                     placeholder="Work, Casual, Date Night..."
-                    className="flex-1 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                    className="flex-1 border-border focus:border-blue-400 focus:ring-blue-400/20"
                   />
                   <Button
                     type="button"
@@ -664,16 +664,16 @@ const OutfitBuilder = ({
                   </Button>
                 </div>
                 {occasions.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg">
+                  <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg">
                     {occasions.map(occasion => (
                       <Badge
                         key={occasion}
                         variant="secondary"
-                        className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800"
                       >
                         {occasion}
                         <X
-                          className="h-3 w-3 cursor-pointer hover:text-blue-900"
+                          className="h-3 w-3 cursor-pointer hover:text-blue-900 dark:hover:text-blue-100"
                           onClick={() => handleRemoveOccasion(occasion)}
                         />
                       </Badge>
@@ -686,7 +686,7 @@ const OutfitBuilder = ({
               <Button
                 variant="outline"
                 onClick={() => setSaveDialogOpen(false)}
-                className="border-slate-200 hover:bg-slate-50"
+                className="border-border hover:bg-muted"
               >
                 Cancel
               </Button>
