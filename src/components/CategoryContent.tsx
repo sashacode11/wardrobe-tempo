@@ -20,7 +20,7 @@ export const CategoryContent: React.FC<CategoryContentProps> = ({
   isItemSelected,
 }) => {
   return (
-    <ScrollArea className="md:h-[500px] p-2 md:p-4 rounded-xl bg-muted/50 pb-16">
+    <ScrollArea className="md:h-[500px] rounded-xl pb-16">
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="text-center">
@@ -29,7 +29,7 @@ export const CategoryContent: React.FC<CategoryContentProps> = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-3">
           {items.length > 0 ? (
             items.map(item => {
               const isSelected = isItemSelected(item);
@@ -39,7 +39,7 @@ export const CategoryContent: React.FC<CategoryContentProps> = ({
                   className={`cursor-pointer hover:-translate-y-2 transition-all duration-300 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl group overflow-hidden ${
                     isSelected
                       ? 'bg-primary/10 ring-2 ring-primary'
-                      : 'bg-card/80'
+                      : 'bg-card/80 border border-border'
                   }`}
                   onClick={() => onAddItem(item)}
                 >

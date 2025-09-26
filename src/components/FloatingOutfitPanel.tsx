@@ -65,7 +65,7 @@ const FloatingOutfitPanel = ({
               <div key={category} className="space-y-2">
                 {/* Category Header */}
                 <div
-                  className="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors"
+                  className="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-white/40 transition-colors"
                   onClick={() => toggleCategory(category)}
                 >
                   <div className="flex items-center gap-2">

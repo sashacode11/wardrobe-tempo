@@ -405,44 +405,44 @@ const OutfitBuilder = ({
 
   return (
     <div className="min-h-screen">
-      {/* Animated Background Pattern - Dark mode compatible */}
-      <div className="fixed inset-0 opacity-30 pointer-events-none">
+      {/* Animated Background Pattern - Semantic colors */}
+      {/* <div className="fixed inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]"></div>
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200 dark:bg-purple-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 dark:bg-blue-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
-      </div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1000"></div>
+      </div> */}
 
       <div
         className={`
-    max-w-7xl mx-auto
-    ${isEditing ? 'p-1' : 'p-4'}
+    w-full mx-auto
+    ${isEditing ? 'p-1' : 'px-1 pt-2 sm:p-4'}
     relative
   `}
       >
         {/* Enhanced Header */}
-        <div className="flex justify-between">
+        <div className="flex justify-between items-start mt-2 mb-0 sm:mb-4">
           <div className="flex items-center gap-4">
             <div>
-              <div className="pb-2 flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+              <div className="pb-1 sm:pb-2 flex items-center gap-3">
+                <div className="hidden sm:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-lg sm:text-3xl font-bold text-muted-foreground">
                     {isEditing ? 'Edit Outfit' : 'Create Outfit'}
                   </h1>
                   {!isEditing && (
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="hidden sm:block text-sm text-muted-foreground mt-1">
                       Mix and match your wardrobe items
                     </p>
                   )}
                 </div>
               </div>
               {isEditing && editingOutfit && (
-                <div className="mt-3">
+                <div className="mt-2 sm:mt-3">
                   <Badge
                     variant="secondary"
-                    className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
+                    className="bg-blue-100 text-blue-700 hover:bg-blue-200"
                   >
                     Editing: {editingOutfit.name}
                   </Badge>
@@ -451,71 +451,94 @@ const OutfitBuilder = ({
             </div>
           </div>
 
-          {/* Close Button - positioned on the right */}
-          {isEditing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="flex gap-2 hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors border-gray-200 dark:border-gray-700"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-          )}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Item count badge - positioned on the right for mobile */}
+            <div className="sm:hidden">
+              <div className="flex items-center gap-2 bg-accent backdrop-blur-sm rounded-lg border border-border px-2 py-1">
+                <Palette className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-muted-foreground">
+                  {selectedItemsCount} selected
+                </span>
+              </div>
+            </div>
+
+            {/* Close Button - positioned on the right */}
+            {isEditing && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClose}
+                className="flex gap-2 hover:bg-red-50 text-red-600 transition-colors border-border p-1 sm:p-2"
+              >
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 md:gap-8">
-          {/* Enhanced Current Outfit Preview - List View */}
-          <FloatingOutfitPanel
-            currentOutfit={currentOutfit}
-            selectedItemsCount={selectedItemsCount}
-            handleRemoveItem={handleRemoveItem}
-            setSaveDialogOpen={setSaveDialogOpen}
-            setActiveCategory={setActiveCategory}
-          />
+        <div className="flex justify-center">
+          <div className="w-full max-w-[1400px] grid grid-cols-1 xl:grid-cols-5 gap-2 md:gap-8">
+            {/* Enhanced Current Outfit Preview - List View - Narrower column */}
+            <div className="xl:col-span-2">
+              <FloatingOutfitPanel
+                currentOutfit={currentOutfit}
+                selectedItemsCount={selectedItemsCount}
+                handleRemoveItem={handleRemoveItem}
+                setSaveDialogOpen={setSaveDialogOpen}
+                setActiveCategory={setActiveCategory}
+              />
+            </div>
 
-          {/* Enhanced Item Selection */}
-          <div className="flex flex-col order-1 xl:order-2">
-            <div className="bg-white/70 dark:bg-gray-900/70 sm:bg-gray-100 dark:sm:bg-gray-800 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 p-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-2 mb-2 md:mb-6">
-                <h2 className="text-xl font-semibold text-foreground">
-                  Browse Your Wardrobe
-                </h2>
-                <div className="w-full sm:w-auto flex justify-end">
-                  <div className="flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/20 px-3 py-1">
-                    <Palette className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {selectedItemsCount} items selected
-                    </span>
+            {/* Enhanced Item Selection - Wider column for better readability */}
+            <div className="flex flex-col order-1 xl:order-2 xl:col-span-3">
+              <div className="sm:bg-card sm:backdrop-blur-md sm:rounded-2xl sm:shadow-xl sm:border sm:border-border sm:p-2">
+                <div className="sm:px-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-0 mb-1 sm:mt-2 sm:mb-4">
+                  <h2 className="hidden sm:block text-md font-semibold text-muted-foreground">
+                    Browse Your Wardrobe
+                  </h2>
+                  <div className="hidden sm:flex w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2 bg-accent backdrop-blur-sm rounded-lg border border-border px-3 py-1">
+                      <Palette className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {selectedItemsCount} items selected
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-                {/* Category Tabs*/}
-                <CategoryTabs
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  setActiveCategory={setActiveCategory}
-                />
-
-                <TabsContent value={activeCategory} className="mt-0">
-                  <CategoryContent
-                    items={getCurrentItems()}
-                    loading={loading}
-                    onAddItem={handleAddItem}
-                    isItemSelected={isItemSelected}
+                <Tabs
+                  value={activeCategory}
+                  onValueChange={setActiveCategory}
+                  className="px-1 sm:px-2"
+                >
+                  {/* Category Tabs*/}
+                  <CategoryTabs
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    setActiveCategory={setActiveCategory}
                   />
-                </TabsContent>
-              </Tabs>
+
+                  <TabsContent
+                    value={activeCategory}
+                    className="mt-0 px-1 sm:px-2"
+                  >
+                    <CategoryContent
+                      items={getCurrentItems()}
+                      loading={loading}
+                      onAddItem={handleAddItem}
+                      isItemSelected={isItemSelected}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Enhanced Save Dialog */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-0 shadow-2xl">
+          <DialogContent className="bg-background/95 backdrop-blur-xl border-0 shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {isEditing ? 'Update Outfit' : 'Save Your Outfit'}
@@ -537,7 +560,7 @@ const OutfitBuilder = ({
                   value={outfitName}
                   onChange={e => setOutfitName(e.target.value)}
                   placeholder="My Amazing Outfit"
-                  className="border-border focus:border-blue-400 focus:ring-blue-400/20"
+                  className="border-border focus:border-primary focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-3">
@@ -559,7 +582,7 @@ const OutfitBuilder = ({
                       }
                     }}
                     placeholder="Work, Casual, Date Night..."
-                    className="flex-1 border-border focus:border-blue-400 focus:ring-blue-400/20"
+                    className="flex-1 border-border focus:border-primary focus:ring-primary/20"
                   />
                   <Button
                     type="button"
@@ -576,11 +599,11 @@ const OutfitBuilder = ({
                       <Badge
                         key={occasion}
                         variant="secondary"
-                        className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800"
+                        className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
                       >
                         {occasion}
                         <X
-                          className="h-3 w-3 cursor-pointer hover:text-blue-900 dark:hover:text-blue-100"
+                          className="h-3 w-3 cursor-pointer hover:text-blue-900"
                           onClick={() => handleRemoveOccasion(occasion)}
                         />
                       </Badge>
@@ -593,7 +616,7 @@ const OutfitBuilder = ({
               <Button
                 variant="outline"
                 onClick={() => setSaveDialogOpen(false)}
-                className="border-border hover:bg-muted"
+                className="border-border hover:bg-accent"
               >
                 Cancel
               </Button>

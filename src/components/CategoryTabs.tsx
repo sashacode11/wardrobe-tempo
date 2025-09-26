@@ -28,7 +28,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
       >
         <TabsList
           ref={tabsRef}
-          className="bg-transparent w-full overflow-x-auto flex-nowrap gap-6 justify-start h-auto min-h-[44px] relative scrollbar-hide p-0 m-0 border-0"
+          className="bg-transparent w-full overflow-x-auto flex-nowrap gap-6 justify-start h-auto min-h-[25px] relative scrollbar-hide p-0 m-0 border-0"
         >
           <TabsTrigger
             key="all"

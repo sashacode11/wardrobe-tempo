@@ -588,37 +588,28 @@ const Home = () => {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : // FIXED: Conditional layout based on tab
+          activeTab === 'wardrobe' || activeTab === 'my-outfits' ? (
+            // Two-column layout WITH filter
             <div className="flex gap-4">
-              {/* Desktop Filter Panel - Left Side keep existing */}
               <div className="hidden md:block w-60 flex-shrink-0">
-                {(activeTab === 'wardrobe' || activeTab === 'my-outfits') && (
-                  <FilterModal
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    setActiveCategory={setActiveCategory}
-                    activeFilters={activeFilters}
-                    activeFilterEntries={activeFilterEntries}
-                    hasActiveFilters={hasActiveFilters}
-                    hasSearchQuery={hasSearchQuery}
-                    searchQuery={searchQuery}
-                    clearAllFilters={clearAllFilters}
-                    clearFilter={clearFilter}
-                    updateFilter={updateFilter}
-                    filterConfigs={filterConfigs}
-                    isMobile={false}
-                  />
-                )}
+                <FilterModal
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  activeFilters={activeFilters}
+                  activeFilterEntries={activeFilterEntries}
+                  hasActiveFilters={hasActiveFilters}
+                  hasSearchQuery={hasSearchQuery}
+                  searchQuery={searchQuery}
+                  clearAllFilters={clearAllFilters}
+                  clearFilter={clearFilter}
+                  updateFilter={updateFilter}
+                  filterConfigs={filterConfigs}
+                  isMobile={false}
+                />
               </div>
-
-              {/* Main Content Area - Right Side */}
-              <div
-                className={`min-w-0 ${
-                  activeTab === 'wardrobe' || activeTab === 'my-outfits'
-                    ? 'flex-1' // Take remaining space when filter is shown
-                    : 'w-full max-w-6xl' // Full width with max constraint when centered
-                }`}
-              >
+              <div className="flex-1 min-w-0">
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -626,7 +617,6 @@ const Home = () => {
                 >
                   <TabsContent value="wardrobe" className="mt-0">
                     {hasSearchQuery ? (
-                      // Show unified search results when searching
                       <UnifiedSearchResults
                         onAddItem={handleAddItemClick}
                         onEditItem={item => {
@@ -647,26 +637,17 @@ const Home = () => {
                         onCreateOutfit={() => setActiveTab('outfit')}
                       />
                     ) : (
-                      // Show normal wardrobe content when not searching
-
                       <div className="space-y-4">
                         <div className="flex flex-col sm:w-fit">
-                          {/* Category Tabs*/}
                           <CategoryTabs
                             categories={categories}
                             activeCategory={activeCategory}
                             setActiveCategory={setActiveCategory}
                           />
-
-                          {/* count items and multiselect */}
                           <div className="flex items-center px-2 gap-4 test-xs sm:test-sm justify-between bg-card sm:justify-normal">
-                            {/* Item Count */}
                             <div className="text-sm sm:block text-muted-foreground text-center">
-                              {items.length} item
-                              {items.length !== 1 ? 's' : ''}
+                              {items.length} item{items.length !== 1 ? 's' : ''}
                             </div>
-
-                            {/*Bulk Delete Button */}
                             <SelectionControls
                               isSelectionMode={isSelectionMode}
                               selectedCount={selectedItems.size}
@@ -679,8 +660,6 @@ const Home = () => {
                             />
                           </div>
                         </div>
-
-                        {/* Wardrobe Grid */}
                         <WardrobeGrid
                           key={wardrobeKey}
                           items={finalItems}
@@ -705,7 +684,6 @@ const Home = () => {
 
                   <TabsContent value="my-outfits" className="mt-0">
                     {hasSearchQuery ? (
-                      // Show unified search results when searching
                       <UnifiedSearchResults
                         onAddItem={handleAddItemClick}
                         onEditItem={item => {
@@ -726,7 +704,6 @@ const Home = () => {
                         onCreateOutfit={() => setActiveTab('outfit')}
                       />
                     ) : (
-                      // Show normal MyOutfits component when not searching
                       <MyOutfits
                         onCreateOutfit={() => setActiveTab('outfit')}
                         onEditOutfit={outfit => {
@@ -742,24 +719,32 @@ const Home = () => {
                       />
                     )}
                   </TabsContent>
-
-                  <TabsContent value="outfit" className="mt-0">
-                    <OutfitBuilder
-                      selectedItem={selectedItemForOutfit}
-                      onItemAdded={() => setSelectedItemForOutfit(null)}
-                      onOutfitSaved={() => setActiveTab('my-outfits')}
-                      editingOutfit={editingOutfit}
-                      onEditComplete={() => setEditingOutfit(null)}
-                      onClose={() => {
-                        setEditingOutfit(null);
-                      }}
-                    />
-                  </TabsContent>
                 </Tabs>
               </div>
             </div>
+          ) : (
+            // Single-column layout WITHOUT filter - full width for OutfitBuilder
+            <div className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsContent value="outfit" className="mt-0">
+                  <OutfitBuilder
+                    selectedItem={selectedItemForOutfit}
+                    onItemAdded={() => setSelectedItemForOutfit(null)}
+                    onOutfitSaved={() => setActiveTab('my-outfits')}
+                    editingOutfit={editingOutfit}
+                    onEditComplete={() => setEditingOutfit(null)}
+                    onClose={() => {
+                      setEditingOutfit(null);
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
-
           {/* Settings Modal */}
           <SettingsModal
             isOpen={showSettings}
