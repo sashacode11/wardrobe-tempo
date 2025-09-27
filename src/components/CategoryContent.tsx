@@ -60,7 +60,7 @@ export const CategoryContent: React.FC<CategoryContentProps> = ({
                           }`}
                         >
                           {isSelected ? (
-                            <Check className="h-3 w-3 text-primary-foreground" />
+                            <Check className="h-3 w-3 text-blue-600" />
                           ) : (
                             <Plus className="h-3 w-3 text-foreground" />
                           )}

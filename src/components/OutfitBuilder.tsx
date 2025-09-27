@@ -176,10 +176,17 @@ const OutfitBuilder = ({
         existingItem => existingItem.id === item.id
       );
       if (isAlreadyAdded) {
-        toast.info('Item is already in your outfit');
-        return prev;
+        // toast.info('Item removed from your outfit');
+
+        return {
+          ...prev,
+          [category]: prev[category].filter(
+            existingItem => existingItem.id !== item.id
+          ),
+        };
       }
 
+      // toast.info('Item added to your outfit');
       return {
         ...prev,
         [category]: [...prev[category], item],
