@@ -485,7 +485,7 @@ const OutfitBuilder = ({
 
         {/* Main Content Grid */}
         <div className="flex justify-center">
-          <div className="w-full max-w-[1400px] grid grid-cols-1 xl:grid-cols-5 gap-2 md:gap-8">
+          <div className="w-full max-w-[1600px] grid grid-cols-1 xl:grid-cols-6 gap-2 md:gap-8">
             {/* Enhanced Current Outfit Preview - List View - Narrower column */}
             <div className="xl:col-span-2">
               <FloatingOutfitPanel
@@ -498,7 +498,7 @@ const OutfitBuilder = ({
             </div>
 
             {/* Enhanced Item Selection - Wider column for better readability */}
-            <div className="flex flex-col order-1 xl:order-2 xl:col-span-3">
+            <div className="flex flex-col order-1 xl:order-2 xl:col-span-4">
               <div className="sm:bg-card sm:backdrop-blur-md sm:rounded-2xl sm:shadow-xl sm:border sm:border-border sm:p-2">
                 <div className="sm:px-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-0 mb-1 sm:mt-2 sm:mb-4">
                   <h2 className="hidden sm:block text-md font-semibold text-muted-foreground">
