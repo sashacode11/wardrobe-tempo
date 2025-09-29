@@ -398,18 +398,21 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[220px] flex flex-col overflow-hidden ${
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[200px] flex flex-col overflow-hidden ${
             isSelectionMode && isSelected
               ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
               : ''
           }`}
         >
           <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-l font-semibold text-foreground mb-1 truncate">
+            <div className="flex justify-between items-center">
+              <div className="flex flex-row gap-2 items-center min-w-0">
+                <CardTitle className="text-l font-semibold text-foreground truncate">
                   {outfit.name}
                 </CardTitle>
+                <span className="text-sm font-medium text-muted-foreground">
+                  ({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})
+                </span>
               </div>
 
               {/* Action buttons with improved positioning */}
@@ -433,7 +436,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             {itemsWithContent.length > 0 ? (
               <div className="flex-1 flex flex-col">
                 {/* Item count indicator */}
-                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                {/* <div className="flex items-center justify-between mb-3 flex-shrink-0">
                   <span className="text-sm font-medium text-muted-foreground">
                     {totalItemCount} item{totalItemCount !== 1 ? 's' : ''}
                   </span>
@@ -458,7 +461,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       </svg>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Items grid with fixed height container */}
                 {/* Items grid with fixed height container */}
@@ -510,14 +513,16 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                               )}
                             </div>
 
-                            {/* Category label with fixed height */}
-                            <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
-                              <p className="text-xs font-medium text-foreground capitalize tracking-wide leading-tight truncate">
-                                {category}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate leading-tight">
+                            {/* Item name and location with fixed height */}
+                            <div className="mt-1 ml-2 text-left h-8 flex flex-col flex-shrink-0">
+                              <p className="text-xs font-medium text-foreground truncate leading-tight">
                                 {item.name}
                               </p>
+                              {item.location && (
+                                <p className="text-xs text-muted-foreground truncate leading-tight">
+                                  {item.location}
+                                </p>
+                              )}
                             </div>
                           </div>
                         );
@@ -557,7 +562,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
+    <div className="min-h-screen p-2">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Error display */}
         {(error || multiselectError || entityError) && (
@@ -583,33 +588,35 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <div className="flex items-center gap-4 mb-2">
-                  {/* Icon with gradient background */}
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                  {/* Icon with gradient background - hidden on mobile */}
+                  <div className="hidden md:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <Shirt className="h-8 w-8 text-white" />
                   </div>
 
-                  <div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                      My Outfits
-                    </h2>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <p className="text-sm font-medium">
-                          You have {outfits.length} saved outfit
-                          {outfits.length !== 1 ? 's' : ''}
-                          {hasSearchQuery && (
-                            <span className="text-blue-600 dark:text-blue-400">
-                              {' '}
-                              ({resultCount} matching)
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      {outfits.length > 0 && (
-                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                          <Sparkles className="h-4 w-4" />
+                  <div className="w-full">
+                    <div className="flex items-center justify-between md:justify-start md:flex-col md:items-start gap-2">
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                        My Outfits
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <p className="text-sm font-medium">
+                            {outfits.length} saved outfit{' '}
+                            {outfits.length !== 1 ? 's' : ''}
+                            {hasSearchQuery && (
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {' '}
+                                ({resultCount})
+                              </span>
+                            )}
+                          </p>
                         </div>
-                      )}
+                        {outfits.length > 0 && (
+                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <Sparkles className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
