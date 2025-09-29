@@ -260,7 +260,8 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       }
     });
 
-    return organized;
+    // return organized;
+    return outfit.outfit_items.map(item => item.wardrobe_items).filter(Boolean);
   };
 
   // ViewModalContent component that properly uses categories
@@ -384,7 +385,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     );
 
     const totalItemCount = outfit.outfit_items?.length || 0;
-    const maxDisplayItems = 2;
+    const maxDisplayItems = 3;
     const hasMoreItems = totalItemCount > maxDisplayItems;
 
     return (
@@ -460,60 +461,67 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                 </div>
 
                 {/* Items grid with fixed height container */}
+                {/* Items grid with fixed height container */}
                 <div className="flex-1 overflow-hidden min-h-0">
                   <div className="grid grid-cols-3 gap-2 h-full max-h-full">
                     {itemsWithContent
                       .slice(0, maxDisplayItems)
-                      .map(([category, item], index) => (
-                        <div
-                          key={category}
-                          className="group/item relative flex flex-col"
-                        >
-                          {/* Image container with consistent aspect ratio */}
-                          <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0">
-                            <OptimizedImage
-                              src={item.image_url || ''}
-                              alt={item.name}
-                              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
-                            />
-                            {/* Overlay on hover */}
-                            <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
-                          </div>
+                      .map(([category, item], index) => {
+                        const isLastItem = index === maxDisplayItems - 1;
+                        const shouldBlur = isLastItem && hasMoreItems;
 
-                          {/* Category label with fixed height */}
-                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
-                            <p className="text-xs font-medium text-foreground capitalize tracking-wide leading-tight truncate">
-                              {category}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate leading-tight">
-                              {item.name}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                        return (
+                          <div
+                            key={category}
+                            className={`group/item relative flex flex-col ${
+                              shouldBlur ? 'cursor-pointer' : ''
+                            }`}
+                            onClick={
+                              shouldBlur ? () => handleView(outfit) : undefined
+                            }
+                          >
+                            {/* Image container with consistent aspect ratio */}
+                            <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0 relative">
+                              <OptimizedImage
+                                src={item.image_url || ''}
+                                alt={item.name}
+                                className={`w-full h-full object-cover transition-all duration-300 ${
+                                  shouldBlur
+                                    ? 'blur-sm group-hover/item:blur-[2px]'
+                                    : 'group-hover/item:scale-105'
+                                }`}
+                              />
 
-                    {/* Show "+X more" indicator if needed */}
-                    {hasMoreItems &&
-                      itemsWithContent.length > maxDisplayItems && (
-                        <div
-                          className="group/item relative cursor-pointer flex flex-col"
-                          onClick={() => handleView(outfit)}
-                        >
-                          <div className="aspect-square bg-gradient-to-br from-blue-50 dark:from-blue-950 to-blue-100 dark:to-blue-900 rounded-xl border border-blue-200 dark:border-blue-700 flex flex-col items-center justify-center hover:bg-gradient-to-br hover:from-blue-100 dark:hover:from-blue-900 hover:to-blue-200 dark:hover:to-blue-800 transition-all duration-200 flex-shrink-0">
-                            <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                              +{totalItemCount - maxDisplayItems}
-                            </span>
-                            <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">
-                              more
-                            </span>
+                              {/* Blur overlay with +X more */}
+                              {shouldBlur && (
+                                <div className="absolute inset-0 bg-black/40 group-hover/item:bg-black/50 transition-all duration-200 flex flex-col items-center justify-center">
+                                  <span className="text-2xl font-bold text-white drop-shadow-lg">
+                                    +{totalItemCount - maxDisplayItems}
+                                  </span>
+                                  <span className="text-xs text-white/90 font-medium mt-1">
+                                    more items
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Normal hover overlay */}
+                              {!shouldBlur && (
+                                <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
+                              )}
+                            </div>
+
+                            {/* Category label with fixed height */}
+                            <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
+                              <p className="text-xs font-medium text-foreground capitalize tracking-wide leading-tight truncate">
+                                {category}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate leading-tight">
+                                {item.name}
+                              </p>
+                            </div>
                           </div>
-                          <div className="mt-1 text-center h-8 flex flex-col justify-center flex-shrink-0">
-                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate">
-                              View all
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })}
                   </div>
                 </div>
               </div>
