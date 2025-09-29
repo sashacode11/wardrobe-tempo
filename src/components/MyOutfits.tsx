@@ -27,6 +27,7 @@ import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import { OptimizedImage } from './OptimizedImage';
+import { capitalizeFirst } from '@/utils/helpers';
 
 interface MyOutfitsProps {
   searchQuery?: string;
@@ -120,7 +121,7 @@ const OutfitCard = React.memo(
             <div className="flex justify-between items-center">
               <div className="flex flex-row gap-2 items-center min-w-0">
                 <CardTitle className="text-l font-semibold text-foreground truncate">
-                  {outfit.name}
+                  {capitalizeFirst(outfit.name)}
                 </CardTitle>
                 <span className="text-sm font-medium text-muted-foreground">
                   ({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})
@@ -190,11 +191,11 @@ const OutfitCard = React.memo(
 
                             <div className="mt-1 ml-2 text-left h-8 flex flex-col flex-shrink-0">
                               <p className="text-xs font-medium text-foreground truncate leading-tight">
-                                {item.name}
+                                {capitalizeFirst(item.name)}
                               </p>
                               {item.location && (
                                 <p className="text-xs text-muted-foreground truncate leading-tight">
-                                  {item.location}
+                                  {capitalizeFirst(item.location)}
                                 </p>
                               )}
                             </div>
