@@ -1,4 +1,4 @@
-// contexts/WardrobeContext.tsx - Clean version with imported types
+// contexts/WardrobeContext.tsx - Fixed image reloading issue
 import React, {
   createContext,
   useContext,
@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useMemo,
   useCallback,
+  useRef,
 } from 'react';
 import {
   getClothingItems,
@@ -96,8 +97,18 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   const [authLoading, setAuthLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+  // Cache management - separate for items and outfits
+  const [lastItemsFetchTime, setLastItemsFetchTime] = useState<number | null>(
+    null
+  );
+  const [lastOutfitsFetchTime, setLastOutfitsFetchTime] = useState<
+    number | null
+  >(null);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const SHORT_CACHE_DURATION = 30 * 1000; // 30 seconds for quick returns
+
+  // Track last visibility change to prevent unnecessary refreshes
+  const lastVisibilityChange = useRef<number>(Date.now());
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,7 +149,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
           outfit.occasions.some(occasion =>
             occasion.toLowerCase().includes(query)
           )) ||
-        // Search through outfit items
         outfit.items?.some(
           item =>
             item.name?.toLowerCase().includes(query) ||
@@ -181,31 +191,46 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     }
   };
 
-  // Fetch wardrobe items
-  const refreshItems = useCallback(async () => {
-    if (!user) {
-      setWardrobeItems([]);
-      setItemsLoading(false);
-      return;
-    }
+  // Fetch wardrobe items with caching
+  const refreshItems = useCallback(
+    async (force = false) => {
+      if (!user) {
+        setWardrobeItems([]);
+        setItemsLoading(false);
+        return;
+      }
 
-    try {
-      setItemsLoading(true);
-      setError(null);
+      // Check cache
+      const now = Date.now();
+      if (
+        !force &&
+        lastItemsFetchTime &&
+        now - lastItemsFetchTime < CACHE_DURATION
+      ) {
+        console.log('Using cached items data');
+        return;
+      }
 
-      const { data, error: fetchError } = await getClothingItems(user.id);
-      if (fetchError) throw fetchError;
+      try {
+        setItemsLoading(true);
+        setError(null);
 
-      setWardrobeItems(data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch items');
-      console.error('Error fetching wardrobe items:', err);
-    } finally {
-      setItemsLoading(false);
-    }
-  }, [user]);
+        const { data, error: fetchError } = await getClothingItems(user.id);
+        if (fetchError) throw fetchError;
 
-  // Enhanced refresh outfits to include completion status
+        setWardrobeItems(data || []);
+        setLastItemsFetchTime(Date.now());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch items');
+        console.error('Error fetching wardrobe items:', err);
+      } finally {
+        setItemsLoading(false);
+      }
+    },
+    [user, lastItemsFetchTime]
+  );
+
+  // Enhanced refresh outfits with caching
   const refreshOutfits = useCallback(
     async (force = false) => {
       if (!user) {
@@ -214,9 +239,13 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         return;
       }
 
-      // Check if we should use cached data
+      // Check cache
       const now = Date.now();
-      if (!force && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
+      if (
+        !force &&
+        lastOutfitsFetchTime &&
+        now - lastOutfitsFetchTime < CACHE_DURATION
+      ) {
         console.log('Using cached outfits data');
         return;
       }
@@ -258,7 +287,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         );
 
         setOutfits(transformedOutfits);
-        setLastFetchTime(Date.now());
+        setLastOutfitsFetchTime(Date.now());
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to fetch outfits'
@@ -268,32 +297,39 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         setOutfitsLoading(false);
       }
     },
-    [user, lastFetchTime]
+    [user, lastOutfitsFetchTime]
   );
 
   // Refresh all data
-  const refreshAll = useCallback(async () => {
-    await Promise.all([refreshItems(), refreshOutfits()]);
-  }, [refreshItems, refreshOutfits]);
+  const refreshAll = useCallback(
+    async (force = false) => {
+      await Promise.all([refreshItems(force), refreshOutfits(force)]);
+    },
+    [refreshItems, refreshOutfits]
+  );
 
   // Item management methods
   const addItem = (item: ClothingItemType) => {
     setWardrobeItems(prev => [item, ...prev]);
+    setLastItemsFetchTime(Date.now()); // Update cache time
   };
 
   const updateItem = (updatedItem: ClothingItemType) => {
     setWardrobeItems(prev =>
       prev.map(item => (item.id === updatedItem.id ? updatedItem : item))
     );
+    setLastItemsFetchTime(Date.now()); // Update cache time
   };
 
   const removeItem = (id: string) => {
     setWardrobeItems(prev => prev.filter(item => item.id !== id));
+    setLastItemsFetchTime(Date.now()); // Update cache time
   };
 
   // Outfit management methods
   const addOutfit = (outfit: OutfitWithItems) => {
     setOutfits(prev => [outfit, ...prev]);
+    setLastOutfitsFetchTime(Date.now()); // Update cache time
   };
 
   const updateOutfit = (updatedOutfit: OutfitWithItems) => {
@@ -302,10 +338,12 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         outfit.id === updatedOutfit.id ? updatedOutfit : outfit
       )
     );
+    setLastOutfitsFetchTime(Date.now()); // Update cache time
   };
 
   const removeOutfit = (id: string) => {
     setOutfits(prev => prev.filter(outfit => outfit.id !== id));
+    setLastOutfitsFetchTime(Date.now()); // Update cache time
   };
 
   // Check which outfits will be affected by deleting items
@@ -331,7 +369,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
       if (error) throw error;
 
-      // Transform and deduplicate outfits
       const affectedOutfitsMap = new Map();
 
       data?.forEach(item => {
@@ -358,14 +395,12 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   // Mark outfits as incomplete after item deletion
   const markOutfitsAsIncomplete = async (deletedItemIds: string[]) => {
     try {
-      // Get affected outfits
       const affectedOutfits = await getAffectedOutfits(deletedItemIds);
 
       if (affectedOutfits.length === 0) return;
 
       const outfitIds = affectedOutfits.map(outfit => outfit.id);
 
-      // Update outfits in database
       const { error } = await supabase
         .from('outfits')
         .update({
@@ -376,7 +411,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
       if (error) throw error;
 
-      // Update local state
       setOutfits(prev =>
         prev.map(outfit =>
           outfitIds.includes(outfit.id)
@@ -388,6 +422,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
             : outfit
         )
       );
+      setLastOutfitsFetchTime(Date.now()); // Update cache time
     } catch (error) {
       console.error('Error marking outfits as incomplete:', error);
       throw error;
@@ -400,7 +435,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     replacementItems: ClothingItemType[]
   ) => {
     try {
-      // Add new outfit items
       const outfitItems = replacementItems.map(item => ({
         outfit_id: outfitId,
         clothing_item_id: parseInt(item.id),
@@ -414,7 +448,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         if (insertError) throw insertError;
       }
 
-      // Mark outfit as complete
       const { error: updateError } = await supabase
         .from('outfits')
         .update({
@@ -425,8 +458,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
       if (updateError) throw updateError;
 
-      // Refresh outfits to get updated data
-      await refreshOutfits();
+      await refreshOutfits(true); // Force refresh after repair
     } catch (error) {
       console.error('Error repairing outfit:', error);
       throw error;
@@ -436,7 +468,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   // Delete an incomplete outfit
   const deleteIncompleteOutfit = async (outfitId: string) => {
     try {
-      // Delete outfit items first
       const { error: outfitItemsError } = await supabase
         .from('outfit_items')
         .delete()
@@ -444,7 +475,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
       if (outfitItemsError) throw outfitItemsError;
 
-      // Delete the outfit
       const { error: outfitError } = await supabase
         .from('outfits')
         .delete()
@@ -452,7 +482,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
 
       if (outfitError) throw outfitError;
 
-      // Update local state
       removeOutfit(outfitId);
     } catch (error) {
       console.error('Error deleting incomplete outfit:', error);
@@ -460,11 +489,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
     }
   };
 
-  // Add useEffect hooks for initialization
+  // Initialize user
   useEffect(() => {
     checkUser();
 
-    // Listen to auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -475,6 +503,8 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         setWardrobeItems([]);
         setOutfits([]);
         setSearchQuery('');
+        setLastItemsFetchTime(null);
+        setLastOutfitsFetchTime(null);
       }
     });
 
@@ -493,80 +523,74 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
       setItemsLoading(false);
       setOutfitsLoading(false);
     }
-  }, [user, refreshAll]);
+  }, [user]); // Removed refreshAll from dependencies
 
-  // Auto-refresh magic!
-  // useEffect(() => {
-  //   const handleVisibilityChange = () => {
-  //     if (!document.hidden && user) {
-  //       // Page became visible and user is logged in - refresh data silently
-  //       console.log('User returned to tab - refreshing data');
-  //       refreshAll();
-  //     }
-  //   };
+  // Smart auto-refresh - only refresh if user was away for more than 30 seconds
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const now = Date.now();
+      const timeSinceLastChange = now - lastVisibilityChange.current;
 
-  //   const handleFocus = () => {
-  //     if (user) {
-  //       // Window got focus and user is logged in - refresh data silently
-  //       console.log('Window got focus - refreshing data');
-  //       refreshAll();
-  //     }
-  //   };
+      if (!document.hidden && user) {
+        // Only refresh if user was away for more than 30 seconds
+        if (timeSinceLastChange > SHORT_CACHE_DURATION) {
+          console.log('User returned after being away - refreshing data');
+          refreshAll(false); // Use cache if available
+        } else {
+          console.log('User returned quickly - using cached data');
+        }
+        lastVisibilityChange.current = now;
+      }
+    };
 
-  //   document.addEventListener('visibilitychange', handleVisibilityChange);
-  //   window.addEventListener('focus', handleFocus);
+    const handleFocus = () => {
+      const now = Date.now();
+      const timeSinceLastChange = now - lastVisibilityChange.current;
 
-  //   return () => {
-  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
-  //     window.removeEventListener('focus', handleFocus);
-  //   };
-  // }, [user, refreshAll]);
+      if (user && timeSinceLastChange > SHORT_CACHE_DURATION) {
+        console.log('Window got focus after being away - refreshing data');
+        refreshAll(false); // Use cache if available
+        lastVisibilityChange.current = now;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]); // Removed refreshAll from dependencies
 
   const value: WardrobeContextType = {
-    // Data
     wardrobeItems,
     outfits,
     user,
-
-    // Loading states
     itemsLoading,
     outfitsLoading,
     authLoading,
     error,
-
-    // Search state
     searchQuery,
     setSearchQuery,
     clearSearch,
-
-    // Search results
     searchResults,
     outfitSearchResults,
     hasSearchResults,
     hasSearchQuery,
-
-    // New properties
     incompleteOutfits,
     incompleteCount,
-
-    // Methods
     refreshItems,
     refreshOutfits,
     refreshAll,
     checkUser,
     setUser,
-
-    // Item management
     addItem,
     updateItem,
     removeItem,
-
-    // Outfit management
     addOutfit,
     updateOutfit,
     removeOutfit,
-
-    // New methods
     markOutfitsAsIncomplete,
     getAffectedOutfits,
     repairOutfit,
