@@ -406,10 +406,6 @@ const OutfitBuilder = ({
     );
   };
 
-  console.log('WardrobeItems:', wardrobeItems);
-  console.log('Active Category:', activeCategory);
-  console.log('Filtered Items:', filteredItems);
-
   return (
     <div className="min-h-screen">
       {/* Animated Background Pattern - Semantic colors */}

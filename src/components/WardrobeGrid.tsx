@@ -202,7 +202,6 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
   // Handle view outfit from item
   const handleViewOutfitFromItem = (outfit: any) => {
     // Implement outfit viewing logic here
-    console.log('View outfit:', outfit);
   };
 
   if (loading) {

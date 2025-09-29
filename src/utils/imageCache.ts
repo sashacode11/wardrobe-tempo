@@ -16,7 +16,6 @@ class ImageCache {
   async getImage(url: string): Promise<string> {
     const cached = this.cache.get(url);
     if (cached && Date.now() - cached.timestamp < this.maxAge) {
-      console.log('Loading from cache:', url);
       return URL.createObjectURL(cached.blob);
     }
 
@@ -25,7 +24,6 @@ class ImageCache {
     }
 
     try {
-      console.log('Downloading and caching:', url);
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -51,8 +49,6 @@ class ImageCache {
       timestamp: Date.now(),
       size: blob.size,
     });
-
-    console.log(`Cached image: ${url} (${(blob.size / 1024).toFixed(1)}KB)`);
   }
 
   private cleanExpiredEntries(): void {
@@ -60,7 +56,6 @@ class ImageCache {
     for (const [url, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.maxAge) {
         this.cache.delete(url);
-        console.log('Removed expired cache entry:', url);
       }
     }
   }
@@ -73,7 +68,6 @@ class ImageCache {
       const oldestEntry = this.getOldestEntry();
       if (oldestEntry) {
         this.cache.delete(oldestEntry[0]);
-        console.log('Removed oldest cache entry:', oldestEntry[0]);
       } else {
         break;
       }
@@ -102,7 +96,6 @@ class ImageCache {
 
   clearCache(): void {
     this.cache.clear();
-    console.log('Image cache cleared');
   }
 
   getCacheInfo() {
@@ -123,14 +116,11 @@ class ImageCache {
     );
 
     await Promise.all(promises);
-    console.log(`Preloaded ${urls.length} images`);
   }
 
   removeFromCache(url: string): boolean {
     const removed = this.cache.delete(url);
-    if (removed) {
-      console.log('Removed from cache:', url);
-    }
+
     return removed;
   }
 }

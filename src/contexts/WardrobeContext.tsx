@@ -207,7 +207,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         lastItemsFetchTime &&
         now - lastItemsFetchTime < CACHE_DURATION
       ) {
-        console.log('Using cached items data');
         return;
       }
 
@@ -246,7 +245,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
         lastOutfitsFetchTime &&
         now - lastOutfitsFetchTime < CACHE_DURATION
       ) {
-        console.log('Using cached outfits data');
         return;
       }
 

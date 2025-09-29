@@ -201,8 +201,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
   // ✅ FIXED: Handle successful outfit save/update
   const handleOutfitSaved = async () => {
-    console.log('Outfit saved successfully, refreshing outfits...');
-
     // Refresh the outfits list to show the new/updated outfit
     await refreshOutfits(true);
 
@@ -212,8 +210,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
   // ✅ FIXED: Handle successful outfit edit
   const handleEditComplete = async () => {
-    console.log('Outfit edit completed, refreshing outfits...');
-
     // Refresh the outfits list to show the updated outfit
     await refreshOutfits(true);
 
@@ -227,7 +223,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     allCategories: string[]
   ) => {
     if (!outfit?.outfit_items) {
-      console.log('No outfit_items found in outfit:', outfit);
       return {};
     }
 
@@ -374,7 +369,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     );
   };
 
-  const OutfitCard: React.FC<{ outfit: OutfitWithItems }> = ({ outfit }) => {
+  const OutfitCard = React.memo(({ outfit }: { outfit: OutfitWithItems }) => {
     const { categories } = useWardrobeItems();
     const isSelected = selectedItems.has(outfit.id);
     const items = organizeOutfitItems(outfit, categories);
@@ -546,7 +541,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         </Card>
       </div>
     );
-  };
+  });
 
   if (loading) {
     return (

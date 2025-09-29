@@ -52,8 +52,6 @@ export const useLanguage = () => {
     // For example:
     // i18n.changeLanguage(languageCode);
 
-    console.log('Language changed to:', languageCode);
-
     // You can also emit a custom event for other components to listen to
     window.dispatchEvent(
       new CustomEvent('languageChanged', {

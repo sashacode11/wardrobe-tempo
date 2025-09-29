@@ -242,9 +242,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
           format: 'jpeg',
         });
 
-        console.log(`Original: ${(originalFile.size / 1024).toFixed(1)}KB`);
-        console.log(`Compressed: ${(compressedFile.size / 1024).toFixed(1)}KB`);
-
         const reader = new FileReader();
         reader.onload = event => {
           if (event.target?.result) {

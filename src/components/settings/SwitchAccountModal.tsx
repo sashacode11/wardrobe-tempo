@@ -74,7 +74,6 @@ const SwitchAccountModal: React.FC<SwitchAccountModalProps> = ({
     setSavedAccounts(updatedAccounts);
     localStorage.setItem('saved-accounts', JSON.stringify(updatedAccounts));
 
-    console.log('Switching to account:', account.email);
     // You would implement actual authentication switching here
     onClose();
   };
