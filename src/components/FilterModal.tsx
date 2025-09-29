@@ -44,7 +44,7 @@ const FilterPanelContainer: React.FC<FilterPanelContainerProps> = ({
   onClose,
 }) => {
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-fit bg-background">
       {/* Header */}
       <div
         className={`p-2 ${
