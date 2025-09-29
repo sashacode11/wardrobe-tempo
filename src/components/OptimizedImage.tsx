@@ -63,6 +63,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onError,
   lazy = true,
 }) => {
+  console.log('🎨 OptimizedImage rendering:', src);
+
   const { cachedUrl, loading, error } = useCachedImage(src);
   const [imageLoaded, setImageLoaded] = useState(false);
 

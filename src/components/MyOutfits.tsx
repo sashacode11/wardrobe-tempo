@@ -1,5 +1,5 @@
-// MyOutfits.tsx - Fixed outfit creation handling with dark mode support
-import React, { useState, useEffect } from 'react';
+// MyOutfits.tsx - Fixed with proper memoization
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,29 +19,226 @@ import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
 import { supabase } from '../lib/supabaseClient';
-
-// Import our reusable components
 import OutfitActions from './common/OutfitActions';
 import ViewModal from './common/ViewModal';
 import DeleteModal from './common/DeleteModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
-import { useWardrobe } from '../contexts/WardrobeContext'; // Use global context
+import { useWardrobe } from '../contexts/WardrobeContext';
 import { OptimizedImage } from './OptimizedImage';
 
 interface MyOutfitsProps {
-  searchQuery?: string; // Keep for backward compatibility but won't be used
-  // onCreateOutfit?: () => void;
+  searchQuery?: string;
   onEditOutfit: (outfit: OutfitWithItems) => void;
 }
 
+// Helper function to organize outfit items - moved outside component
+const organizeOutfitItems = (
+  outfit: OutfitWithItems,
+  allCategories: string[]
+) => {
+  if (!outfit?.outfit_items) {
+    return {};
+  }
+
+  const organized: Record<string, ClothingItemType | null> = {};
+
+  allCategories.forEach(cat => {
+    organized[cat] = null;
+  });
+
+  outfit.outfit_items?.forEach(item => {
+    const clothingItem = item.wardrobe_items;
+    if (clothingItem) {
+      const itemCategory = clothingItem.category.toLowerCase();
+      const matchedCategory = allCategories.find(
+        cat => cat.toLowerCase() === itemCategory
+      );
+
+      if (matchedCategory) {
+        if (!organized[matchedCategory]) {
+          organized[matchedCategory] = clothingItem;
+        }
+      }
+    }
+  });
+
+  return outfit.outfit_items.map(item => item.wardrobe_items).filter(Boolean);
+};
+
+// OutfitCard component - moved outside and properly memoized
+const OutfitCard = React.memo(
+  ({
+    outfit,
+    isSelectionMode,
+    isSelected,
+    onView,
+    onEdit,
+    onDelete,
+    onToggleSelection,
+    categories,
+  }: {
+    outfit: OutfitWithItems;
+    isSelectionMode: boolean;
+    isSelected: boolean;
+    onView: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+    onToggleSelection: () => void;
+    categories: string[];
+  }) => {
+    const items = useMemo(
+      () => organizeOutfitItems(outfit, categories),
+      [outfit.id, outfit.outfit_items?.length, categories.length]
+    );
+
+    const itemsWithContent = Object.entries(items).filter(
+      ([category, item]) => item !== null
+    );
+
+    const totalItemCount = outfit.outfit_items?.length || 0;
+    const maxDisplayItems = 3;
+    const hasMoreItems = totalItemCount > maxDisplayItems;
+
+    return (
+      <div className="relative">
+        <SelectionCheckbox
+          isSelectionMode={isSelectionMode}
+          isSelected={isSelected}
+          onToggleSelection={onToggleSelection}
+        />
+
+        <Card
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[200px] flex flex-col overflow-hidden ${
+            isSelectionMode && isSelected
+              ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
+              : ''
+          }`}
+        >
+          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
+            <div className="flex justify-between items-center">
+              <div className="flex flex-row gap-2 items-center min-w-0">
+                <CardTitle className="text-l font-semibold text-foreground truncate">
+                  {outfit.name}
+                </CardTitle>
+                <span className="text-sm font-medium text-muted-foreground">
+                  ({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})
+                </span>
+              </div>
+
+              {!isSelectionMode && (
+                <div className="group-hover:opacity-100 transition-opacity duration-200 ml-3">
+                  <OutfitActions
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    viewTitle="View outfit details"
+                    editTitle="Edit outfit"
+                    deleteTitle="Delete outfit"
+                  />
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-0 pb-4 px-4 flex-1 flex flex-col overflow-hidden">
+            {itemsWithContent.length > 0 ? (
+              <div className="flex-1 flex flex-col">
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <div className="grid grid-cols-3 gap-2 h-full max-h-full">
+                    {itemsWithContent
+                      .slice(0, maxDisplayItems)
+                      .map(([category, item], index) => {
+                        const isLastItem = index === maxDisplayItems - 1;
+                        const shouldBlur = isLastItem && hasMoreItems;
+
+                        return (
+                          <div
+                            key={category}
+                            className={`group/item relative flex flex-col ${
+                              shouldBlur ? 'cursor-pointer' : ''
+                            }`}
+                            onClick={shouldBlur ? onView : undefined}
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0 relative">
+                              <OptimizedImage
+                                src={item.image_url || ''}
+                                alt={item.name}
+                                className={`w-full h-full object-cover transition-all duration-300 ${
+                                  shouldBlur
+                                    ? 'blur-sm group-hover/item:blur-[2px]'
+                                    : 'group-hover/item:scale-105'
+                                }`}
+                              />
+
+                              {shouldBlur && (
+                                <div className="absolute inset-0 bg-black/40 group-hover/item:bg-black/50 transition-all duration-200 flex flex-col items-center justify-center">
+                                  <span className="text-2xl font-bold text-white drop-shadow-lg">
+                                    +{totalItemCount - maxDisplayItems}
+                                  </span>
+                                  <span className="text-xs text-white/90 font-medium mt-1">
+                                    more items
+                                  </span>
+                                </div>
+                              )}
+
+                              {!shouldBlur && (
+                                <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
+                              )}
+                            </div>
+
+                            <div className="mt-1 ml-2 text-left h-8 flex flex-col flex-shrink-0">
+                              <p className="text-xs font-medium text-foreground truncate leading-tight">
+                                {item.name}
+                              </p>
+                              {item.location && (
+                                <p className="text-xs text-muted-foreground truncate leading-tight">
+                                  {item.location}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">👔</span>
+                  </div>
+                  <p className="text-muted-foreground text-sm font-medium">
+                    No items in this outfit
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison - only re-render if these specific things change
+    return (
+      prevProps.outfit.id === nextProps.outfit.id &&
+      prevProps.outfit.name === nextProps.outfit.name &&
+      prevProps.outfit.outfit_items?.length ===
+        nextProps.outfit.outfit_items?.length &&
+      prevProps.isSelectionMode === nextProps.isSelectionMode &&
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.categories.length === nextProps.categories.length
+    );
+  }
+);
+
 const MyOutfits: React.FC<MyOutfitsProps> = ({
-  searchQuery: externalSearchQuery, // Not used anymore since we use global search
-  // onCreateOutfit,
+  searchQuery: externalSearchQuery,
   onEditOutfit,
 }) => {
-  // 🔹 Use global context instead of local state
   const {
     outfits,
     outfitsLoading: loading,
@@ -55,18 +252,15 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     removeOutfit,
   } = useWardrobe();
 
-  // Local UI state
+  const { categories } = useWardrobeItems();
+
   const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
   const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
   const [isCreatingNewOutfit, setIsCreatingNewOutfit] = useState(false);
 
-  // Note: Removed useEffect for refreshOutfits - relies on global context initialization
-
-  // Get the final list of outfits to display (search results or all outfits)
   const displayedOutfits = hasSearchQuery ? outfitSearchResults : outfits;
   const resultCount = displayedOutfits.length;
 
-  // Add multiselect functionality - now works with displayed outfits
   const {
     isSelectionMode,
     selectedItems,
@@ -82,7 +276,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     deleteSelectedItems,
   } = useMultiselect();
 
-  // Use our reusable entity actions hook
   const {
     selectedItem,
     showDeleteModal,
@@ -95,36 +288,25 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     closeModals,
     setError: setEntityError,
   } = useOutfitActions<OutfitWithItems>({
-    onView: outfit => {
-      // Custom view logic if needed
-    },
+    onView: outfit => {},
     onDelete: async outfit => {
       await handleDeleteOutfit(outfit.id);
     },
   });
 
-  // ✅ FIXED: Handle creating new outfit
-  const handleCreateNewOutfit = () => {
+  const handleCreateNewOutfit = useCallback(() => {
     setIsCreatingNewOutfit(true);
-    setMyOutfitsEditingOutfit(null); // Ensure we're not editing
+    setMyOutfitsEditingOutfit(null);
     setShowOutfitBuilder(true);
+  }, []);
 
-    // Call the parent's onCreateOutfit if provided
-    if (onCreateOutfit) {
-      onCreateOutfit();
-    }
-  };
-
-  // Keep your original edit function exactly as it was
-  const handleEditOutfit = (outfit: OutfitWithItems) => {
+  const handleEditOutfit = useCallback((outfit: OutfitWithItems) => {
     setIsCreatingNewOutfit(false);
     setMyOutfitsEditingOutfit(outfit);
     setShowOutfitBuilder(true);
-  };
+  }, []);
 
-  // 🔹 Simplified delete function using global context
   const handleDeleteOutfit = async (outfitId: string) => {
-    // First delete the outfit_items
     const { error: outfitItemsError } = await supabase
       .from('outfit_items')
       .delete()
@@ -134,7 +316,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       throw new Error('Failed to delete outfit items');
     }
 
-    // Then delete the outfit
     const { error: outfitError } = await supabase
       .from('outfits')
       .delete()
@@ -144,136 +325,70 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       throw new Error('Failed to delete outfit');
     }
 
-    // Update global state
     removeOutfit(outfitId);
   };
 
-  // Handle bulk delete function specifically for outfits
   const handleBulkDeleteOutfits = async () => {
     if (selectedItems.size === 0) return;
 
     try {
       const idsToDelete = Array.from(selectedItems);
 
-      // Delete outfit_items for all selected outfits first
       const { error: outfitItemsError } = await supabase
         .from('outfit_items')
         .delete()
         .in('outfit_id', idsToDelete);
 
       if (outfitItemsError) {
-        console.error('Error deleting outfit items:', outfitItemsError);
         setMultiselectError('Failed to delete outfit items');
         return;
       }
 
-      // Delete the outfits
       const { error: outfitsError } = await supabase
         .from('outfits')
         .delete()
         .in('id', idsToDelete);
 
       if (outfitsError) {
-        console.error('Error deleting outfits:', outfitsError);
         setMultiselectError('Failed to delete outfits');
         return;
       }
 
-      // Update global state - remove each outfit
       idsToDelete.forEach(id => removeOutfit(id));
-
-      // Reset multiselect state
       deselectAllItems();
       setShowDeleteDialog(false);
-      toggleSelectionMode(); // Exit selection mode
+      toggleSelectionMode();
     } catch (error) {
-      console.error('Error in bulk delete:', error);
       setMultiselectError('Failed to delete outfits');
     }
   };
 
-  // ✅ FIXED: Handle outfit builder close with proper state cleanup
-  const handleOutfitBuilderClose = () => {
+  const handleOutfitBuilderClose = useCallback(() => {
     setShowOutfitBuilder(false);
     setMyOutfitsEditingOutfit(null);
     setIsCreatingNewOutfit(false);
-  };
+  }, []);
 
-  // ✅ FIXED: Handle successful outfit save/update
-  const handleOutfitSaved = async () => {
-    // Refresh the outfits list to show the new/updated outfit
+  const handleOutfitSaved = useCallback(async () => {
     await refreshOutfits(true);
-
-    // Close the outfit builder
     handleOutfitBuilderClose();
-  };
+  }, [refreshOutfits, handleOutfitBuilderClose]);
 
-  // ✅ FIXED: Handle successful outfit edit
-  const handleEditComplete = async () => {
-    // Refresh the outfits list to show the updated outfit
+  const handleEditComplete = useCallback(async () => {
     await refreshOutfits(true);
-
-    // Close the outfit builder
     handleOutfitBuilderClose();
-  };
+  }, [refreshOutfits, handleOutfitBuilderClose]);
 
-  // Helper function to organize outfit items by category
-  const organizeOutfitItems = (
-    outfit: OutfitWithItems,
-    allCategories: string[]
-  ) => {
-    if (!outfit?.outfit_items) {
-      return {};
-    }
-
-    const organized: Record<string, ClothingItemType | null> = {};
-
-    // Initialize all categories
-    allCategories.forEach(cat => {
-      organized[cat] = null;
-    });
-
-    // ✅ FIXED: Handle multiple items per category properly
-    // For display purposes, just show the first item in each category
-    outfit.outfit_items?.forEach(item => {
-      const clothingItem = item.wardrobe_items;
-      if (clothingItem) {
-        const itemCategory = clothingItem.category.toLowerCase();
-
-        const matchedCategory = allCategories.find(
-          cat => cat.toLowerCase() === itemCategory
-        );
-
-        if (matchedCategory) {
-          // Only set if not already set (first item in category)
-          if (!organized[matchedCategory]) {
-            organized[matchedCategory] = clothingItem;
-          }
-        } else {
-          console.warn(`🔴 No match for category: "${clothingItem.category}"`);
-        }
-      }
-    });
-
-    // return organized;
-    return outfit.outfit_items.map(item => item.wardrobe_items).filter(Boolean);
-  };
-
-  // ViewModalContent component that properly uses categories
+  // ViewModalContent component
   const ViewModalContent: React.FC<{ outfit: OutfitWithItems }> = ({
     outfit,
   }) => {
-    const { categories } = useWardrobeItems();
-
-    // ✅ FIXED: Group items by category for display
     const itemsByCategory: Record<string, ClothingItemType[]> = {};
 
-    // Initialize categories
     categories.forEach(cat => {
       itemsByCategory[cat] = [];
     });
 
-    // Group items by category
     outfit.outfit_items?.forEach(item => {
       const clothingItem = item.wardrobe_items;
       if (clothingItem) {
@@ -288,14 +403,12 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       }
     });
 
-    // Filter out empty categories
     const categoriesWithItems = Object.entries(itemsByCategory).filter(
       ([category, items]) => items.length > 0
     );
 
     return (
       <div className="space-y-6">
-        {/* Occasions */}
         {outfit.occasions && outfit.occasions.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {outfit.occasions.map((occasion, index) => (
@@ -310,7 +423,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           </div>
         )}
 
-        {/* Outfit Items by Category */}
         <div className="space-y-6">
           {categoriesWithItems.map(([category, items]) => (
             <div key={category} className="space-y-3">
@@ -369,180 +481,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     );
   };
 
-  const OutfitCard = React.memo(({ outfit }: { outfit: OutfitWithItems }) => {
-    const { categories } = useWardrobeItems();
-    const isSelected = selectedItems.has(outfit.id);
-    const items = organizeOutfitItems(outfit, categories);
-
-    // Filter out empty categories - only show categories that have items
-    const itemsWithContent = Object.entries(items).filter(
-      ([category, item]) => item !== null
-    );
-
-    const totalItemCount = outfit.outfit_items?.length || 0;
-    const maxDisplayItems = 3;
-    const hasMoreItems = totalItemCount > maxDisplayItems;
-
-    return (
-      <div className="relative">
-        {/* Selection checkbox */}
-        <SelectionCheckbox
-          isSelectionMode={isSelectionMode}
-          isSelected={isSelected}
-          onToggleSelection={() => toggleItemSelection(outfit.id)}
-        />
-
-        <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[200px] flex flex-col overflow-hidden ${
-            isSelectionMode && isSelected
-              ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
-              : ''
-          }`}
-        >
-          <CardHeader className="py-2 px-4 md:p-6 pb-2 md:pb-4 flex-shrink-0">
-            <div className="flex justify-between items-center">
-              <div className="flex flex-row gap-2 items-center min-w-0">
-                <CardTitle className="text-l font-semibold text-foreground truncate">
-                  {outfit.name}
-                </CardTitle>
-                <span className="text-sm font-medium text-muted-foreground">
-                  ({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})
-                </span>
-              </div>
-
-              {/* Action buttons with improved positioning */}
-              {!isSelectionMode && (
-                <div className="group-hover:opacity-100 transition-opacity duration-200 ml-3">
-                  <OutfitActions
-                    onView={() => handleView(outfit)}
-                    onEdit={() => handleEditOutfit(outfit)}
-                    onDelete={() => handleDelete(outfit)}
-                    viewTitle="View outfit details"
-                    editTitle="Edit outfit"
-                    deleteTitle="Delete outfit"
-                  />
-                </div>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-0 pb-4 px-4 flex-1 flex flex-col overflow-hidden">
-            {/* Items display with fixed height */}
-            {itemsWithContent.length > 0 ? (
-              <div className="flex-1 flex flex-col">
-                {/* Item count indicator */}
-                {/* <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {totalItemCount} item{totalItemCount !== 1 ? 's' : ''}
-                  </span>
-                  {hasMoreItems && (
-                    <div
-                      className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer group/hint"
-                      onClick={() => handleView(outfit)}
-                    >
-                      <span className="text-xs font-medium">View all</span>
-                      <svg
-                        className="w-3 h-3 group-hover/hint:translate-x-0.5 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div> */}
-
-                {/* Items grid with fixed height container */}
-                {/* Items grid with fixed height container */}
-                <div className="flex-1 overflow-hidden min-h-0">
-                  <div className="grid grid-cols-3 gap-2 h-full max-h-full">
-                    {itemsWithContent
-                      .slice(0, maxDisplayItems)
-                      .map(([category, item], index) => {
-                        const isLastItem = index === maxDisplayItems - 1;
-                        const shouldBlur = isLastItem && hasMoreItems;
-
-                        return (
-                          <div
-                            key={category}
-                            className={`group/item relative flex flex-col ${
-                              shouldBlur ? 'cursor-pointer' : ''
-                            }`}
-                            onClick={
-                              shouldBlur ? () => handleView(outfit) : undefined
-                            }
-                          >
-                            {/* Image container with consistent aspect ratio */}
-                            <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0 relative">
-                              <OptimizedImage
-                                src={item.image_url || ''}
-                                alt={item.name}
-                                className={`w-full h-full object-cover transition-all duration-300 ${
-                                  shouldBlur
-                                    ? 'blur-sm group-hover/item:blur-[2px]'
-                                    : 'group-hover/item:scale-105'
-                                }`}
-                              />
-
-                              {/* Blur overlay with +X more */}
-                              {shouldBlur && (
-                                <div className="absolute inset-0 bg-black/40 group-hover/item:bg-black/50 transition-all duration-200 flex flex-col items-center justify-center">
-                                  <span className="text-2xl font-bold text-white drop-shadow-lg">
-                                    +{totalItemCount - maxDisplayItems}
-                                  </span>
-                                  <span className="text-xs text-white/90 font-medium mt-1">
-                                    more items
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Normal hover overlay */}
-                              {!shouldBlur && (
-                                <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-all duration-200" />
-                              )}
-                            </div>
-
-                            {/* Item name and location with fixed height */}
-                            <div className="mt-1 ml-2 text-left h-8 flex flex-col flex-shrink-0">
-                              <p className="text-xs font-medium text-foreground truncate leading-tight">
-                                {item.name}
-                              </p>
-                              {item.location && (
-                                <p className="text-xs text-muted-foreground truncate leading-tight">
-                                  {item.location}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl">👔</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-medium">
-                    No items in this outfit
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -559,7 +497,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   return (
     <div className="min-h-screen p-2">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
-        {/* Error display */}
         {(error || multiselectError || entityError) && (
           <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 shadow-sm">
             <p className="text-red-800 dark:text-red-200 text-sm font-medium">
@@ -579,11 +516,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
 
         {!showOutfitBuilder && (
           <div className="w-full">
-            {/* Header Section */}
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <div className="flex items-center gap-4 mb-2">
-                  {/* Icon with gradient background - hidden on mobile */}
                   <div className="hidden md:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <Shirt className="h-8 w-8 text-white" />
                   </div>
@@ -596,8 +531,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <p className="text-sm font-medium">
-                            {outfits.length} saved outfit{' '}
-                            {outfits.length !== 1 ? 's' : ''}
+                            {outfits.length} saved
                             {hasSearchQuery && (
                               <span className="text-blue-600 dark:text-blue-400">
                                 {' '}
@@ -618,7 +552,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Selection Controls */}
                 <SelectionControls
                   isSelectionMode={isSelectionMode}
                   selectedCount={selectedItems.size}
@@ -629,7 +562,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                   onDeleteSelected={() => setShowDeleteDialog(true)}
                 />
 
-                {/* Create button with gradient */}
                 {!isSelectionMode && (
                   <Button
                     onClick={handleCreateNewOutfit}
@@ -642,7 +574,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               </div>
             </div>
 
-            {/* Search Results Info */}
             {hasSearchQuery && (
               <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
                 <div className="flex items-center gap-2">
@@ -668,11 +599,9 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
               </div>
             )}
 
-            {/* Outfits Grid */}
             {displayedOutfits.length === 0 ? (
               <div className="text-center py-16">
                 {hasSearchQuery ? (
-                  // No search results
                   <div>
                     <div className="w-24 h-24 bg-gradient-to-br from-gray-50 dark:from-gray-800 to-gray-100 dark:to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Search className="h-12 w-12 text-muted-foreground" />
@@ -692,7 +621,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                     </Button>
                   </div>
                 ) : (
-                  // No outfits at all
                   <div>
                     <div className="w-24 h-24 bg-gradient-to-br from-blue-50 dark:from-blue-950 to-indigo-100 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
                       <span className="text-4xl">👔</span>
@@ -716,14 +644,23 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
                 {displayedOutfits.map(outfit => (
-                  <OutfitCard key={outfit.id} outfit={outfit} />
+                  <OutfitCard
+                    key={outfit.id}
+                    outfit={outfit}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedItems.has(outfit.id)}
+                    onView={() => handleView(outfit)}
+                    onEdit={() => handleEditOutfit(outfit)}
+                    onDelete={() => handleDelete(outfit)}
+                    onToggleSelection={() => toggleItemSelection(outfit.id)}
+                    categories={categories}
+                  />
                 ))}
               </div>
             )}
           </div>
         )}
 
-        {/* ✅ FIXED: Outfit Builder with proper props */}
         {showOutfitBuilder && (
           <OutfitBuilder
             onClose={handleOutfitBuilderClose}
@@ -733,7 +670,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           />
         )}
 
-        {/* Reusable View Modal */}
         <ViewModal
           isOpen={!!showViewModal}
           onClose={closeModals}
@@ -755,7 +691,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           {selectedItem && <ViewModalContent outfit={selectedItem} />}
         </ViewModal>
 
-        {/* Reusable Delete Modal */}
         <DeleteModal
           isOpen={!!showDeleteModal}
           onClose={closeModals}
@@ -765,7 +700,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           isLoading={isDeleting}
         />
 
-        {/* Bulk Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
