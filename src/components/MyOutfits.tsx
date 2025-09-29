@@ -517,7 +517,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         {!showOutfitBuilder && (
           <div className="w-full">
             <div className="flex flex-col md:flex-row items-center justify-between">
-              <div>
+              <div className="w-full mx-auto">
                 <div className="flex items-center gap-4 mb-2">
                   <div className="hidden md:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <Shirt className="h-8 w-8 text-white" />
@@ -531,7 +531,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <p className="text-sm font-medium">
-                            {outfits.length} saved
+                            {outfits.length} saved outfits
                             {hasSearchQuery && (
                               <span className="text-blue-600 dark:text-blue-400">
                                 {' '}
