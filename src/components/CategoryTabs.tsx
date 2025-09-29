@@ -20,7 +20,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
     useScrollArrow(tabsRef);
 
   return (
-    <div className="relative">
+    <div className="relative mb-2">
       <Tabs
         defaultValue="all"
         value={activeCategory}

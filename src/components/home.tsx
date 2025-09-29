@@ -556,7 +556,7 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <div className="px-2 md:px-4">
+      <div className="py-2 px-2 md:px-4">
         <div className="mx-auto py-0 sm:px-20 pb-20 md:pb-4">
           {authLoading ? (
             <div className="flex items-center justify-center min-h-[400px]">
