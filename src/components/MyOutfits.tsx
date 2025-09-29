@@ -204,7 +204,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     console.log('Outfit saved successfully, refreshing outfits...');
 
     // Refresh the outfits list to show the new/updated outfit
-    await refreshOutfits();
+    await refreshOutfits(true);
 
     // Close the outfit builder
     handleOutfitBuilderClose();
@@ -215,7 +215,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
     console.log('Outfit edit completed, refreshing outfits...');
 
     // Refresh the outfits list to show the updated outfit
-    await refreshOutfits();
+    await refreshOutfits(true);
 
     // Close the outfit builder
     handleOutfitBuilderClose();
@@ -397,7 +397,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
         />
 
         <Card
-          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[280px] flex flex-col overflow-hidden ${
+          className={`group hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/20 h-[220px] flex flex-col overflow-hidden ${
             isSelectionMode && isSelected
               ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
               : ''

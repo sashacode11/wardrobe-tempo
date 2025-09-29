@@ -49,7 +49,7 @@ interface WardrobeContextType {
 
   // Refresh states
   refreshItems: () => Promise<void>;
-  refreshOutfits: () => Promise<void>;
+  refreshOutfits: (force?: Boolean) => Promise<void>;
   refreshAll: () => Promise<void>;
 
   // User management
@@ -95,6 +95,9 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   const [outfitsLoading, setOutfitsLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -203,55 +206,70 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   }, [user]);
 
   // Enhanced refresh outfits to include completion status
-  const refreshOutfits = useCallback(async () => {
-    if (!user) {
-      setOutfits([]);
-      setOutfitsLoading(false);
-      return;
-    }
+  const refreshOutfits = useCallback(
+    async (force = false) => {
+      if (!user) {
+        setOutfits([]);
+        setOutfitsLoading(false);
+        return;
+      }
 
-    try {
-      setOutfitsLoading(true);
-      setError(null);
+      // Check if we should use cached data
+      const now = Date.now();
+      if (!force && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
+        console.log('Using cached outfits data');
+        return;
+      }
 
-      const { data, error: fetchError } = await supabase
-        .from('outfits')
-        .select(
-          `
+      try {
+        setOutfitsLoading(true);
+        setError(null);
+
+        const { data, error: fetchError } = await supabase
+          .from('outfits')
+          .select(
+            `
+        *,
+        outfit_items (
           *,
-          outfit_items (
-            *,
-            wardrobe_items (*)
-          )
-        `
+          wardrobe_items (*)
         )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      `
+          )
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+        if (fetchError) throw fetchError;
 
-      const transformedOutfits: OutfitWithItems[] = (data || []).map(outfit => {
-        const validItems =
-          outfit.outfit_items?.filter(oi => oi.wardrobe_items) || [];
-        const totalItems = outfit.outfit_items?.length || 0;
+        const transformedOutfits: OutfitWithItems[] = (data || []).map(
+          outfit => {
+            const validItems =
+              outfit.outfit_items?.filter(oi => oi.wardrobe_items) || [];
+            const totalItems = outfit.outfit_items?.length || 0;
 
-        return {
-          ...outfit,
-          items: validItems.map(oi => oi.wardrobe_items),
-          outfit_items: outfit.outfit_items || [],
-          is_complete: validItems.length === totalItems && totalItems > 0,
-          missing_items_count: totalItems - validItems.length,
-        };
-      });
+            return {
+              ...outfit,
+              items: validItems.map(oi => oi.wardrobe_items),
+              outfit_items: outfit.outfit_items || [],
+              is_complete: validItems.length === totalItems && totalItems > 0,
+              missing_items_count: totalItems - validItems.length,
+            };
+          }
+        );
 
-      setOutfits(transformedOutfits);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch outfits');
-      console.error('Error fetching outfits:', err);
-    } finally {
-      setOutfitsLoading(false);
-    }
-  }, [user]);
+        setOutfits(transformedOutfits);
+        setLastFetchTime(Date.now());
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to fetch outfits'
+        );
+        console.error('Error fetching outfits:', err);
+      } finally {
+        setOutfitsLoading(false);
+      }
+    },
+    [user, lastFetchTime]
+  );
 
   // Refresh all data
   const refreshAll = useCallback(async () => {
@@ -478,31 +496,31 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({
   }, [user, refreshAll]);
 
   // Auto-refresh magic!
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        // Page became visible and user is logged in - refresh data silently
-        console.log('User returned to tab - refreshing data');
-        refreshAll();
-      }
-    };
+  // useEffect(() => {
+  //   const handleVisibilityChange = () => {
+  //     if (!document.hidden && user) {
+  //       // Page became visible and user is logged in - refresh data silently
+  //       console.log('User returned to tab - refreshing data');
+  //       refreshAll();
+  //     }
+  //   };
 
-    const handleFocus = () => {
-      if (user) {
-        // Window got focus and user is logged in - refresh data silently
-        console.log('Window got focus - refreshing data');
-        refreshAll();
-      }
-    };
+  //   const handleFocus = () => {
+  //     if (user) {
+  //       // Window got focus and user is logged in - refresh data silently
+  //       console.log('Window got focus - refreshing data');
+  //       refreshAll();
+  //     }
+  //   };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
+  //   document.addEventListener('visibilitychange', handleVisibilityChange);
+  //   window.addEventListener('focus', handleFocus);
 
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [user, refreshAll]);
+  //   return () => {
+  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
+  //     window.removeEventListener('focus', handleFocus);
+  //   };
+  // }, [user, refreshAll]);
 
   const value: WardrobeContextType = {
     // Data
