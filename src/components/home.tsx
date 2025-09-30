@@ -267,7 +267,7 @@ const Home = () => {
         <div className="text-center space-y-6 max-w-md">
           <h2 className="text-2xl font-bold">Welcome to Vesti</h2>
           <p className="text-gray-600">
-            Organize your wardrobe, plan outfits, and style your life.
+            Stop digging through your closet. Find clothes instantly with Vesti.
           </p>
           <div className="flex gap-4 justify-center">
             <Button onClick={() => setShowAuthDialog(true)}>Login</Button>
