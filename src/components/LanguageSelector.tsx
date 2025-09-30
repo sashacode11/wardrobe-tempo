@@ -18,7 +18,7 @@ const LanguageSelector = ({ className = '' }) => {
     <div className={`relative ${className}`} data-language-selector>
       <button
         onClick={toggleLanguageMenu}
-        className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground hover:font-bold rounded-lg transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground hover:font-bold rounded-lg transition-colors duration-200 focus:outline-none"
         type="button"
       >
         <Globe className="h-4 w-4" />
