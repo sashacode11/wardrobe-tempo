@@ -264,9 +264,14 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border max-w-md h-screen sm:h-auto sm:max-w-lg p-0 gap-0 [&>button]:hidden sm:rounded-2xl sm:border overflow-y-auto">
+      <DialogContent
+        className="border-border max-w-md min-h-[100dvh] sm:min-h-fit sm:h-auto sm:max-w-lg p-0 gap-0 
+             flex flex-col [&>button]:hidden sm:rounded-2xl sm:border overflow-y-auto
+             pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      >
+        {' '}
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
           <div className="flex items-center gap-3">
             {((activeTab === 'signup' && signupStep === 2) ||
               (activeTab === 'login' && loginStep === 2)) && (
@@ -289,8 +294,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
             </button>
           </div>
         </div>
-
-        <div className="px-6 pb-8">
+        <div className="px-6 pb-8 ">
           <h2 className="text-2xl font-semibold text-muted-foreground mb-6">
             Welcome to Vesti
           </h2>
