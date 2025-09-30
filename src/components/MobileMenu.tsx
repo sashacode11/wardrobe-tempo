@@ -50,7 +50,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       {/* Mobile Menu */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-background border-l border-border z-50 md:hidden
+          fixed top-0 right-0 h-full w-full bg-card border-l border-border z-50 md:hidden
           transform transition-transform duration-300 ease-in-out
           ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -91,7 +91,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowSettings(true)}
+                onClick={() => {
+                  setShowMobileMenu(false),
+                    setTimeout(() => setShowSettings(true), 50);
+                }}
                 className="p-2 ml-2"
               >
                 <Settings className="h-6 w-6 text-muted-foreground hover:text-foreground" />
@@ -190,18 +193,18 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           </div>
 
           {/* Footer */}
-          {user && (
+          {/* {user && (
             <div className="p-4 border-t border-border mt-auto">
               <Button
                 variant="outline"
                 onClick={handleSignOut}
-                className="w-full"
+                className="w-full bg-red-500 text-muted "
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </Button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </>

@@ -261,7 +261,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-8 h-full pb-20">
+        <div className="flex-1 overflow-y-auto p-2 space-y-8 h-full">
           {/* User Profile Section */}
           {user && (
             <div className="space-y-4">

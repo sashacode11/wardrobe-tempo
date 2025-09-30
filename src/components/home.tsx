@@ -283,7 +283,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-page-bg">
       {/* Header */}
-      <header className="sticky top-0 z-10 md:border-b bg-background pb-1 px-2 md:px-4 sm:pb-4 pt-4">
+      <header className="sticky top-0 z-10 md:border-b bg-card pb-1 px-2 md:px-4 sm:pb-4 pt-4">
         <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold text-blue-600">Vesti</h1>
@@ -745,11 +745,6 @@ const Home = () => {
               </Tabs>
             </div>
           )}
-          {/* Settings Modal */}
-          <SettingsModal
-            isOpen={showSettings}
-            onClose={() => setShowSettings(false)}
-          />
 
           {/* Mobile Filter Modal */}
           {showFilterModal && (
@@ -788,7 +783,7 @@ const Home = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 shadow-lg">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card backdrop-blur-md border-t border-border z-50 shadow-lg">
         <div className="flex items-center justify-around px-1 py-1 pb-safe">
           {/* Home button */}
           <button
@@ -891,6 +886,12 @@ const Home = () => {
           </button>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
 
       {/* Upload Form Dialog */}
       <ItemUploadForm
