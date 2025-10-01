@@ -14,6 +14,9 @@ interface EmptyWardrobeStateProps {
   onClearFilters: () => void;
   onRefresh: () => void;
   loading?: boolean;
+  error?: string;
+  refetch?: () => void;
+  isSuccess?: boolean;
 }
 
 const EmptyWardrobeState: React.FC<EmptyWardrobeStateProps> = ({
@@ -26,6 +29,9 @@ const EmptyWardrobeState: React.FC<EmptyWardrobeStateProps> = ({
   onClearFilters,
   onRefresh,
   loading = false,
+  error,
+  refetch,
+  isSuccess,
 }) => {
   // Determine the state to show
   const getStateInfo = () => {
@@ -62,22 +68,41 @@ const EmptyWardrobeState: React.FC<EmptyWardrobeStateProps> = ({
     }
 
     // If online but not connected to Supabase
-    if (!isConnected) {
-      const timeSinceSync = lastSyncTime
-        ? Math.floor((Date.now() - lastSyncTime.getTime()) / (1000 * 60))
-        : null;
+    // if (!isConnected) {
+    //   const timeSinceSync = lastSyncTime
+    //     ? Math.floor((Date.now() - lastSyncTime.getTime()) / (1000 * 60))
+    //     : null;
 
+    //   return {
+    //     icon: <AlertCircle className="h-8 w-8 text-orange-500" />,
+    //     title: 'Connection issue',
+    //     description: timeSinceSync
+    //       ? `Last synced ${timeSinceSync} minutes ago. There might be a connection issue.`
+    //       : 'Unable to connect to the server. Your items might not be up to date.',
+    //     action: (
+    //       <Button onClick={onRefresh} variant="outline" disabled={loading}>
+    //         <RefreshCw
+    //           className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+    //         />
+    //         Refresh
+    //       </Button>
+    //     ),
+    //   };
+    // }
+
+    if (error || !isSuccess) {
       return {
-        icon: <AlertCircle className="h-8 w-8 text-orange-500" />,
-        title: 'Connection issue',
-        description: timeSinceSync
-          ? `Last synced ${timeSinceSync} minutes ago. There might be a connection issue.`
-          : 'Unable to connect to the server. Your items might not be up to date.',
+        icon: <AlertCircle className="h-8 w-8 text-destructive" />,
+        title: 'Something went wrong',
+        description:
+          'Unable to load your wardrobe. This may be due to network issues.',
         action: (
-          <Button onClick={onRefresh} variant="outline" disabled={loading}>
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
-            />
+          <Button
+            onClick={refetch}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
         ),

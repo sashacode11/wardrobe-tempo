@@ -187,9 +187,22 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
     });
 
   useEffect(() => {
+    console.log('[ViewOutfitsModal] Main useEffect triggered:', {
+      isOpen,
+      clothingItemId: clothingItem?.id,
+      timestamp: new Date().toISOString(),
+    });
+
     if (isOpen && clothingItem?.id) {
+      console.log(
+        '[ViewOutfitsModal] Fetching outfits for item:',
+        clothingItem.id
+      );
+
       fetchItemOutfits(clothingItem.id);
     } else if (!isOpen) {
+      console.log('[ViewOutfitsModal] Modal closed, clearing outfits');
+
       clearOutfits();
     }
   }, [isOpen, clothingItem?.id, fetchItemOutfits, clearOutfits]);
