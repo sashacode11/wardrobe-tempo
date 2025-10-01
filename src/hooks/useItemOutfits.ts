@@ -1,3 +1,4 @@
+// useItemOutfits.ts
 import { useState, useCallback } from 'react';
 import { supabase, getCurrentUser } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';

@@ -1,3 +1,4 @@
+// useOutfitActions.ts
 import { useState } from 'react';
 
 interface useOutfitActions<T> {

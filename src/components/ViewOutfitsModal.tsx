@@ -59,9 +59,19 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
     });
 
   useEffect(() => {
+    console.log('🔍 ViewOutfitsModal useEffect triggered', {
+      isOpen,
+      clothingItem: clothingItem?.id,
+      fetchItemOutfits: typeof fetchItemOutfits,
+      clearOutfits: typeof clearOutfits,
+      fetchFnRef: fetchItemOutfits, // logs function identity
+    });
+
     if (isOpen && clothingItem) {
       // Check if fetchItemOutfits function exists
       if (typeof fetchItemOutfits === 'function') {
+        console.log('✅ Fetching outfits for item:', clothingItem.id);
+
         fetchItemOutfits(clothingItem.id);
       } else {
         console.error(
@@ -71,9 +81,19 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
       }
     } else if (!isOpen) {
       if (typeof clearOutfits === 'function') {
+        console.log('🧹 Clearing outfits');
+
         clearOutfits();
       }
     }
+
+    // Cleanup on unmount or close
+    return () => {
+      console.log('🗑️ ViewOutfitsModal cleanup');
+      if (!isOpen && typeof clearOutfits === 'function') {
+        clearOutfits();
+      }
+    };
   }, [isOpen, clothingItem, fetchItemOutfits, clearOutfits]);
 
   // Helper function to organize outfit items by category
@@ -128,7 +148,8 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
             <div className="flex-1">
               <CardTitle className="text-lg">{outfit.name}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Created {new Date(outfit.created_at).toLocaleDateString()}
+                {/* Created {new Date(outfit.created_at).toLocaleDateString()} */}
+                Locations: {outfit.locations || 'Not specified'}
               </p>
               {outfit.occasions && outfit.occasions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
@@ -277,7 +298,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogContent className="max-w-2xl max-h-[90vh] bg-card">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
