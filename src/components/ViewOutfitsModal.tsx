@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogOverlay,
 } from '@/components/ui/dialog';
 import { useItemOutfits } from '../hooks/useItemOutfits';
 import { OutfitWithItems, ClothingItemType } from '@/types';
@@ -19,6 +20,7 @@ import { useOutfitActions } from '../hooks/useOutfitActions';
 import OutfitBuilder from './OutfitBuilder';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { OptimizedImage } from './OptimizedImage';
+import { capitalizeFirst } from '@/utils/helpers';
 
 interface ViewOutfitsModalProps {
   isOpen: boolean;
@@ -66,13 +68,12 @@ const OutfitCard = React.memo<OutfitCardProps>(
 
     return (
       <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-3">
+        <CardHeader className="p-2">
           <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <CardTitle className="text-lg">{outfit.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Locations: {outfit.locations || 'Not specified'}
-              </p>
+            <div className="flex flex-row items-center gap-3">
+              <CardTitle className="text-lg">
+                {capitalizeFirst(outfit.name)}
+              </CardTitle>
               {outfit.occasions && outfit.occasions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {outfit.occasions.slice(0, 2).map((occasion, index) => (
@@ -102,8 +103,8 @@ const OutfitCard = React.memo<OutfitCardProps>(
           </div>
         </CardHeader>
 
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-5 gap-2">
+        <CardContent className="pt-0 px-2">
+          <div className="flex flex-row gap-2">
             {categories.map(category => {
               const item = items[category];
 
@@ -299,12 +300,27 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
 
   return (
     <>
-      <Dialog open={isOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] bg-card">
+      <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
+        <DialogOverlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out" />
+
+        <DialogContent
+          className="
+      bg-muted 
+      sm:top-[50%] top-auto 
+      bottom-0 sm:bottom-auto
+      
+      sm:translate-x-[-50%] sm:translate-y-[-50%]
+      translate-y-0 sm:translate-y-auto
+      border-0
+      p-3
+    "
+          onInteractOutside={e => e.preventDefault()}
+          onEscapeKeyDown={e => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Outfits with "{clothingItem?.name}"
+              Outfits with "{capitalizeFirst(clothingItem?.name)}"
             </DialogTitle>
             {clothingItem && (
               <div className="flex items-center gap-3 pt-2">
@@ -316,7 +332,9 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
                   />
                 </div>
                 <div>
-                  <p className="font-medium">{clothingItem.name}</p>
+                  <p className="font-medium text-left pl-2">
+                    {capitalizeFirst(clothingItem.name)}
+                  </p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Badge variant="outline" className="text-xs">
                       {clothingItem.category}
@@ -362,11 +380,9 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(organizeOutfitItems(selectedItem)).map(
                 ([category, item]) => (
-                  <Card key={category}>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm capitalize">
-                        {category}
-                      </CardTitle>
+                  <Card key={category} className="bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-sm">{category}</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <div className="flex items-center gap-3">
