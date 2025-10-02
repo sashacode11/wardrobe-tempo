@@ -1,4 +1,4 @@
-// components/ViewOutfitsModal.tsx - Optimized to prevent excessive re-renders
+// components/ViewOutfitsModal.tsx - Fixed to show all items
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ interface ViewOutfitsModalProps {
   onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
 
-// Memoized OutfitCard component
+// Memoized OutfitCard component - FIXED VERSION
 interface OutfitCardProps {
   outfit: OutfitWithItems;
   categories: string[];
@@ -42,16 +42,24 @@ interface OutfitCardProps {
 
 const OutfitCard = React.memo<OutfitCardProps>(
   ({ outfit, categories, clothingItemId, onView, onEdit, onDelete }) => {
-    const items = useMemo(() => {
+    // FIXED: Group items by category to show ALL items, not just one per category
+    const itemsByCategory = useMemo(() => {
       if (!outfit.outfit_items) return {};
-      const organized: { [key: string]: ClothingItemType } = {};
+
+      const grouped: { [key: string]: ClothingItemType[] } = {};
+
       outfit.outfit_items.forEach(item => {
         const clothingItemData = item.wardrobe_items;
         if (clothingItemData) {
-          organized[clothingItemData.category] = clothingItemData;
+          const category = clothingItemData.category;
+          if (!grouped[category]) {
+            grouped[category] = [];
+          }
+          grouped[category].push(clothingItemData);
         }
       });
-      return organized;
+
+      return grouped;
     }, [outfit.outfit_items]);
 
     const handleView = useCallback(() => {
@@ -104,43 +112,59 @@ const OutfitCard = React.memo<OutfitCardProps>(
         </CardHeader>
 
         <CardContent className="pt-0 px-2">
-          <div className="flex flex-row gap-2">
+          {/* FIXED: Show all items grouped by category */}
+          <div className="flex flex-row gap-2 flex-wrap">
             {categories.map(category => {
-              const item = items[category];
+              const items = itemsByCategory[category] || [];
 
-              const isCurrentItem = outfit.outfit_items?.some(
-                outfitItem =>
-                  (outfitItem.wardrobe_items?.id === clothingItemId ||
-                    outfitItem.clothing_item_id === clothingItemId) &&
-                  outfitItem.wardrobe_items?.category === category
-              );
-
-              return (
-                <div key={category} className="text-center">
-                  <div
-                    className={`w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 transition-colors ${
-                      isCurrentItem
-                        ? 'border-primary bg-primary/10'
-                        : 'border-muted bg-muted'
-                    }`}
-                  >
-                    {item ? (
-                      <OptimizedImage
-                        src={item.image_url || ''}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
+              if (items.length === 0) {
+                // Show empty placeholder
+                return (
+                  <div key={category} className="text-center">
+                    <div className="w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 border-muted bg-muted">
                       <div className="text-muted-foreground text-xs">-</div>
-                    )}
+                    </div>
+                    <p className="text-xs text-muted-foreground capitalize truncate">
+                      {category}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground capitalize truncate">
-                    {category}
-                  </p>
-                  {isCurrentItem && (
-                    <div className="w-2 h-2 bg-primary rounded-full mx-auto mt-1"></div>
-                  )}
-                </div>
+                );
+              }
+
+              // Show all items in this category
+              return (
+                <React.Fragment key={category}>
+                  {items.map((item, index) => {
+                    const isCurrentItem = item.id === clothingItemId;
+
+                    return (
+                      <div
+                        key={`${category}-${item.id}-${index}`}
+                        className="text-center"
+                      >
+                        <div
+                          className={`w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 transition-colors ${
+                            isCurrentItem
+                              ? 'border-primary bg-primary/10'
+                              : 'border-muted bg-muted'
+                          }`}
+                        >
+                          <OptimizedImage
+                            src={item.image_url || ''}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground capitalize truncate w-12">
+                          {category}
+                        </p>
+                        {isCurrentItem && (
+                          <div className="w-2 h-2 bg-primary rounded-full mx-auto mt-1"></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
               );
             })}
           </div>
