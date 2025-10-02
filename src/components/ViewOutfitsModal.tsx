@@ -21,6 +21,7 @@ import OutfitBuilder from './OutfitBuilder';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { OptimizedImage } from './OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
+import { on } from 'events';
 
 interface ViewOutfitsModalProps {
   isOpen: boolean;
@@ -161,6 +162,9 @@ const OutfitCard = React.memo<OutfitCardProps>(
                         <p className="text-xs text-muted-foreground capitalize truncate w-12">
                           {category}
                         </p>
+                        <p className="text-xs text-muted-foreground capitalize truncate w-12">
+                          {item.location}
+                        </p>
                         {isCurrentItem && (
                           <div className="w-2 h-2 bg-primary rounded-full mx-auto mt-1"></div>
                         )}
@@ -237,11 +241,14 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
 
   const handleEditOutfit = useCallback(
     (outfit: OutfitWithItems) => {
+      onClose();
+      setEditingOutfit(outfit);
+      setShowOutfitBuilder(true);
       if (onEditOutfit && typeof onEditOutfit === 'function') {
         onEditOutfit(outfit);
       }
     },
-    [onEditOutfit]
+    [onEditOutfit, onClose]
   );
 
   const handleDeleteOutfit = useCallback((outfit: OutfitWithItems) => {
@@ -362,7 +369,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
         </DialogContent>
       </Dialog>
 
-      <ViewModal
+      {/* <ViewModal
         isOpen={!!showViewModal}
         onClose={closeModals}
         title={selectedItem?.name || 'Outfit Details'}
@@ -399,7 +406,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
                         {category}
                       </p>
                       <p className="text-xs text-muted-foreground truncate px-1">
-                        {item.name}
+                        {item.location}
                       </p>
                     </div>
                   ))
@@ -407,7 +414,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
             </div>
           </div>
         )}
-      </ViewModal>
+      </ViewModal> */}
 
       {showOutfitBuilder && editingOutfit && (
         <OutfitBuilder

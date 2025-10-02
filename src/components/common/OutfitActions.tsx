@@ -45,7 +45,7 @@ const OutfitActions: React.FC<OutfitActionsProps> = ({
 
   return (
     <div className={`flex gap-1 ${className}`}>
-      {showView && onView && (
+      {/* {showView && onView && (
         <Button
           variant={variant}
           size="icon"
@@ -55,7 +55,7 @@ const OutfitActions: React.FC<OutfitActionsProps> = ({
         >
           <Eye className={iconSizes[size]} />
         </Button>
-      )}
+      )} */}
       {showEdit && onEdit && (
         <Button
           variant={variant}
