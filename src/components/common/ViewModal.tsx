@@ -40,13 +40,13 @@ const ViewModal: React.FC<ViewModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={`${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto gap-2`}
+        className={`${maxWidthClasses[maxWidth]} bg-card max-h-[90vh] overflow-y-auto gap-0 py-2`}
       >
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">{title}</DialogTitle>
-          {subtitle && (
+          {/* {subtitle && (
             <p className="text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          )} */}
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">

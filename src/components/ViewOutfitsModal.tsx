@@ -1,5 +1,5 @@
 // components/ViewOutfitsModal.tsx - Fixed to show all items
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,6 @@ interface ViewOutfitsModalProps {
   onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
 
-// Memoized OutfitCard component - FIXED VERSION
 interface OutfitCardProps {
   outfit: OutfitWithItems;
   categories: string[];
@@ -40,27 +39,34 @@ interface OutfitCardProps {
   onDelete: (outfit: OutfitWithItems) => void;
 }
 
+// Shared function - moved outside components
+const organizeOutfitItems = (
+  outfit: OutfitWithItems
+): { [key: string]: ClothingItemType[] } => {
+  const organized: { [key: string]: ClothingItemType[] } = {};
+
+  if (!outfit.outfit_items) {
+    return organized;
+  }
+
+  outfit.outfit_items.forEach(item => {
+    const clothingItemData = item.wardrobe_items;
+    if (clothingItemData) {
+      const category = clothingItemData.category;
+      if (!organized[category]) {
+        organized[category] = [];
+      }
+      organized[category].push(clothingItemData);
+    }
+  });
+
+  return organized;
+};
+
+// OutfitCard component - moved before ViewOutfitsModal
 const OutfitCard = React.memo<OutfitCardProps>(
   ({ outfit, categories, clothingItemId, onView, onEdit, onDelete }) => {
-    // FIXED: Group items by category to show ALL items, not just one per category
-    const itemsByCategory = useMemo(() => {
-      if (!outfit.outfit_items) return {};
-
-      const grouped: { [key: string]: ClothingItemType[] } = {};
-
-      outfit.outfit_items.forEach(item => {
-        const clothingItemData = item.wardrobe_items;
-        if (clothingItemData) {
-          const category = clothingItemData.category;
-          if (!grouped[category]) {
-            grouped[category] = [];
-          }
-          grouped[category].push(clothingItemData);
-        }
-      });
-
-      return grouped;
-    }, [outfit.outfit_items]);
+    const itemsByCategory = organizeOutfitItems(outfit);
 
     const handleView = useCallback(() => {
       onView(outfit);
@@ -112,13 +118,11 @@ const OutfitCard = React.memo<OutfitCardProps>(
         </CardHeader>
 
         <CardContent className="pt-0 px-2">
-          {/* FIXED: Show all items grouped by category */}
           <div className="flex flex-row gap-2 flex-wrap">
             {categories.map(category => {
               const items = itemsByCategory[category] || [];
 
               if (items.length === 0) {
-                // Show empty placeholder
                 return (
                   <div key={category} className="text-center">
                     <div className="w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 border-muted bg-muted">
@@ -131,7 +135,6 @@ const OutfitCard = React.memo<OutfitCardProps>(
                 );
               }
 
-              // Show all items in this category
               return (
                 <React.Fragment key={category}>
                   {items.map((item, index) => {
@@ -231,23 +234,6 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
       clearOutfits();
     }
   }, [isOpen, clothingItem?.id, fetchItemOutfits, clearOutfits]);
-
-  const organizeOutfitItems = useCallback((outfit: OutfitWithItems) => {
-    const organized: { [key: string]: ClothingItemType } = {};
-
-    if (!outfit.outfit_items) {
-      return organized;
-    }
-
-    outfit.outfit_items.forEach(item => {
-      const clothingItemData = item.wardrobe_items;
-      if (clothingItemData) {
-        organized[clothingItemData.category] = clothingItemData;
-      }
-    });
-
-    return organized;
-  }, []);
 
   const handleEditOutfit = useCallback(
     (outfit: OutfitWithItems) => {
@@ -380,19 +366,12 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
         isOpen={!!showViewModal}
         onClose={closeModals}
         title={selectedItem?.name || 'Outfit Details'}
-        subtitle={
-          selectedItem
-            ? `Created on ${new Date(
-                selectedItem.created_at
-              ).toLocaleDateString()}`
-            : ''
-        }
         maxWidth="2xl"
       >
         {selectedItem && (
-          <div>
+          <div className="px-2">
             {selectedItem.occasions && selectedItem.occasions.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {selectedItem.occasions.map((occasion, index) => (
                   <Badge key={index} variant="secondary">
                     {occasion}
@@ -401,47 +380,29 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {Object.entries(organizeOutfitItems(selectedItem)).map(
-                ([category, item]) => (
-                  <Card key={category} className="bg-card">
-                    <CardHeader>
-                      <CardTitle className="text-sm">{category}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                          <OptimizedImage
-                            src={item.image_url || ''}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{item.name}</p>
-                          {item.color && (
-                            <p className="text-sm text-muted-foreground capitalize">
-                              Color: {item.color}
-                            </p>
-                          )}
-                          {Array.isArray(item.tags) && item.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {item.tags.slice(0, 2).map((tag, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                ([category, items]) =>
+                  items.map((item, index) => (
+                    <div
+                      key={`${category}-${item.id}-${index}`}
+                      className="text-center"
+                    >
+                      <div className="w-full aspect-square bg-muted rounded-md overflow-hidden mb-1">
+                        <OptimizedImage
+                          src={item.image_url || ''}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    </CardContent>
-                  </Card>
-                )
+                      <p className="text-sm font-medium capitalize truncate px-1">
+                        {category}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate px-1">
+                        {item.name}
+                      </p>
+                    </div>
+                  ))
               )}
             </div>
           </div>
