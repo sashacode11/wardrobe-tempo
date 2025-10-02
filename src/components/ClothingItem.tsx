@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Pencil, Trash2, Plus, Eye, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, Eye, X, ChevronRight } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { capitalizeFirst, parseArrayField } from '@/utils/helpers';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
 import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
 import { OptimizedImage } from './OptimizedImage';
+import { supabase } from '@/lib/supabaseClient';
 
 const ClothingItem = ({
   id = 'unknown',
@@ -35,10 +36,59 @@ const ClothingItem = ({
 }: ClothingItemProps) => {
   const [showDetails, setShowDetails] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
-
   const [showOutfitsModal, setShowOutfitsModal] = React.useState(false);
 
+  const [previewOutfit, setPreviewOutfit] = useState<OutfitWithItems | null>(
+    null
+  );
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   // const { name, category, image_url: image } = item;
+
+  useEffect(() => {
+    const fetchPreviewOutfit = async () => {
+      if (!id || id === 'unknown') return;
+
+      setIsLoadingPreview(true);
+      try {
+        const { data, error } = await supabase
+          .from('outfit_items')
+          .select(
+            `
+            outfits (
+              id,
+              name,
+              occasions,
+              created_at,
+              outfit_items (
+                id,
+                clothing_item_id,
+                wardrobe_items (
+                  id,
+                  name,
+                  category,
+                  color,
+                  image_url
+                )
+              )
+            )
+          `
+          )
+          .eq('clothing_item_id', id)
+          .limit(1)
+          .single();
+
+        if (data && data.outfits) {
+          setPreviewOutfit(data.outfits as any);
+        }
+      } catch (error) {
+        console.error('Error fetching preview outfit:', error);
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    };
+
+    fetchPreviewOutfit();
+  }, [id]);
 
   const handleViewOutfit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -215,14 +265,67 @@ const ClothingItem = ({
           <Badge className="absolute top-2 right-2 bg-white dark:bg-gray-900 text-black dark:text-white px-1.5 py-0.5 text-xs font-medium rounded border border-gray-200 dark:border-gray-700">
             {category}
           </Badge>
-          <button
+          {/* <button
             className="absolute bottom-2 left-2 text-xs p-2 rounded-md shadow-lg px-3 py-1 bg-black/70 dark:bg-gray-800 text-white font-medium hover:bg-black/80 dark:hover:bg-gray-700 transition-colors duration-200"
             onClick={handleViewOutfit}
             type="button"
           >
             View Outfits
-          </button>
+          </button> */}
+          {/* "Complete the Look" Section - Shows preview of first outfit */}
+          {/* "Complete the Look" Section - Shows preview of first outfit */}
+          {!isLoadingPreview &&
+            previewOutfit &&
+            previewOutfit.outfit_items &&
+            previewOutfit.outfit_items.length > 0 && (
+              <div className="absolute bottom-3 left-3 w-1/2 bg-primary-foreground backdrop-blur-sm rounded-sm shadow-lg">
+                <button
+                  className="w-full p-1 flex items-center gap-0 hover:bg-muted transition-colors"
+                  onClick={handleViewOutfit}
+                  type="button"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h6 className="text-left font-semibold text-xs sm:text-sm text-foreground">
+                        My Looks
+                      </h6>
+                      <ChevronRight className="h-5 w-5 text-foreground flex-shrink-0" />
+                    </div>
+
+                    {/* Horizontal scrollable row of items from first outfit */}
+                    <div
+                      className="flex gap-0 overflow-x-auto scrollbar-hide"
+                      style={{
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                      }}
+                    >
+                      {previewOutfit.outfit_items.map((item, index) => {
+                        const clothingItemData = item.wardrobe_items;
+                        if (!clothingItemData) return null;
+
+                        return (
+                          <div
+                            key={index}
+                            className="flex-shrink-0 w-10 h-10 sm:w-14 sm:h-14"
+                          >
+                            <div className="w-full h-full bg-muted rounded-lg overflow-hidden border-2 border-border">
+                              <OptimizedImage
+                                src={clothingItemData.image_url || ''}
+                                alt={clothingItemData.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
         </div>
+
         <CardContent className="py-1 px-2 h-[52px]">
           <h3 className="font-medium text-sm truncate text-foreground">
             {capitalizeFirst(name)}
