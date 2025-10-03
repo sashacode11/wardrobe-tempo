@@ -975,7 +975,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             </div>
           </TabsContent>
         </Tabs>
-        <DialogFooter className="flex flex-row justify-end gap-2 bg-white mt-4 sticky bottom-0 ">
+        <DialogFooter className="flex flex-row justify-end gap-2 bg-white pb-10 sm:pb-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
