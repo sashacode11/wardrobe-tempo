@@ -15,9 +15,8 @@ import {
 import { useItemOutfits } from '../hooks/useItemOutfits';
 import { OutfitWithItems, ClothingItemType } from '@/types';
 import OutfitActions from './common/OutfitActions';
-import ViewModal from './common/ViewModal';
+// import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
-import OutfitBuilder from './OutfitBuilder';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { OptimizedImage } from './OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
@@ -199,11 +198,6 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   onViewOutfit,
   onEditOutfit,
 }) => {
-  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
-    null
-  );
-  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
-
   const { outfits, isLoading, error, fetchItemOutfits, clearOutfits } =
     useItemOutfits();
 
@@ -242,8 +236,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   const handleEditOutfit = useCallback(
     (outfit: OutfitWithItems) => {
       onClose();
-      setEditingOutfit(outfit);
-      setShowOutfitBuilder(true);
+
       if (onEditOutfit && typeof onEditOutfit === 'function') {
         onEditOutfit(outfit);
       }
@@ -415,28 +408,6 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
           </div>
         )}
       </ViewModal> */}
-
-      {showOutfitBuilder && editingOutfit && (
-        <OutfitBuilder
-          isOpen={true}
-          initialOutfit={editingOutfit}
-          onClose={() => {
-            setShowOutfitBuilder(false);
-            setEditingOutfit(null);
-          }}
-          onSave={() => {
-            if (clothingItem) {
-              fetchItemOutfits(clothingItem.id);
-            }
-            setShowOutfitBuilder(false);
-            setEditingOutfit(null);
-          }}
-          editingOutfit={undefined}
-          onEditComplete={() => {
-            console.log('Edit complete');
-          }}
-        />
-      )}
     </>
   );
 };

@@ -1,5 +1,5 @@
-// MyOutfits.tsx - Fixed with proper memoization
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// MyOutfits.tsx - Fixed version
+import React, { useState, useCallback, useMemo } from 'react';
 import { Plus, Shirt, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import OutfitBuilder from './OutfitBuilder';
 import { useMultiselect } from '../hooks/useMultiSelect';
 import SelectionControls from './common/SelectionControls';
 import SelectionCheckbox from './common/SelectionCheckbox';
@@ -32,6 +31,7 @@ import { capitalizeFirst } from '@/utils/helpers';
 interface MyOutfitsProps {
   searchQuery?: string;
   onEditOutfit: (outfit: OutfitWithItems) => void;
+  onCreateOutfit: () => void;
 }
 
 // Helper function to organize outfit items - moved outside component
@@ -223,7 +223,6 @@ const OutfitCard = React.memo(
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison - only re-render if these specific things change
     return (
       prevProps.outfit.id === nextProps.outfit.id &&
       prevProps.outfit.name === nextProps.outfit.name &&
@@ -239,6 +238,7 @@ const OutfitCard = React.memo(
 const MyOutfits: React.FC<MyOutfitsProps> = ({
   searchQuery: externalSearchQuery,
   onEditOutfit,
+  onCreateOutfit,
 }) => {
   const {
     outfits,
@@ -254,10 +254,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   } = useWardrobe();
 
   const { categories } = useWardrobeItems();
-
-  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
-  const [myOutfitsEditingOutfit, setMyOutfitsEditingOutfit] = useState(null);
-  const [isCreatingNewOutfit, setIsCreatingNewOutfit] = useState(false);
 
   const displayedOutfits = hasSearchQuery ? outfitSearchResults : outfits;
   const resultCount = displayedOutfits.length;
@@ -296,16 +292,15 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
   });
 
   const handleCreateNewOutfit = useCallback(() => {
-    setIsCreatingNewOutfit(true);
-    setMyOutfitsEditingOutfit(null);
-    setShowOutfitBuilder(true);
-  }, []);
+    onCreateOutfit();
+  }, [onCreateOutfit]);
 
-  const handleEditOutfit = useCallback((outfit: OutfitWithItems) => {
-    setIsCreatingNewOutfit(false);
-    setMyOutfitsEditingOutfit(outfit);
-    setShowOutfitBuilder(true);
-  }, []);
+  const handleEditOutfit = useCallback(
+    (outfit: OutfitWithItems) => {
+      onEditOutfit(outfit);
+    },
+    [onEditOutfit]
+  );
 
   const handleDeleteOutfit = async (outfitId: string) => {
     const { error: outfitItemsError } = await supabase
@@ -363,22 +358,6 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
       setMultiselectError('Failed to delete outfits');
     }
   };
-
-  const handleOutfitBuilderClose = useCallback(() => {
-    setShowOutfitBuilder(false);
-    setMyOutfitsEditingOutfit(null);
-    setIsCreatingNewOutfit(false);
-  }, []);
-
-  const handleOutfitSaved = useCallback(async () => {
-    await refreshOutfits(true);
-    handleOutfitBuilderClose();
-  }, [refreshOutfits, handleOutfitBuilderClose]);
-
-  const handleEditComplete = useCallback(async () => {
-    await refreshOutfits(true);
-    handleOutfitBuilderClose();
-  }, [refreshOutfits, handleOutfitBuilderClose]);
 
   // ViewModalContent component
   const ViewModalContent: React.FC<{ outfit: OutfitWithItems }> = ({
@@ -515,161 +494,150 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
           </div>
         )}
 
-        {!showOutfitBuilder && (
-          <div className="w-full">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="w-full mx-auto">
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="hidden md:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                    <Shirt className="h-8 w-8 text-white" />
-                  </div>
+        <div className="w-full">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="w-full mx-auto">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="hidden md:block p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                  <Shirt className="h-8 w-8 text-white" />
+                </div>
 
-                  <div className="w-full">
-                    <div className="flex items-center justify-between md:justify-start md:flex-col md:items-start gap-2">
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                        My Outfits
-                      </h2>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <p className="text-sm font-medium">
-                            {outfits.length} saved outfits
-                            {hasSearchQuery && (
-                              <span className="text-blue-600 dark:text-blue-400">
-                                {' '}
-                                ({resultCount})
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        {outfits.length > 0 && (
-                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                            <Sparkles className="h-4 w-4" />
-                          </div>
-                        )}
+                <div className="w-full">
+                  <div className="flex items-center justify-between md:justify-start md:flex-col md:items-start gap-2">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                      My Outfits
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <p className="text-sm font-medium">
+                          {outfits.length} saved outfits
+                          {hasSearchQuery && (
+                            <span className="text-blue-600 dark:text-blue-400">
+                              {' '}
+                              ({resultCount})
+                            </span>
+                          )}
+                        </p>
                       </div>
+                      {outfits.length > 0 && (
+                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <SelectionControls
-                  isSelectionMode={isSelectionMode}
-                  selectedCount={selectedItems.size}
-                  totalFilteredCount={displayedOutfits.length}
-                  onToggleSelectionMode={toggleSelectionMode}
-                  onSelectAll={() => selectAllItems(displayedOutfits)}
-                  onDeselectAll={deselectAllItems}
-                  onDeleteSelected={() => setShowDeleteDialog(true)}
-                />
-
-                {!isSelectionMode && (
-                  <Button
-                    onClick={handleCreateNewOutfit}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Create New Outfit
-                  </Button>
-                )}
               </div>
             </div>
 
-            {hasSearchQuery && (
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-blue-800 dark:text-blue-200">
-                    {resultCount > 0 ? (
-                      <>
-                        Found <strong>{resultCount}</strong> outfit
-                        {resultCount === 1 ? '' : 's'} matching "{searchQuery}"
-                      </>
-                    ) : (
-                      <>No outfits found for "{searchQuery}"</>
-                    )}
-                  </span>
-                </div>
+            <div className="flex items-center gap-3">
+              <SelectionControls
+                isSelectionMode={isSelectionMode}
+                selectedCount={selectedItems.size}
+                totalFilteredCount={displayedOutfits.length}
+                onToggleSelectionMode={toggleSelectionMode}
+                onSelectAll={() => selectAllItems(displayedOutfits)}
+                onDeselectAll={deselectAllItems}
+                onDeleteSelected={() => setShowDeleteDialog(true)}
+              />
+
+              {!isSelectionMode && (
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSearch}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  onClick={handleCreateNewOutfit}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                 >
-                  Clear
+                  <Plus className="h-5 w-5" />
+                  Create New Outfit
                 </Button>
-              </div>
-            )}
-
-            {displayedOutfits.length === 0 ? (
-              <div className="text-center py-16">
-                {hasSearchQuery ? (
-                  <div>
-                    <div className="w-24 h-24 bg-gradient-to-br from-gray-50 dark:from-gray-800 to-gray-100 dark:to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Search className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-2xl font-semibold text-foreground mb-3">
-                      No matching outfits
-                    </h3>
-                    <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                      Try adjusting your search terms or browse all your outfits
-                    </p>
-                    <Button
-                      onClick={clearSearch}
-                      variant="outline"
-                      className="px-8 py-4"
-                    >
-                      Clear Search
-                    </Button>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-50 dark:from-blue-950 to-indigo-100 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <span className="text-4xl">👔</span>
-                    </div>
-                    <h3 className="text-2xl font-semibold text-foreground mb-3">
-                      No outfits yet
-                    </h3>
-                    <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                      Create your first outfit by mixing and matching items from
-                      your wardrobe
-                    </p>
-                    <Button
-                      onClick={handleCreateNewOutfit}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
-                    >
-                      Create Your First Outfit
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
-                {displayedOutfits.map(outfit => (
-                  <OutfitCard
-                    key={outfit.id}
-                    outfit={outfit}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedItems.has(outfit.id)}
-                    onView={() => handleView(outfit)}
-                    onEdit={() => handleEditOutfit(outfit)}
-                    onDelete={() => handleDelete(outfit)}
-                    onToggleSelection={() => toggleItemSelection(outfit.id)}
-                    categories={categories}
-                  />
-                ))}
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        )}
 
-        {showOutfitBuilder && (
-          <OutfitBuilder
-            onClose={handleOutfitBuilderClose}
-            editingOutfit={isCreatingNewOutfit ? null : myOutfitsEditingOutfit}
-            onEditComplete={handleEditComplete}
-            onOutfitSaved={handleOutfitSaved}
-          />
-        )}
+          {hasSearchQuery && (
+            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-blue-800 dark:text-blue-200">
+                  {resultCount > 0 ? (
+                    <>
+                      Found <strong>{resultCount}</strong> outfit
+                      {resultCount === 1 ? '' : 's'} matching "{searchQuery}"
+                    </>
+                  ) : (
+                    <>No outfits found for "{searchQuery}"</>
+                  )}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
+
+          {displayedOutfits.length === 0 ? (
+            <div className="text-center py-16">
+              {hasSearchQuery ? (
+                <div>
+                  <div className="w-24 h-24 bg-gradient-to-br from-gray-50 dark:from-gray-800 to-gray-100 dark:to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-foreground mb-3">
+                    No matching outfits
+                  </h3>
+                  <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                    Try adjusting your search terms or browse all your outfits
+                  </p>
+                  <Button
+                    onClick={clearSearch}
+                    variant="outline"
+                    className="px-8 py-4"
+                  >
+                    Clear Search
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-50 dark:from-blue-950 to-indigo-100 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">👔</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-foreground mb-3">
+                    No outfits yet
+                  </h3>
+                  <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                    Create your first outfit by mixing and matching items from
+                    your wardrobe
+                  </p>
+                  <Button
+                    onClick={handleCreateNewOutfit}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                  >
+                    Create Your First Outfit
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 mt-6">
+              {displayedOutfits.map(outfit => (
+                <OutfitCard
+                  key={outfit.id}
+                  outfit={outfit}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedItems.has(outfit.id)}
+                  onView={() => handleView(outfit)}
+                  onEdit={() => handleEditOutfit(outfit)}
+                  onDelete={() => handleDelete(outfit)}
+                  onToggleSelection={() => toggleItemSelection(outfit.id)}
+                  categories={categories}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         <ViewModal
           isOpen={!!showViewModal}
