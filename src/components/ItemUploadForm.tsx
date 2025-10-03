@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,8 @@ import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { toast } from 'sonner';
 import { OptimizedImage } from './OptimizedImage';
 import { compressImage } from '@/utils/imageCache';
+import { Area } from 'react-easy-crop/types';
+import Cropper from 'react-easy-crop';
 
 interface ItemUploadFormProps {
   open?: boolean;
@@ -273,6 +275,79 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   };
 
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const onCropComplete = useCallback(
+    (croppedArea: Area, croppedAreaPixels: Area) => {
+      setCroppedAreaPixels(croppedAreaPixels);
+    },
+    []
+  );
+
+  const createCroppedImage = async () => {
+    if (!itemData.imagePreview || !croppedAreaPixels) return;
+
+    const image = new Image();
+    image.src = itemData.imagePreview;
+
+    await new Promise(resolve => {
+      image.onload = resolve;
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = croppedAreaPixels.width;
+    canvas.height = croppedAreaPixels.height;
+
+    ctx?.drawImage(
+      image,
+      croppedAreaPixels.x,
+      croppedAreaPixels.y,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height,
+      0,
+      0,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height
+    );
+
+    return new Promise<string>(resolve => {
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            const croppedUrl = URL.createObjectURL(blob);
+            resolve(croppedUrl);
+          }
+        },
+        'image/jpeg',
+        0.8
+      );
+    });
+  };
+
+  const handleCropSave = async () => {
+    const croppedImage = await createCroppedImage();
+    if (croppedImage) {
+      // Convert blob URL to File
+      const response = await fetch(croppedImage);
+      const blob = await response.blob();
+      const file = new File([blob], 'cropped-image.jpg', {
+        type: 'image/jpeg',
+      });
+
+      setItemData({
+        ...itemData,
+        image: file,
+        imagePreview: croppedImage,
+      });
+      setShowCropModal(false);
+    }
+  };
+
   const handleAddTag = () => {
     if (currentTag && !itemData.tags.includes(currentTag)) {
       setItemData(prev => ({
@@ -488,39 +563,95 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold ">
-            {editingItem ? 'Edit Clothing Item' : 'Add New Clothing Item'}
-          </DialogTitle>
-        </DialogHeader>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="upload">
-              Upload Image
-              {!itemData.imagePreview && (
-                <span className="ml-1 text-red-500 text-xs">*</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="details" disabled={!itemData.imagePreview}>
-              Item Details
-            </TabsTrigger>
-          </TabsList>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold ">
+              {editingItem ? 'Edit Clothing Item' : 'Add New Clothing Item'}
+            </DialogTitle>
+          </DialogHeader>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="upload">
+                Upload Image
+                {!itemData.imagePreview && (
+                  <span className="ml-1 text-red-500 text-xs">*</span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="details" disabled={!itemData.imagePreview}>
+                Item Details
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="upload" className="space-y-4">
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50">
-              {itemData.imagePreview ? (
-                <div className="relative w-full max-w-md">
-                  <OptimizedImage
-                    src={itemData.imagePreview}
-                    alt="Clothing item preview"
-                    className="w-full h-auto rounded-md object-contain max-h-[300px]"
-                  />
+            <TabsContent value="upload" className="space-y-4">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-2 bg-gray-50">
+                {itemData.imagePreview ? (
+                  <div className="relative w-full max-w-md">
+                    <OptimizedImage
+                      src={itemData.imagePreview}
+                      alt="Clothing item preview"
+                      className="w-full h-auto rounded-md object-contain max-h-[300px]"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() =>
+                        setItemData({
+                          ...itemData,
+                          image: null,
+                          imagePreview: null,
+                        })
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Upload className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="hidden md:inline">
+                          Drag and drop an image or click to browse
+                        </span>
+                        <span className="md:hidden">Tap to add a photo</span>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-4 justify-center">
+                      <Button asChild variant="outline">
+                        <label htmlFor="file-upload" className="cursor-pointer">
+                          <Camera className="h-4 w-4 mr-2" />
+                          Add Photo
+                        </label>
+                      </Button>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                      {/* <Button variant="outline">
+                      <Camera className="h-4 w-4 mr-2" />
+                      Take Photo
+                    </Button> */}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {itemData.imagePreview && (
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                   <Button
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2"
+                    variant="outline"
+                    className="w-full sm:w-auto"
                     onClick={() =>
                       setItemData({
                         ...itemData,
@@ -529,483 +660,465 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       })
                     }
                   >
-                    <X className="h-4 w-4" />
+                    Choose Different Image
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4 text-center">
-                  <div className="flex flex-col items-center gap-4">
-                    <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      <span className="hidden md:inline">
-                        Drag and drop an image or click to browse
-                      </span>
-                      <span className="md:hidden">Tap to add a photo</span>
-                    </p>
-                  </div>
-
-                  <div className="flex gap-4 justify-center">
-                    <Button asChild variant="outline">
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <Camera className="h-4 w-4 mr-2" />
-                        Add Photo
-                      </label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      onClick={() => setShowCropModal(true)}
+                    >
+                      <Crop className="h-4 w-4 mr-2" />
+                      Crop Image
                     </Button>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
-                    {/* <Button variant="outline">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Take Photo
-                    </Button> */}
+                    <Button
+                      onClick={() => setActiveTab('details')}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Continue
+                    </Button>
                   </div>
                 </div>
               )}
-            </div>
+            </TabsContent>
 
-            {itemData.imagePreview && (
-              <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() =>
-                    setItemData({
-                      ...itemData,
-                      image: null,
-                      imagePreview: null,
-                    })
-                  }
-                >
-                  Choose Different Image
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 sm:flex-none">
-                    <Crop className="h-4 w-4 mr-2" />
-                    Crop Image
-                  </Button>
-                  <Button
-                    onClick={() => setActiveTab('details')}
-                    className="flex-1 sm:flex-none"
-                  >
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="details" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">
-                  Item Name
-                  <span className="ml-1 text-red-500 text-xs">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={itemData.name}
-                  onChange={e =>
-                    setItemData({ ...itemData, name: e.target.value })
-                  }
-                  placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="category">
-                  Category
-                  <span className="ml-1 text-red-500 text-xs">*</span>
-                </Label>
-                <div className="space-y-2">
-                  <Select
-                    value={itemData.category}
-                    onValueChange={value =>
-                      setItemData({ ...itemData, category: value })
-                    }
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories
-                        .filter(category => category.trim() !== '') // Remove empty/whitespace
-                        .map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-
-                  {!showAddCategory ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddCategory(true)}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Custom Category
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        value={customCategory}
-                        onChange={e => setCustomCategory(e.target.value)}
-                        placeholder="Enter custom category"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddCustomCategory();
-                          }
-                          if (e.key === 'Escape') {
-                            setShowAddCategory(false);
-                            setCustomCategory('');
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddCustomCategory}
-                        size="sm"
-                        disabled={!customCategory.trim()}
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddCategory(false);
-                          setCustomCategory('');
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="color">Primary Color</Label>
-                <div className="space-y-2">
-                  <Select
-                    value={itemData.color}
-                    onValueChange={value =>
-                      setItemData({ ...itemData, color: value })
-                    }
-                  >
-                    <SelectTrigger id="color">
-                      <SelectValue placeholder="Select color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colors
-                        .filter(colorOption => colorOption.trim() !== '') // Avoid empty/whitespace
-                        .map(colorOption => (
-                          <SelectItem key={colorOption} value={colorOption}>
-                            {colorOption}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-
-                  {!showAddColor ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddColor(true)}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Custom Color
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        value={customColor}
-                        onChange={e => setCustomColor(e.target.value)}
-                        placeholder="Enter custom color"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddCustomColor();
-                          }
-                          if (e.key === 'Escape') {
-                            setShowAddColor(false);
-                            setCustomColor('');
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddCustomColor}
-                        size="sm"
-                        disabled={!customColor.trim()}
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddColor(false);
-                          setCustomColor('');
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="brand">Brand</Label>
-                <Input
-                  id="brand"
-                  value={itemData.brand}
-                  onChange={e =>
-                    setItemData({ ...itemData, location: e.target.value })
-                  }
-                  placeholder="E.g., Nike, Uniqlo"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="location">Storage Location</Label>
-                <Input
-                  id="location"
-                  value={itemData.location}
-                  onChange={e =>
-                    setItemData({ ...itemData, location: e.target.value })
-                  }
-                  placeholder="E.g., Bedroom closet, Dresser drawer 2"
-                />
-                {!itemData.location && (
-                  <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
-                    💡 Tip: Adding a location helps you find this item quickly
-                    in your wardrobe
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label>Seasons</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {seasons.map(season => (
-                    <Badge
-                      key={season}
-                      variant={
-                        itemData.seasons.includes(season)
-                          ? 'default'
-                          : 'outline'
-                      }
-                      className="cursor-pointer"
-                      onClick={() => handleSeasonToggle(season)}
-                    >
-                      {season}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <Label>Tags</Label>
-                <div className="flex gap-2 mt-2">
+            <TabsContent value="details" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">
+                    Item Name
+                    <span className="ml-1 text-red-500 text-xs">*</span>
+                  </Label>
                   <Input
-                    value={currentTag}
-                    onChange={e => setCurrentTag(e.target.value)}
-                    placeholder="Add a tag (e.g., favorite, new)"
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
+                    id="name"
+                    value={itemData.name}
+                    onChange={e =>
+                      setItemData({ ...itemData, name: e.target.value })
+                    }
+                    placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
                   />
-                  <Button
-                    type="button"
-                    onClick={handleAddTag}
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
                 </div>
 
-                {itemData.tags && itemData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2 mb-2">
-                    {itemData.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tag)}
-                          className="text-blue-600 hover:text-blue-800 ml-1"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <Label>Occasions</Label>
-                <div className="space-y-2">
-                  <div className="flex gap-2 mt-2">
+                <div>
+                  <Label htmlFor="category">
+                    Category
+                    <span className="ml-1 text-red-500 text-xs">*</span>
+                  </Label>
+                  <div className="space-y-2">
                     <Select
-                      value={currentOccasion}
-                      onValueChange={value => {
-                        setCurrentOccasion(value);
-                        if (!itemData.occasions.includes(value)) {
-                          setItemData(prev => ({
-                            ...prev,
-                            occasions: [...prev.occasions, value],
-                          }));
-                        }
-                      }}
+                      value={itemData.category}
+                      onValueChange={value =>
+                        setItemData({ ...itemData, category: value })
+                      }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select or type occasion" />
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {occasions.map(occasion => (
-                          <SelectItem key={occasion} value={occasion}>
-                            {capitalizeFirst(occasion)}
-                          </SelectItem>
-                        ))}
+                        {categories
+                          .filter(category => category.trim() !== '') // Remove empty/whitespace
+                          .map(category => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
+
+                    {!showAddCategory ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddCategory(true)}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Custom Category
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={customCategory}
+                          onChange={e => setCustomCategory(e.target.value)}
+                          placeholder="Enter custom category"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCustomCategory();
+                            }
+                            if (e.key === 'Escape') {
+                              setShowAddCategory(false);
+                              setCustomCategory('');
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddCustomCategory}
+                          size="sm"
+                          disabled={!customCategory.trim()}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddCategory(false);
+                            setCustomCategory('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="color">Primary Color</Label>
+                  <div className="space-y-2">
+                    <Select
+                      value={itemData.color}
+                      onValueChange={value =>
+                        setItemData({ ...itemData, color: value })
+                      }
+                    >
+                      <SelectTrigger id="color">
+                        <SelectValue placeholder="Select color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colors
+                          .filter(colorOption => colorOption.trim() !== '') // Avoid empty/whitespace
+                          .map(colorOption => (
+                            <SelectItem key={colorOption} value={colorOption}>
+                              {colorOption}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+
+                    {!showAddColor ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddColor(true)}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Custom Color
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={customColor}
+                          onChange={e => setCustomColor(e.target.value)}
+                          placeholder="Enter custom color"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCustomColor();
+                            }
+                            if (e.key === 'Escape') {
+                              setShowAddColor(false);
+                              setCustomColor('');
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddCustomColor}
+                          size="sm"
+                          disabled={!customColor.trim()}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddColor(false);
+                            setCustomColor('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="brand">Brand</Label>
+                  <Input
+                    id="brand"
+                    value={itemData.brand}
+                    onChange={e =>
+                      setItemData({ ...itemData, location: e.target.value })
+                    }
+                    placeholder="E.g., Nike, Uniqlo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location">Storage Location</Label>
+                  <Input
+                    id="location"
+                    value={itemData.location}
+                    onChange={e =>
+                      setItemData({ ...itemData, location: e.target.value })
+                    }
+                    placeholder="E.g., Bedroom closet, Dresser drawer 2"
+                  />
+                  {!itemData.location && (
+                    <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                      💡 Tip: Adding a location helps you find this item quickly
+                      in your wardrobe
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Seasons</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {seasons.map(season => (
+                      <Badge
+                        key={season}
+                        variant={
+                          itemData.seasons.includes(season)
+                            ? 'default'
+                            : 'outline'
+                        }
+                        className="cursor-pointer"
+                        onClick={() => handleSeasonToggle(season)}
+                      >
+                        {season}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label>Tags</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={currentTag}
+                      onChange={e => setCurrentTag(e.target.value)}
+                      placeholder="Add a tag (e.g., favorite, new)"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
                     <Button
                       type="button"
-                      onClick={handleAddOccasion}
+                      onClick={handleAddTag}
                       variant="outline"
                     >
                       Add
                     </Button>
                   </div>
 
-                  {!showAddOccasion ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddOccasion(true)}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Custom Occasion
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        value={customOccasion}
-                        onChange={e => setCustomOccasion(e.target.value)}
-                        placeholder="Enter custom occasion"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddCustomOccasion();
-                          }
-                          if (e.key === 'Escape') {
-                            setShowAddOccasion(false);
-                            setCustomOccasion('');
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddCustomOccasion}
-                        size="sm"
-                        disabled={!customOccasion.trim()}
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddOccasion(false);
-                          setCustomOccasion('');
-                        }}
-                      >
-                        Cancel
-                      </Button>
+                  {itemData.tags && itemData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                      {itemData.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="text-blue-600 hover:text-blue-800 ml-1"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-2 mb-2">
-                  {itemData.occasions.map(occasion => (
-                    <span
-                      key={occasion}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
-                    >
-                      {occasion}
-                      <button
-                        className="text-blue-600 hover:text-blue-800 ml-1"
-                        onClick={() => handleRemoveOccasion(occasion)}
+                <div className="md:col-span-2">
+                  <Label>Occasions</Label>
+                  <div className="space-y-2">
+                    <div className="flex gap-2 mt-2">
+                      <Select
+                        value={currentOccasion}
+                        onValueChange={value => {
+                          setCurrentOccasion(value);
+                          if (!itemData.occasions.includes(value)) {
+                            setItemData(prev => ({
+                              ...prev,
+                              occasions: [...prev.occasions, value],
+                            }));
+                          }
+                        }}
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select or type occasion" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {occasions.map(occasion => (
+                            <SelectItem key={occasion} value={occasion}>
+                              {capitalizeFirst(occasion)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        onClick={handleAddOccasion}
+                        variant="outline"
+                      >
+                        Add
+                      </Button>
+                    </div>
+
+                    {!showAddOccasion ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddOccasion(true)}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Custom Occasion
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={customOccasion}
+                          onChange={e => setCustomOccasion(e.target.value)}
+                          placeholder="Enter custom occasion"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCustomOccasion();
+                            }
+                            if (e.key === 'Escape') {
+                              setShowAddOccasion(false);
+                              setCustomOccasion('');
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddCustomOccasion}
+                          size="sm"
+                          disabled={!customOccasion.trim()}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddOccasion(false);
+                            setCustomOccasion('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                    {itemData.occasions.map(occasion => (
+                      <span
+                        key={occasion}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                      >
+                        {occasion}
+                        <button
+                          className="text-blue-600 hover:text-blue-800 ml-1"
+                          onClick={() => handleRemoveOccasion(occasion)}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={itemData.notes}
+                    onChange={e =>
+                      setItemData({ ...itemData, notes: e.target.value })
+                    }
+                    placeholder="Add any additional notes about this item"
+                    className="min-h-[100px]"
+                  />
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={itemData.notes}
-                  onChange={e =>
-                    setItemData({ ...itemData, notes: e.target.value })
-                  }
-                  placeholder="Add any additional notes about this item"
-                  className="min-h-[100px]"
-                />
+              <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-10 sm:pb-0">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  // disabled={
+                  //   !itemData.imagePreview ||
+                  //   !itemData.category ||
+                  //   !itemData.name ||
+                  //   saving
+                  // }
+                >
+                  {saving
+                    ? 'Saving...'
+                    : editingItem
+                    ? 'Update Item'
+                    : 'Save Item'}
+                </Button>
               </div>
-            </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
 
-            <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-10 sm:pb-0">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+      {/* Crop modal - separate Dialog */}
+      {showCropModal && itemData.imagePreview && (
+        <Dialog open={showCropModal} onOpenChange={setShowCropModal}>
+          <DialogContent className="bg-card">
+            <DialogHeader>
+              <DialogTitle>Crop Image</DialogTitle>
+            </DialogHeader>
+            <div className="relative h-96 w-full">
+              <Cropper
+                image={itemData.imagePreview}
+                crop={crop}
+                zoom={zoom}
+                aspect={4 / 3}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCropModal(false)}>
                 Cancel
               </Button>
-              <Button
-                type="button"
-                onClick={handleSave}
-                // disabled={
-                //   !itemData.imagePreview ||
-                //   !itemData.category ||
-                //   !itemData.name ||
-                //   saving
-                // }
-              >
-                {saving
-                  ? 'Saving...'
-                  : editingItem
-                  ? 'Update Item'
-                  : 'Save Item'}
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+              <Button onClick={handleCropSave}>Apply Crop</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };
 
