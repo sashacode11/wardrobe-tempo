@@ -372,7 +372,7 @@ const ClothingItem = ({
 
       {/* Item Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto p-0 overflow-hidden [&>button]:hidden">
+        <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto p-0 overflow-hidden [&>button]:hidden bg-card">
           {/* Image Header with Title Overlay */}
           <div className="relative">
             <div className="relative w-full h-48 sm:h-64 overflow-hidden">
