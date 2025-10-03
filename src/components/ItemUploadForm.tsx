@@ -31,7 +31,7 @@ import { ClothingItemType } from '../types';
 import { capitalizeFirst, parseArrayField } from '../utils/helpers';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { toast } from 'sonner';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { compressImage } from '@/utils/imageCache';
 import { Area } from 'react-easy-crop/types';
 import Cropper from 'react-easy-crop';
@@ -592,7 +592,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-2 bg-gray-50">
                 {itemData.imagePreview ? (
                   <div className="relative w-full max-w-md">
-                    <OptimizedImage
+                    <img
                       src={itemData.imagePreview}
                       alt="Clothing item preview"
                       className="w-full h-auto rounded-md object-contain max-h-[300px]"

@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import { ClothingItemType, OutfitWithItems } from '../types';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 
 interface UnifiedSearchResultsProps {
   onAddItem: () => void;
@@ -92,7 +92,7 @@ const UnifiedSearchResults: React.FC<UnifiedSearchResultsProps> = ({
               >
                 <div className="aspect-square relative overflow-hidden bg-gray-50">
                   {item.image_url ? (
-                    <OptimizedImage
+                    <img
                       src={item.image_url}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -197,7 +197,7 @@ const UnifiedSearchResults: React.FC<UnifiedSearchResultsProps> = ({
                           className="aspect-square bg-gray-50 rounded overflow-hidden"
                         >
                           {item.image_url ? (
-                            <OptimizedImage
+                            <img
                               src={item.image_url}
                               alt={item.name}
                               className="w-full h-full object-cover"

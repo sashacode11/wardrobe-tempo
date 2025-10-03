@@ -34,7 +34,7 @@ import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useFilters } from '@/hooks/useFilters';
 import FloatingOutfitPanel from './FloatingOutfitPanel';
 import { toast } from 'sonner';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { CategoryTabs } from './CategoryTabs';
 import { CategoryContent } from './CategoryContent';
 // import { categories } from '@/lib/data';

@@ -27,7 +27,7 @@ import { useMultiselect } from '../hooks/useMultiSelect';
 import OutfitActions from './common/OutfitActions';
 import OutfitBuilder from './OutfitBuilder';
 import { supabase } from '../lib/supabaseClient';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 
 interface OutfitRepairViewProps {
   onClose: () => void;
@@ -197,7 +197,7 @@ const OutfitRepairView: React.FC<OutfitRepairViewProps> = ({ onClose }) => {
                   {outfit.items.slice(0, 3).map((item, index) => (
                     <div key={index} className="group/item relative">
                       <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
-                        <OptimizedImage
+                        <img
                           src={item.image_url || ''}
                           alt={item.name}
                           className="w-full h-full object-cover"

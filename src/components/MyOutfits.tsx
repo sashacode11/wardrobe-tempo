@@ -25,7 +25,7 @@ import { useOutfitActions } from '../hooks/useOutfitActions';
 import { ClothingItemType, OutfitWithItems } from '@/types';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { useWardrobe } from '../contexts/WardrobeContext';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
 import { OutfitCard } from './OutfitCard';
 
@@ -164,7 +164,7 @@ interface MyOutfitsProps {
 //                             onClick={shouldBlur ? onView : undefined}
 //                           >
 //                             <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0 relative">
-//                               <OptimizedImage
+//                               <img
 //                                 src={item.image_url || ''}
 //                                 alt={item.name}
 //                                 className={`w-full h-full object-cover transition-all duration-300 ${
@@ -417,7 +417,7 @@ const MyOutfits: React.FC<MyOutfitsProps> = ({
                     className="flex flex-col gap-2 p-3 bg-muted rounded-lg hover:shadow-sm transition-shadow"
                   >
                     <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <OptimizedImage
+                      <img
                         src={item.image_url || ''}
                         alt={item.name}
                         className="w-full h-full object-cover"

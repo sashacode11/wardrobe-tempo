@@ -16,7 +16,7 @@ import { capitalizeFirst, parseArrayField } from '@/utils/helpers';
 import { OutfitWithItems, ClothingItemProps } from '@/types';
 import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { supabase } from '@/lib/supabaseClient';
 
 const ClothingItem = ({
@@ -257,11 +257,7 @@ const ClothingItem = ({
         onClick={() => setShowDetails(true)}
       >
         <div className="relative h-[220px] overflow-hidden">
-          <OptimizedImage
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <img src={image} alt={name} className="w-full h-full object-cover" />
           <Badge className="absolute top-2 right-2 bg-white dark:bg-gray-900 text-black dark:text-white px-1.5 py-0.5 text-xs font-medium rounded border border-gray-200 dark:border-gray-700">
             {category}
           </Badge>
@@ -310,7 +306,7 @@ const ClothingItem = ({
                             className="flex-shrink-0 w-10 h-10 sm:w-14 sm:h-14"
                           >
                             <div className="w-full h-full bg-muted rounded-lg overflow-hidden border-2 border-border">
-                              <OptimizedImage
+                              <img
                                 src={clothingItemData.image_url || ''}
                                 alt={clothingItemData.name}
                                 className="w-full h-full object-cover"
@@ -376,7 +372,7 @@ const ClothingItem = ({
           {/* Image Header with Title Overlay */}
           <div className="relative">
             <div className="relative w-full h-48 sm:h-64 overflow-hidden">
-              <OptimizedImage
+              <img
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"

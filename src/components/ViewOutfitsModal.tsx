@@ -18,7 +18,7 @@ import OutfitActions from './common/OutfitActions';
 // import ViewModal from './common/ViewModal';
 import { useOutfitActions } from '../hooks/useOutfitActions';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
 import { on } from 'events';
 import { OutfitCard } from './OutfitCard';
@@ -169,7 +169,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
             {clothingItem && (
               <div className="flex items-center gap-3 pt-2">
                 <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden">
-                  <OptimizedImage
+                  <img
                     src={clothingItem.image_url || ''}
                     alt={clothingItem.name}
                     className="w-full h-full object-cover"
@@ -223,7 +223,7 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
                       className="text-center"
                     >
                       <div className="w-full aspect-square bg-muted rounded-md overflow-hidden mb-1">
-                        <OptimizedImage
+                        <img
                           src={item.image_url || ''}
                           alt={item.name}
                           className="w-full h-full object-cover"

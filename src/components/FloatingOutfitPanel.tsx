@@ -9,7 +9,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from 'lucide-react';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 
 const FloatingOutfitPanel = ({
   currentOutfit,
@@ -106,7 +106,7 @@ const FloatingOutfitPanel = ({
                         className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-700/60 rounded-xl border border-slate-200/40 dark:border-gray-600/40 hover:bg-white/80 dark:hover:bg-gray-700/80 transition-all duration-300 group"
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
-                          <OptimizedImage
+                          <img
                             src={item.image_url}
                             alt={item.name}
                             className="w-full h-full object-cover rounded-lg shadow-sm"
@@ -159,7 +159,7 @@ const FloatingOutfitPanel = ({
                         className="relative w-10 h-10 rounded-lg overflow-hidden border-2 border-white dark:border-gray-700 shadow-sm"
                         style={{ zIndex: 10 - index }}
                       >
-                        <OptimizedImage
+                        <img
                           src={item.image_url}
                           alt={item.name}
                           className="w-full h-full object-cover"
@@ -257,7 +257,7 @@ const FloatingOutfitPanel = ({
                           className="relative w-9 h-9 rounded-lg overflow-hidden border-2 border-white dark:border-gray-700 shadow-sm"
                           style={{ zIndex: 10 - index }}
                         >
-                          <OptimizedImage
+                          <img
                             src={item.image_url}
                             alt={item.name}
                             className="w-full h-full object-cover"
@@ -374,7 +374,7 @@ const FloatingOutfitPanel = ({
                             className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-700/60 rounded-xl border border-slate-200/40 dark:border-gray-600/40"
                           >
                             <div className="relative w-10 h-10 flex-shrink-0">
-                              <OptimizedImage
+                              <img
                                 src={item.image_url}
                                 alt={item.name}
                                 className="w-full h-full object-cover rounded-lg shadow-sm"

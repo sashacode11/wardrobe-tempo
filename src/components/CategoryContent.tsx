@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, Plus } from 'lucide-react';
 import { ClothingItemType } from '@/types';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 
 interface CategoryContentProps {
   items: ClothingItemType[];
@@ -45,7 +45,7 @@ export const CategoryContent: React.FC<CategoryContentProps> = ({
                 >
                   <CardContent className="p-0">
                     <div className="relative w-full h-40 overflow-hidden">
-                      <OptimizedImage
+                      <img
                         src={item.image_url}
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

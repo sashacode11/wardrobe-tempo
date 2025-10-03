@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { OutfitWithItems, ClothingItemType } from '@/types';
 import OutfitActions from './common/OutfitActions';
 import SelectionCheckbox from './common/SelectionCheckbox';
-import { OptimizedImage } from './OptimizedImage';
+import { OptimizedImage } from '../trash/OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
 
 interface OutfitCardProps {
@@ -147,7 +147,7 @@ export const OutfitCard = React.memo<OutfitCardProps>(
                             onClick={shouldBlur ? onView : undefined}
                           >
                             <div className="aspect-square bg-gradient-to-br from-gray-50 dark:from-gray-700 to-gray-100 dark:to-gray-600 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm group-hover/item:shadow-md transition-all duration-200 flex-shrink-0 relative">
-                              <OptimizedImage
+                              <img
                                 src={item.image_url || ''}
                                 alt={item.name}
                                 className={`w-full h-full object-cover transition-all duration-300 ${
