@@ -202,9 +202,19 @@ const Home = () => {
     return result;
   }, [filteredItems, activeCategory]);
 
-  const handleItemSaved = () => {
+  const handleItemSaved = async () => {
+    console.log(
+      'Before refresh:',
+      items.find(i => i.id === editingItem?.id)
+    );
+
     // Refresh data from global context
-    refreshItems();
+    await refreshItems(true);
+    console.log(
+      'After refresh:',
+      items.find(i => i.id === editingItem?.id)
+    );
+
     setWardrobeKey(prev => prev + 1);
   };
 
