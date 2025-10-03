@@ -137,8 +137,8 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
         image: null,
         imagePreview: editingItem.image_url || null,
         name: editingItem.name || '',
-        category: editingItem.category || '',
-        color: editingItem.color || '',
+        category: capitalizeFirst(editingItem.category || ''),
+        color: capitalizeFirst(editingItem.color || ''),
         brand: editingItem.brand || '',
         location: editingItem.location || '',
         tags: parseArrayField(editingItem.tags),
@@ -858,7 +858,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     id="brand"
                     value={itemData.brand}
                     onChange={e =>
-                      setItemData({ ...itemData, location: e.target.value })
+                      setItemData({ ...itemData, brand: e.target.value })
                     }
                     placeholder="E.g., Nike, Uniqlo"
                   />
