@@ -250,7 +250,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
               image: compressedFile, // Use compressed file
               imagePreview: event.target.result as string,
             });
-            setActiveTab('details');
+            // setActiveTab('details');
           }
         };
         reader.readAsDataURL(compressedFile);
@@ -535,17 +535,20 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
               ) : (
                 <div className="space-y-4 text-center">
                   <div className="flex flex-col items-center gap-4">
-                    <Upload className="h-10 w-10 text-gray-400" />
-                    <p className="text-sm text-gray-500">
-                      Drag and drop an image or click to browse
+                    <Upload className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      <span className="hidden md:inline">
+                        Drag and drop an image or click to browse
+                      </span>
+                      <span className="md:hidden">Tap to add a photo</span>
                     </p>
                   </div>
 
                   <div className="flex gap-4 justify-center">
                     <Button asChild variant="outline">
                       <label htmlFor="file-upload" className="cursor-pointer">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload File
+                        <Camera className="h-4 w-4 mr-2" />
+                        Add Photo
                       </label>
                     </Button>
                     <Input
@@ -555,19 +558,20 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       className="hidden"
                       onChange={handleImageUpload}
                     />
-                    <Button variant="outline">
+                    {/* <Button variant="outline">
                       <Camera className="h-4 w-4 mr-2" />
                       Take Photo
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               )}
             </div>
 
             {itemData.imagePreview && (
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() =>
                     setItemData({
                       ...itemData,
@@ -579,11 +583,14 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   Choose Different Image
                 </Button>
                 <div className="flex gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" className="flex-1 sm:flex-none">
                     <Crop className="h-4 w-4 mr-2" />
                     Crop Image
                   </Button>
-                  <Button onClick={() => setActiveTab('details')}>
+                  <Button
+                    onClick={() => setActiveTab('details')}
+                    className="flex-1 sm:flex-none"
+                  >
                     Continue
                   </Button>
                 </div>
@@ -973,25 +980,30 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                 />
               </div>
             </div>
+
+            <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-10 sm:pb-0">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                // disabled={
+                //   !itemData.imagePreview ||
+                //   !itemData.category ||
+                //   !itemData.name ||
+                //   saving
+                // }
+              >
+                {saving
+                  ? 'Saving...'
+                  : editingItem
+                  ? 'Update Item'
+                  : 'Save Item'}
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
-        <DialogFooter className="flex flex-row justify-end gap-2 bg-white mb-5 pb-10 sm:pb-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            // disabled={
-            //   !itemData.imagePreview ||
-            //   !itemData.category ||
-            //   !itemData.name ||
-            //   saving
-            // }
-          >
-            {saving ? 'Saving...' : editingItem ? 'Update Item' : 'Save Item'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
