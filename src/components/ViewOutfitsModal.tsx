@@ -21,6 +21,7 @@ import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { OptimizedImage } from './OptimizedImage';
 import { capitalizeFirst } from '@/utils/helpers';
 import { on } from 'events';
+import { OutfitCard } from './OutfitCard';
 
 interface ViewOutfitsModalProps {
   isOpen: boolean;
@@ -29,167 +30,6 @@ interface ViewOutfitsModalProps {
   onViewOutfit?: (outfit: OutfitWithItems) => void;
   onEditOutfit?: (outfit: OutfitWithItems) => void;
 }
-
-interface OutfitCardProps {
-  outfit: OutfitWithItems;
-  categories: string[];
-  clothingItemId?: number | null;
-  onView: (outfit: OutfitWithItems) => void;
-  onEdit: (outfit: OutfitWithItems) => void;
-  onDelete: (outfit: OutfitWithItems) => void;
-}
-
-// Shared function - moved outside components
-const organizeOutfitItems = (
-  outfit: OutfitWithItems
-): { [key: string]: ClothingItemType[] } => {
-  const organized: { [key: string]: ClothingItemType[] } = {};
-
-  if (!outfit.outfit_items) {
-    return organized;
-  }
-
-  outfit.outfit_items.forEach(item => {
-    const clothingItemData = item.wardrobe_items;
-    if (clothingItemData) {
-      const category = clothingItemData.category;
-      if (!organized[category]) {
-        organized[category] = [];
-      }
-      organized[category].push(clothingItemData);
-    }
-  });
-
-  return organized;
-};
-
-// OutfitCard component - moved before ViewOutfitsModal
-const OutfitCard = React.memo<OutfitCardProps>(
-  ({ outfit, categories, clothingItemId, onView, onEdit, onDelete }) => {
-    const itemsByCategory = organizeOutfitItems(outfit);
-
-    const handleView = useCallback(() => {
-      onView(outfit);
-    }, [onView, outfit]);
-
-    const handleEdit = useCallback(() => {
-      onEdit(outfit);
-    }, [onEdit, outfit]);
-
-    const handleDelete = useCallback(() => {
-      onDelete(outfit);
-    }, [onDelete, outfit]);
-
-    return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="p-2">
-          <div className="flex justify-between items-start">
-            <div className="flex flex-row items-center gap-3">
-              <CardTitle className="text-lg">
-                {capitalizeFirst(outfit.name)}
-              </CardTitle>
-              {outfit.occasions && outfit.occasions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {outfit.occasions.slice(0, 2).map((occasion, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {occasion}
-                    </Badge>
-                  ))}
-                  {outfit.occasions.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{outfit.occasions.length - 2} more
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-1 ml-2">
-              <OutfitActions
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                viewTitle="View outfit details"
-                editTitle="Edit outfit"
-                deleteTitle="Delete outfit"
-              />
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="pt-0 px-2">
-          <div className="flex flex-row gap-2 flex-wrap">
-            {categories.map(category => {
-              const items = itemsByCategory[category] || [];
-
-              if (items.length === 0) {
-                return (
-                  <div key={category} className="text-center">
-                    <div className="w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 border-muted bg-muted">
-                      <div className="text-muted-foreground text-xs">-</div>
-                    </div>
-                    <p className="text-xs text-muted-foreground capitalize truncate">
-                      {category}
-                    </p>
-                  </div>
-                );
-              }
-
-              return (
-                <React.Fragment key={category}>
-                  {items.map((item, index) => {
-                    const isCurrentItem = item.id === clothingItemId;
-
-                    return (
-                      <div
-                        key={`${category}-${item.id}-${index}`}
-                        className="text-center"
-                      >
-                        <div
-                          className={`w-12 h-12 rounded-md mb-1 flex items-center justify-center overflow-hidden border-2 transition-colors ${
-                            isCurrentItem
-                              ? 'border-primary bg-primary/10'
-                              : 'border-muted bg-muted'
-                          }`}
-                        >
-                          <OptimizedImage
-                            src={item.image_url || ''}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground capitalize truncate w-12">
-                          {category}
-                        </p>
-                        <p className="text-xs text-muted-foreground capitalize truncate w-12">
-                          {item.location}
-                        </p>
-                        {isCurrentItem && (
-                          <div className="w-2 h-2 bg-primary rounded-full mx-auto mt-1"></div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  },
-  (prevProps, nextProps) => {
-    return (
-      prevProps.outfit.id === nextProps.outfit.id &&
-      prevProps.outfit.outfit_items?.length ===
-        nextProps.outfit.outfit_items?.length &&
-      prevProps.clothingItemId === nextProps.clothingItemId &&
-      prevProps.categories.length === nextProps.categories.length
-    );
-  }
-);
-
-OutfitCard.displayName = 'OutfitCard';
 
 const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
   isOpen,
@@ -203,22 +43,16 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
 
   const { categories } = useWardrobeItems();
 
-  const { selectedItem, showViewModal, handleView, closeModals } =
-    useOutfitActions<OutfitWithItems>({
-      onView: outfit => {
-        if (onViewOutfit) {
-          onViewOutfit(outfit);
-        }
-      },
-    });
+  // const { selectedItem, showViewModal, handleView, closeModals } =
+  //   useOutfitActions<OutfitWithItems>({
+  //     onView: outfit => {
+  //       if (onViewOutfit) {
+  //         onViewOutfit(outfit);
+  //       }
+  //     },
+  //   });
 
   useEffect(() => {
-    console.log('[ViewOutfitsModal] Main useEffect triggered:', {
-      isOpen,
-      clothingItemId: clothingItem?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     if (isOpen && clothingItem?.id) {
       console.log(
         '[ViewOutfitsModal] Fetching outfits for item:',
@@ -233,16 +67,16 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
     }
   }, [isOpen, clothingItem?.id, fetchItemOutfits, clearOutfits]);
 
-  const handleEditOutfit = useCallback(
-    (outfit: OutfitWithItems) => {
-      onClose();
+  // const handleEditOutfit = useCallback(
+  //   (outfit: OutfitWithItems) => {
+  //     onClose();
 
-      if (onEditOutfit && typeof onEditOutfit === 'function') {
-        onEditOutfit(outfit);
-      }
-    },
-    [onEditOutfit, onClose]
-  );
+  //     if (onEditOutfit && typeof onEditOutfit === 'function') {
+  //       onEditOutfit(outfit);
+  //     }
+  //   },
+  //   [onEditOutfit, onClose]
+  // );
 
   const handleDeleteOutfit = useCallback((outfit: OutfitWithItems) => {
     console.log('Delete outfit:', outfit.id);
@@ -298,9 +132,9 @@ const ViewOutfitsModal: React.FC<ViewOutfitsModalProps> = ({
               outfit={outfit}
               categories={categories}
               clothingItemId={clothingItem?.id}
-              onView={handleView}
-              onEdit={handleEditOutfit}
-              onDelete={handleDeleteOutfit}
+              // onView={handleView}
+              // onEdit={handleEditOutfit}
+              // onDelete={handleDeleteOutfit}
             />
           ))}
         </div>
