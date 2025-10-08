@@ -559,7 +559,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-white w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
+        <DialogContent className="bg-card w-full max-w-md sm:max-w-2xl max-h-[100vh] overflow-y-auto flex flex-col mx-0 pb-4">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold ">
               {editingItem ? 'Edit Clothing Item' : 'Add New Clothing Item'}
@@ -1059,7 +1059,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-20 sm:pb-0">
+              <div className="flex flex-row justify-end gap-2 bg-card mb-5 pb-20 sm:pb-0">
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
