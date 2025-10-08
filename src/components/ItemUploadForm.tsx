@@ -389,8 +389,8 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       return;
     }
 
-    if (!itemData.name) {
-      toast.error('Please give this item a name');
+    if (!itemData.location) {
+      toast.error('Please specify where this item is stored');
       return;
     }
 
@@ -398,12 +398,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       toast.error('Please select a category for your item');
       return;
     }
-
-    // if (!itemData.location) {
-    //   toast.warning(
-    //     'Pro tip: Add a location to easily find this item in your closet'
-    //   );
-    // }
 
     if (currentTag.trim()) {
       toast.warning('Please press Enter or click Add to include the tag.');
@@ -685,21 +679,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             <TabsContent value="details" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">
-                    Item Name
-                    <span className="ml-1 text-red-500 text-xs">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={itemData.name}
-                    onChange={e =>
-                      setItemData({ ...itemData, name: e.target.value })
-                    }
-                    placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
-                  />
-                </div>
-
-                <div>
                   <Label htmlFor="category">
                     Category
                     <span className="ml-1 text-red-500 text-xs">*</span>
@@ -775,6 +754,39 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="location">Storage Location</Label>
+                  <Input
+                    id="location"
+                    value={itemData.location}
+                    onChange={e =>
+                      setItemData({ ...itemData, location: e.target.value })
+                    }
+                    placeholder="E.g., Bedroom closet, Dresser drawer 2"
+                  />
+                  {!itemData.location && (
+                    <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                      💡 Tip: Adding a location helps you find this item quickly
+                      in your wardrobe
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="name">
+                    Item Name
+                    {/* <span className="ml-1 text-red-500 text-xs">*</span> */}
+                  </Label>
+                  <Input
+                    id="name"
+                    value={itemData.name}
+                    onChange={e =>
+                      setItemData({ ...itemData, name: e.target.value })
+                    }
+                    placeholder="e.g., White Linen Shirt, Black Ankle Boots..."
+                  />
                 </div>
 
                 <div>
@@ -862,24 +874,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                     }
                     placeholder="E.g., Nike, Uniqlo"
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="location">Storage Location</Label>
-                  <Input
-                    id="location"
-                    value={itemData.location}
-                    onChange={e =>
-                      setItemData({ ...itemData, location: e.target.value })
-                    }
-                    placeholder="E.g., Bedroom closet, Dresser drawer 2"
-                  />
-                  {!itemData.location && (
-                    <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
-                      💡 Tip: Adding a location helps you find this item quickly
-                      in your wardrobe
-                    </div>
-                  )}
                 </div>
 
                 <div>
@@ -1065,7 +1059,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-10 sm:pb-0">
+              <div className="flex flex-row justify-end gap-2 bg-white mb-5 pb-20 sm:pb-0">
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
@@ -1103,7 +1097,9 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                 image={itemData.imagePreview}
                 crop={crop}
                 zoom={zoom}
-                aspect={4 / 3}
+                aspect={undefined}
+                minZoom={0.5}
+                maxZoom={5}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
