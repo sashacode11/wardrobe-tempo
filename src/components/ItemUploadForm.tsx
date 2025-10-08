@@ -570,7 +570,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 mb-4">
+            <TabsList className="grid grid-cols-2 mb-4 bg-foreground/5">
               <TabsTrigger value="upload">
                 Upload Image
                 {!itemData.imagePreview && (
@@ -583,7 +583,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
             </TabsList>
 
             <TabsContent value="upload" className="space-y-4">
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-2 bg-gray-50">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-2 bg-muted">
                 {itemData.imagePreview ? (
                   <div className="relative w-full max-w-md">
                     <img
