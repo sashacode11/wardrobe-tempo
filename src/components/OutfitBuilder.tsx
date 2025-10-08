@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import { OptimizedImage } from '../trash/OptimizedImage';
 import { CategoryTabs } from './CategoryTabs';
 import { CategoryContent } from './CategoryContent';
+import { useWardrobe } from '@/contexts/WardrobeContext';
 // import { categories } from '@/lib/data';
 
 const OutfitBuilder = ({
@@ -48,6 +49,8 @@ const OutfitBuilder = ({
   onEditComplete,
 }: OutfitBuilderProps) => {
   const { wardrobeItems, setWardrobeItems, categories } = useWardrobeItems();
+
+  const { refreshAll } = useWardrobe();
 
   const [loading, setLoading] = useState(true);
 
@@ -321,6 +324,8 @@ const OutfitBuilder = ({
 
         toast.success('Outfit saved successfully!');
       }
+      await refreshAll();
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Close the save dialog first
       setSaveDialogOpen(false);
@@ -541,7 +546,7 @@ const OutfitBuilder = ({
 
         {/* Enhanced Save Dialog */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogContent className="bg-background/95 backdrop-blur-xl border-0 shadow-2xl">
+          <DialogContent className="bg-card backdrop-blur-xl border-0 shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {isEditing ? 'Update Outfit' : 'Save Your Outfit'}

@@ -29,7 +29,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import OutfitRepairView from './OutfitRepairView';
 import { Tabs } from '@radix-ui/react-tabs';
-import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
+import IncompleteOutfitsNotification from '../trash/IncompleteOutfitsNotification';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import EmptyWardrobeState from './EmptyWardrobeState';
 
@@ -323,13 +323,13 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
         )}
       </div>
 
-      {!isNotificationDismissed && (
+      {/* {!isNotificationDismissed && (
         <IncompleteOutfitsNotification
           onFixOutfits={() => setShowRepairView(true)}
           onDismiss={() => setIsNotificationDismissed(true)}
           showDismiss={true}
         />
-      )}
+      )} */}
 
       {/* Initial Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -359,7 +359,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
 
       {/* Outfit Impact Warning Dialog */}
       <AlertDialog open={showOutfitWarning} onOpenChange={setShowOutfitWarning}>
-        <AlertDialogContent className="sm:max-w-lg">
+        <AlertDialogContent className="sm:max-w-lg bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-xl font-semibold text-amber-700">
               <AlertTriangle className="h-5 w-5" />
@@ -367,12 +367,17 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
-                <p className="text-gray-600">
+                {/* <p className="text-gray-600">
                   Deleting these items will affect{' '}
                   <strong>{affectedOutfits.length}</strong> outfit
                   {affectedOutfits.length !== 1 ? 's' : ''}. The affected
                   outfits will be marked as
                   <strong> incomplete</strong> and you can fix them later.
+                </p> */}
+                <p className="text-gray-600">
+                  Deleting these items will affect{' '}
+                  <strong>{affectedOutfits.length}</strong> outfit
+                  {affectedOutfits.length !== 1 ? 's' : ''}.
                 </p>
 
                 {/* Show affected outfits */}
@@ -398,7 +403,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-3">
+                {/* <div className="bg-blue-50 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
                     <strong>What happens next:</strong>
                     <br />
@@ -408,7 +413,7 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
                     <br />• You can add replacement items or delete incomplete
                     outfits
                   </p>
-                </div>
+                </div> */}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -418,7 +423,8 @@ const WardrobeGrid: React.FC<WardrobeGridProps> = ({
               onClick={() => handleConfirmedDelete(pendingDeleteIds)}
               className="bg-red-600 hover:bg-red-700 text-white px-6"
             >
-              Delete Items & Mark Outfits Incomplete
+              {/* Delete Items & Mark Outfits Incomplete */}
+              Delete Item
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

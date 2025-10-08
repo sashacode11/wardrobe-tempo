@@ -18,6 +18,7 @@ import ViewOutfitsModal from './ViewOutfitsModal';
 import OutfitBuilder from './OutfitBuilder';
 import { OptimizedImage } from '../trash/OptimizedImage';
 import { supabase } from '@/lib/supabaseClient';
+import { useWardrobe } from '../contexts/WardrobeContext'; // Add this import
 
 const ClothingItem = ({
   id = 'unknown',
@@ -42,7 +43,13 @@ const ClothingItem = ({
     null
   );
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  // const { name, category, image_url: image } = item;
+  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
+    null
+  );
+  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
+
+  // Get the refresh function from context
+  const { refreshOutfits } = useWardrobe();
 
   useEffect(() => {
     const fetchPreviewOutfit = async () => {
@@ -119,16 +126,6 @@ const ClothingItem = ({
     setShowDetails(false);
   };
 
-  const [editingOutfit, setEditingOutfit] = useState<OutfitWithItems | null>(
-    null
-  );
-
-  const [showOutfitBuilder, setShowOutfitBuilder] = useState(false);
-
-  function fetchOutfits() {
-    throw new Error('Function not implemented.');
-  }
-
   const handleClose = () => {
     setShowOutfitBuilder(false);
 
@@ -136,6 +133,53 @@ const ClothingItem = ({
     setTimeout(() => {
       setEditingOutfit(null);
     }, 300); // match Dialog close animation duration
+  };
+
+  const handleOutfitSaved = async () => {
+    // Refresh the outfits list
+    await refreshOutfits();
+
+    // Close the builder
+    setShowOutfitBuilder(false);
+    setEditingOutfit(null);
+
+    // Optionally refresh the preview outfit for this item
+    if (id && id !== 'unknown') {
+      try {
+        const { data } = await supabase
+          .from('outfit_items')
+          .select(
+            `
+            outfits (
+              id,
+              name,
+              occasions,
+              created_at,
+              outfit_items (
+                id,
+                clothing_item_id,
+                wardrobe_items (
+                  id,
+                  name,
+                  category,
+                  color,
+                  image_url
+                )
+              )
+            )
+          `
+          )
+          .eq('clothing_item_id', id)
+          .limit(1)
+          .single();
+
+        if (data && data.outfits) {
+          setPreviewOutfit(data.outfits as any);
+        }
+      } catch (error) {
+        console.error('Error refreshing preview outfit:', error);
+      }
+    }
   };
 
   // Modal data configuration
@@ -261,15 +305,7 @@ const ClothingItem = ({
           <Badge className="absolute top-2 right-2 bg-white dark:bg-gray-900 text-black dark:text-white px-1.5 py-0.5 text-xs font-medium rounded border border-gray-200 dark:border-gray-700">
             {category}
           </Badge>
-          {/* <button
-            className="absolute bottom-2 left-2 text-xs p-2 rounded-md shadow-lg px-3 py-1 bg-black/70 dark:bg-gray-800 text-white font-medium hover:bg-black/80 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={handleViewOutfit}
-            type="button"
-          >
-            View Outfits
-          </button> */}
-          {/* "Complete the Look" Section - Shows preview of first outfit */}
-          {/* "Complete the Look" Section - Shows preview of first outfit */}
+
           {!isLoadingPreview &&
             previewOutfit &&
             previewOutfit.outfit_items &&
@@ -288,7 +324,6 @@ const ClothingItem = ({
                       <ChevronRight className="h-5 w-5 text-foreground flex-shrink-0" />
                     </div>
 
-                    {/* Horizontal scrollable row of items from first outfit */}
                     <div
                       className="flex gap-0 overflow-x-auto scrollbar-hide"
                       style={{
@@ -326,7 +361,6 @@ const ClothingItem = ({
           <h3 className="font-medium text-sm truncate text-foreground">
             {capitalizeFirst(name)}
           </h3>
-          {/* <p className="text-xs text-muted-foreground">{color}</p> */}
           <div className="flex items-center justify-between mt-1">
             <span className="text-sm text-foreground capitalize ">
               {location}
@@ -339,11 +373,6 @@ const ClothingItem = ({
               />
             )}
           </div>
-          {/* {brand && (
-    <p className="text-xs text-gray-500 mt-1 truncate">
-      {brand}
-    </p>
-  )} */}
         </CardContent>
       </Card>
 
@@ -351,7 +380,6 @@ const ClothingItem = ({
       <ViewOutfitsModal
         isOpen={showOutfitsModal}
         onClose={() => setShowOutfitsModal(false)}
-        // clothingItem={}
         clothingItem={{
           id,
           name,
@@ -361,15 +389,14 @@ const ClothingItem = ({
         }}
         onViewOutfit={handleOutfitView}
         onEditOutfit={outfit => {
-          setEditingOutfit(outfit); // Set the outfit to edit
-          setShowOutfitBuilder(true); // Open the builder
+          setEditingOutfit(outfit);
+          setShowOutfitBuilder(true);
         }}
       />
 
       {/* Item Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="w-full max-w-md max-h-[90vh] mx-auto p-0 overflow-hidden [&>button]:hidden bg-card">
-          {/* Image Header with Title Overlay */}
           <div className="relative">
             <div className="relative w-full h-48 sm:h-64 overflow-hidden">
               <img
@@ -377,17 +404,14 @@ const ClothingItem = ({
                 alt={name}
                 className="w-full h-full object-contain"
               />
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-              {/* Title overlay on image */}
               <div className="absolute bottom-4 left-4 right-4">
                 <h2 className="text-white text-xl font-bold drop-shadow-lg">
                   {capitalizeFirst(name)}
                 </h2>
               </div>
 
-              {/* Close button */}
               <DialogPrimitive.Close className="absolute top-4 right-4 w-8 h-8 bg-black/20 dark:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white dark:text-black hover:bg-black/30 dark:hover:bg-white/30 transition-colors">
                 <X className="h-4 w-4" />
               </DialogPrimitive.Close>
@@ -395,21 +419,18 @@ const ClothingItem = ({
           </div>
 
           <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
-            {/* Details Grid - Now data-driven */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               {detailFields.map(field => (
                 <DetailField key={field.id} field={field} />
               ))}
             </div>
 
-            {/* Meta Fields - Now data-driven */}
             <div className="space-y-4 mb-6">
               {metaFields.map(field => (
                 <MetaField key={field.id} field={field} />
               ))}
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -441,7 +462,7 @@ const ClothingItem = ({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
@@ -466,15 +487,8 @@ const ClothingItem = ({
           isOpen={showOutfitBuilder}
           editingOutfit={editingOutfit}
           onClose={handleClose}
-          onEditComplete={() => {
-            // Optionally refresh outfits
-            fetchOutfits(); // or whatever refresh function you have
-          }}
-          onOutfitSaved={() => {
-            fetchOutfits();
-            setShowOutfitBuilder(false);
-            setEditingOutfit(null);
-          }}
+          onEditComplete={handleOutfitSaved}
+          onOutfitSaved={handleOutfitSaved}
         />
       )}
     </>

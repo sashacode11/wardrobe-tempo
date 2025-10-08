@@ -40,7 +40,7 @@ import { capitalizeFirst } from '@/utils/helpers';
 import { useWardrobe } from '../contexts/WardrobeContext';
 import UnifiedSearchResults from './SearchResults';
 import OutfitRepairView from './OutfitRepairView';
-import IncompleteOutfitsNotification from './IncompleteOutfitsNotification';
+import IncompleteOutfitsNotification from '../trash/IncompleteOutfitsNotification';
 import LanguageSelector from './LanguageSelector';
 import SettingsModal from './settings/SettingsModal';
 import MobileMenu from './MobileMenu';
