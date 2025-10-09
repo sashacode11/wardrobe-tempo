@@ -20,7 +20,7 @@ interface FilterPanelContainerProps {
   clearAllFilters: () => void;
   clearFilter: (key: string) => void;
   updateFilter: (key: string, value: any) => void;
-  filterConfigs: any[]; // replace with your actual type
+  filterConfigs: any[];
 
   // UI mode
   isMobile?: boolean;
@@ -44,7 +44,7 @@ const FilterPanelContainer: React.FC<FilterPanelContainerProps> = ({
   onClose,
 }) => {
   return (
-    <div className="flex flex-col h-fit bg-background">
+    <div className="flex flex-col  h-[calc(100vh-180px)]  bg-card">
       {/* Header */}
       <div
         className={`p-2 ${

@@ -26,6 +26,10 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
     const colors = [...new Set(items.map(item => item.color).filter(Boolean))];
     const brands = [...new Set(items.map(item => item.brand).filter(Boolean))];
     const seasons = [...new Set(items.flatMap(item => item.seasons || []))];
+    const locations = [
+      ...new Set(items.map(item => item.location).filter(Boolean)),
+    ];
+    const occasions = [...new Set(items.flatMap(item => item.occasions || []))];
 
     return [
       ...categories
@@ -40,6 +44,12 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
       ...seasons
         .slice(0, 2)
         .map(season => ({ type: 'season', value: season, icon: Calendar })),
+      ...locations
+        .slice(0, 2)
+        .map(location => ({ type: 'location', value: location, icon: Search })),
+      ...occasions
+        .slice(0, 2)
+        .map(occasion => ({ type: 'occasion', value: occasion, icon: Search })),
     ].slice(0, 8); // Limit to 8 suggestions
   }, [items, currentQuery]);
 

@@ -129,6 +129,7 @@ const Home = () => {
     seasons,
     occasions,
     loading: metadataLoading,
+    locations,
   } = useWardrobeItems();
 
   // Category filter
@@ -166,6 +167,12 @@ const Home = () => {
       label: 'Occasion',
       options: occasions,
       placeholder: 'Select occasion',
+    },
+    {
+      key: 'location',
+      label: 'Location',
+      options: locations,
+      placeholder: 'Select location',
     },
   ];
 

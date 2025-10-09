@@ -1,5 +1,5 @@
 // FilterPanel.tsx
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '../ui/button';
 import { ChevronDown } from 'lucide-react';
 import { FilterConfig } from '@/hooks/useFilters';
@@ -16,9 +16,37 @@ const FilterPanel = ({
   activeFilters,
   onUpdateFilter,
 }: FilterPanelProps) => {
+  // 💡 Compute expanded state based on active filters
+  const initialExpanded = useMemo(() => {
+    const expanded: Record<string, boolean> = {};
+    filters.forEach(filter => {
+      // Open if there's an active value for this filter
+      expanded[filter.key] = !!activeFilters[filter.key];
+    });
+    return expanded;
+  }, [filters, activeFilters]);
+
   const [expandedFilters, setExpandedFilters] = useState<
     Record<string, boolean>
   >({});
+
+  // 🔁 Keep expanded state in sync when activeFilters change
+  React.useEffect(() => {
+    const newExpanded = { ...expandedFilters };
+    let hasChanges = false;
+
+    filters.forEach(filter => {
+      const isActive = !!activeFilters[filter.key];
+      if (isActive && !newExpanded[filter.key]) {
+        newExpanded[filter.key] = true;
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      setExpandedFilters(newExpanded);
+    }
+  }, [activeFilters, filters, expandedFilters]);
 
   const toggleExpand = (key: string) => {
     setExpandedFilters(prev => ({

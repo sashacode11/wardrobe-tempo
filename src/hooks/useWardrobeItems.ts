@@ -2,6 +2,7 @@
 import { ClothingItemType } from '@/types';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { getCurrentUser, supabase } from '../lib/supabaseClient';
+import { formatForDisplay, normalizeForKey } from '@/utils/helpers';
 
 export function getUniqueCategories(items: ClothingItemType[]): string[] {
   if (!items || !Array.isArray(items)) return [];
@@ -276,6 +277,24 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     [localData.items]
   );
 
+  const locations = useMemo(() => {
+    const seen = new Set<string>();
+    const uniqueLocations: string[] = [];
+
+    localData.items.forEach(item => {
+      const rawLoc = item?.location;
+      if (!rawLoc) return;
+
+      const key = normalizeForKey(rawLoc);
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueLocations.push(formatForDisplay(rawLoc));
+      }
+    });
+
+    return uniqueLocations;
+  }, [localData.items]);
+
   const refetch = useCallback(async () => {
     // Clear cache and fetch fresh data
     globalWardrobeCache.data = null;
@@ -309,6 +328,7 @@ export function useWardrobeItems(initialItems: ClothingItemType[] = []) {
     seasons,
     occasions,
     brands,
+    locations,
     loading: localData.loading,
     error: localData.error,
     refetch,

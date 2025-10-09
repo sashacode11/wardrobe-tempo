@@ -74,6 +74,14 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
       return [];
     }
 
+    const normalizeLocation = (str: string): string => {
+      if (typeof str !== 'string') return '';
+      return str
+        .toLowerCase()
+        .replace(/\s+/g, '') // remove all whitespace
+        .replace(/[^a-z0-9]/g, ''); // keep only letters and digits
+    };
+
     const filtered = items.filter(item => {
       // Check each filter
       for (const config of filterConfigs) {
@@ -91,10 +99,18 @@ export const useFilters = <T>(items: T[], options: UseFiltersOptions) => {
           itemValue = (item as any)[singularKey];
         }
 
-        const matches = valueContainsFilter(itemValue, filterValue);
+        if (config.key === 'location') {
+          const normalizedFilter = normalizeLocation(filterValue);
+          const normalizedItem = normalizeLocation(itemValue);
+          if (normalizedFilter !== normalizedItem) {
+            return false;
+          }
+        } else {
+          const matches = valueContainsFilter(itemValue, filterValue);
 
-        if (!matches) {
-          return false;
+          if (!matches) {
+            return false;
+          }
         }
       }
 
