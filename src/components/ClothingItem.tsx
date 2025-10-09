@@ -358,10 +358,7 @@ const ClothingItem = ({
         </div>
 
         <CardContent className="py-1 px-2 h-[52px]">
-          <h3 className="font-medium text-sm truncate text-foreground">
-            {capitalizeFirst(name)}
-          </h3>
-          <div className="flex items-center justify-between mt-1">
+          <h3 className="flex items-center justify-between mt-1 text-foreground">
             <span className="text-sm text-foreground capitalize ">
               {location}
             </span>
@@ -372,6 +369,11 @@ const ClothingItem = ({
                 title={color}
               />
             )}
+          </h3>
+          <div className="text-xs truncate text-fmuted-oreground">
+            {occasions && occasions.length > 0
+              ? parseArrayField(occasions).join(', ')
+              : 'No occasions'}
           </div>
         </CardContent>
       </Card>
