@@ -404,6 +404,19 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       return;
     }
 
+    if (
+      currentOccasion.trim() &&
+      !itemData.occasions.includes(currentOccasion)
+    ) {
+      setItemData(prev => ({
+        ...prev,
+        occasions: [...prev.occasions, currentOccasion.trim()],
+      }));
+      setCurrentOccasion('');
+      toast.info('Occasion added automatically');
+      return; // Stop here, let them click save again
+    }
+
     setSaving(true);
     try {
       const user = await getCurrentUser();
