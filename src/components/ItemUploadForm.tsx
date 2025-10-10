@@ -275,6 +275,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     }
   };
 
+  const [categoryJustAdded, setCategoryJustAdded] = useState<string>('');
   const [showCropModal, setShowCropModal] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -712,6 +713,14 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                           ))}
                       </SelectContent>
                     </Select>
+
+                    {/* ✅ ADD THE HINT */}
+                    {categoryJustAdded && !itemData.category && (
+                      <div className="text-sm text-red-600 p-2">
+                        ✓ "{categoryJustAdded}" has been added. Please select it
+                        from the dropdown above.
+                      </div>
+                    )}
 
                     {!showAddCategory ? (
                       <Button
