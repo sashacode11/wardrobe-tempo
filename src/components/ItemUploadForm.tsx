@@ -693,6 +693,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   </Label>
                   <div className="space-y-2">
                     <Select
+                      key={itemData.category}
                       value={itemData.category}
                       onValueChange={value =>
                         setItemData({ ...itemData, category: value })
@@ -801,6 +802,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   <Label htmlFor="color">Primary Color</Label>
                   <div className="space-y-2">
                     <Select
+                      key={itemData.color}
                       value={itemData.color}
                       onValueChange={value =>
                         setItemData({ ...itemData, color: value })
@@ -953,6 +955,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                   <div className="space-y-2">
                     <div className="flex gap-2 mt-2">
                       <Select
+                        key={currentOccasion}
                         value={currentOccasion}
                         onValueChange={value => {
                           setCurrentOccasion(value);
