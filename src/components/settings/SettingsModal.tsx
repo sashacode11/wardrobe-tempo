@@ -20,6 +20,7 @@ import { PrivacySettings } from './PrivacySettings';
 import SwitchAccountModal from './SwitchAccountModal';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { settingsConfig } from '@/types/settingsConfig';
+import FeedbackModal from './FeedbackModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
   const { currentLanguage, currentLanguageData } = useLanguage();
   const { user, setUser } = useWardrobe();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -121,6 +123,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setShowLanguageModal,
     handleHelpSupport,
     handlePrivacySettings,
+    setShowFeedbackModal,
   });
 
   // Reusable SettingButton component
@@ -394,6 +397,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       <SwitchAccountModal
         isOpen={showSwitchAccountModal}
         onClose={() => setShowSwitchAccountModal(false)}
+      />
+
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
       />
     </>
   );

@@ -1,5 +1,13 @@
 // 📁 src/config/settingsConfig.ts
-import { Globe, Moon, Sun, Bell, Shield, HelpCircle } from 'lucide-react';
+import {
+  Globe,
+  Moon,
+  Sun,
+  Bell,
+  Shield,
+  HelpCircle,
+  MessageCircle,
+} from 'lucide-react';
 import type { SettingSection } from './index';
 
 export const settingsConfig = (dependencies: {
@@ -9,6 +17,7 @@ export const settingsConfig = (dependencies: {
   handleNotificationsChange: () => void;
   currentLanguageData: any;
   setShowLanguageModal: (show: boolean) => void;
+  setShowFeedbackModal: (show: boolean) => void;
   handleHelpSupport: () => void;
   handlePrivacySettings: () => void;
 }): SettingSection[] => {
@@ -19,6 +28,7 @@ export const settingsConfig = (dependencies: {
     handleNotificationsChange,
     currentLanguageData,
     setShowLanguageModal,
+    setShowFeedbackModal,
     handleHelpSupport,
     handlePrivacySettings,
   } = dependencies;
@@ -80,11 +90,18 @@ export const settingsConfig = (dependencies: {
       title: 'Support',
       order: 4,
       items: [
+        // {
+        //   id: 'help',
+        //   title: 'Help & Support',
+        //   icon: HelpCircle,
+        //   onClick: handleHelpSupport,
+        //   showOn: ['all'],
+        // },
         {
-          id: 'help',
-          title: 'Help & Support',
-          icon: HelpCircle,
-          onClick: handleHelpSupport,
+          id: 'contact',
+          title: 'Contact Us',
+          icon: MessageCircle,
+          onClick: () => setShowFeedbackModal(true),
           showOn: ['all'],
         },
         {
