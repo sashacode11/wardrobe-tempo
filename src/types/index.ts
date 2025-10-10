@@ -116,3 +116,26 @@ export interface SettingSection {
   items: SettingItem[];
   order: number;
 }
+
+export interface MobileMenuProps {
+  showMobileMenu: boolean;
+  setShowMobileMenu: (show: boolean) => void;
+  user: any;
+  setShowSettings: (show: boolean) => void;
+  setCurrentView: (view: string) => void;
+  handleAddItemClick: () => void;
+  setActiveTab: (tab: string) => void;
+  setShowAuthDialog: (show: boolean) => void;
+  handleSignOut: () => void;
+}
+
+export interface FeedbackModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export interface FeedbackForm {
+  name: string;
+  email: string;
+  message: string;
+}

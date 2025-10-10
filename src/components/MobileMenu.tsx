@@ -1,5 +1,5 @@
 // components/MobileMenu.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
@@ -12,19 +12,24 @@ import {
   LogOut,
   Camera,
   Edit3,
+  Mail,
+  MessageCircle,
+  X,
 } from 'lucide-react';
+import { MobileMenuProps } from '@/types';
+import FeedbackModal from './settings/FeedbackModal';
 
-interface MobileMenuProps {
-  showMobileMenu: boolean;
-  setShowMobileMenu: (show: boolean) => void;
-  user: any;
-  setShowSettings: (show: boolean) => void;
-  setCurrentView: (view: string) => void;
-  handleAddItemClick: () => void;
-  setActiveTab: (tab: string) => void;
-  setShowAuthDialog: (show: boolean) => void;
-  handleSignOut: () => void;
-}
+// interface MobileMenuProps {
+//   showMobileMenu: boolean;
+//   setShowMobileMenu: (show: boolean) => void;
+//   user: any;
+//   setShowSettings: (show: boolean) => void;
+//   setCurrentView: (view: string) => void;
+//   handleAddItemClick: () => void;
+//   setActiveTab: (tab: string) => void;
+//   setShowAuthDialog: (show: boolean) => void;
+//   handleSignOut: () => void;
+// }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({
   showMobileMenu,
@@ -37,6 +42,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   setShowAuthDialog,
   handleSignOut,
 }) => {
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
+
   if (!showMobileMenu) return null;
 
   return (
@@ -152,15 +159,16 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
                     <button
                       onClick={() => {
-                        setShowMobileMenu(false);
+                        // setShowMobileMenu(false);
+                        setShowFeedbackModal(true);
                       }}
                       className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card dark:bg-muted rounded-xl shadow-sm border border-border flex items-center justify-center mb-2 group-hover:shadow-md transition-all duration-200 relative">
-                        <Headphones className="h-5 w-5 text-foreground" />
+                        <MessageCircle className="h-5 w-5 text-foreground" />
                       </div>
                       <span className="text-xs sm:text-sm font-medium text-foreground">
-                        Customer Service
+                        Contact Us
                       </span>
                     </button>
                   </div>
@@ -207,6 +215,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           )} */}
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </>
   );
 };
