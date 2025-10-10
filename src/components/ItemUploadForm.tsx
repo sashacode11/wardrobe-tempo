@@ -408,13 +408,8 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
       currentOccasion.trim() &&
       !itemData.occasions.includes(currentOccasion)
     ) {
-      setItemData(prev => ({
-        ...prev,
-        occasions: [...prev.occasions, currentOccasion.trim()],
-      }));
-      setCurrentOccasion('');
-      toast.info('Occasion added automatically');
-      return; // Stop here, let them click save again
+      toast.warning('Please click Add to include the occasion.');
+      return;
     }
 
     setSaving(true);
