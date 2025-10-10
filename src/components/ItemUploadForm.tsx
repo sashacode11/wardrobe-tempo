@@ -207,7 +207,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     addIfNotExists([itemData.color]);
 
     setColors(uniqueColors);
-  }, [existingColors, itemData.color]);
+  }, [existingColors]);
 
   useEffect(() => {
     const normalized = new Set<string>();
