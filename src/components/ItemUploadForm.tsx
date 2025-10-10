@@ -801,7 +801,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                       <SelectTrigger id="color">
                         <SelectValue placeholder="Select color" />
                       </SelectTrigger>
-                      <SelectContent className="pt-12">
+                      <SelectContent className="pt-5 pb-5">
                         {colors
                           .filter(colorOption => colorOption.trim() !== '') // Avoid empty/whitespace
                           .map(colorOption => (
