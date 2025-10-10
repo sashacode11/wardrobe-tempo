@@ -229,7 +229,7 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
     addIfNotExists([itemData.category]); // Include current editing value if missing
 
     setCategories(uniqueCategories);
-  }, [existingCategories, itemData.category]);
+  }, [existingCategories]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -523,12 +523,22 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
   };
 
   const handleAddCustomCategory = () => {
+    console.log('🔵 ADD CATEGORY - Start');
+    console.log('customCategory:', customCategory);
+    console.log('categories before:', categories);
+    console.log('itemData.category before:', itemData.category);
     if (customCategory && !categories.includes(customCategory)) {
       const newCategories = [...categories, customCategory];
+      console.log('newCategories:', newCategories);
       setCategories(newCategories);
+      console.log('✅ setCategories called');
       setItemData({ ...itemData, category: customCategory });
+      console.log('✅ setItemData called with category:', customCategory);
       setCustomCategory('');
       setShowAddCategory(false);
+      console.log('✅ setItemData called with category:', customCategory);
+    } else {
+      console.log('❌ Category not added - already exists or empty');
     }
   };
 
@@ -713,14 +723,6 @@ const ItemUploadForm: React.FC<ItemUploadFormProps> = ({
                           ))}
                       </SelectContent>
                     </Select>
-
-                    {/* ✅ ADD THE HINT */}
-                    {categoryJustAdded && !itemData.category && (
-                      <div className="text-sm text-red-600 p-2">
-                        ✓ "{categoryJustAdded}" has been added. Please select it
-                        from the dropdown above.
-                      </div>
-                    )}
 
                     {!showAddCategory ? (
                       <Button
